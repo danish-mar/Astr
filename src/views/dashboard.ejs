@@ -1,0 +1,315 @@
+<div x-data="dashboardData()" x-init="init()">
+  <!-- Page Header -->
+  <div class="mb-8 animate__animated animate__fadeInDown">
+    <h1 class="text-3xl md:text-4xl font-bold text-gray-800 mb-2">
+      Welcome back, <span class="text-primary-600" x-text="user.name"></span>!
+      👋
+    </h1>
+    <p class="text-gray-600">Here's what's happening with your shop today.</p>
+  </div>
+
+  <!-- Quick Actions -->
+  <div class="mb-8">
+    <h2 class="text-xl font-semibold text-gray-800 mb-4 flex items-center">
+      <i class="fas fa-bolt text-primary-500 mr-2"></i>
+      Quick Actions
+    </h2>
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+      <!-- Add Product -->
+      <a
+        href="/products/new"
+        class="bg-white/80 backdrop-blur-md rounded-2xl p-6 shadow-lg hover:shadow-xl hover:scale-105 transition-all group animate__animated animate__fadeInUp"
+        style="animation-delay: 0.1s"
+      >
+        <div
+          class="w-12 h-12 bg-gradient-to-br from-blue-400 to-blue-600 rounded-xl flex items-center justify-center mb-3 group-hover:scale-110 transition-transform"
+        >
+          <i class="fas fa-plus text-white text-xl"></i>
+        </div>
+        <h3 class="font-semibold text-gray-800">Add Product</h3>
+        <p class="text-sm text-gray-500">New inventory</p>
+      </a>
+
+      <!-- New Ticket -->
+      <a
+        href="/service-tickets/new"
+        class="bg-white/80 backdrop-blur-md rounded-2xl p-6 shadow-lg hover:shadow-xl hover:scale-105 transition-all group animate__animated animate__fadeInUp"
+        style="animation-delay: 0.2s"
+      >
+        <div
+          class="w-12 h-12 bg-gradient-to-br from-green-400 to-green-600 rounded-xl flex items-center justify-center mb-3 group-hover:scale-110 transition-transform"
+        >
+          <i class="fas fa-ticket text-white text-xl"></i>
+        </div>
+        <h3 class="font-semibold text-gray-800">New Ticket</h3>
+        <p class="text-sm text-gray-500">Service request</p>
+      </a>
+
+      <!-- Add Contact -->
+      <a
+        href="/contacts/new"
+        class="bg-white/80 backdrop-blur-md rounded-2xl p-6 shadow-lg hover:shadow-xl hover:scale-105 transition-all group animate__animated animate__fadeInUp"
+        style="animation-delay: 0.3s"
+      >
+        <div
+          class="w-12 h-12 bg-gradient-to-br from-purple-400 to-purple-600 rounded-xl flex items-center justify-center mb-3 group-hover:scale-110 transition-transform"
+        >
+          <i class="fas fa-user-plus text-white text-xl"></i>
+        </div>
+        <h3 class="font-semibold text-gray-800">Add Contact</h3>
+        <p class="text-sm text-gray-500">Vendor/Customer</p>
+      </a>
+
+      <!-- View Stats -->
+      <a
+        href="/statistics"
+        class="bg-white/80 backdrop-blur-md rounded-2xl p-6 shadow-lg hover:shadow-xl hover:scale-105 transition-all group animate__animated animate__fadeInUp"
+        style="animation-delay: 0.4s"
+      >
+        <div
+          class="w-12 h-12 bg-gradient-to-br from-amber-400 to-amber-600 rounded-xl flex items-center justify-center mb-3 group-hover:scale-110 transition-transform"
+        >
+          <i class="fas fa-chart-line text-white text-xl"></i>
+        </div>
+        <h3 class="font-semibold text-gray-800">Statistics</h3>
+        <p class="text-sm text-gray-500">View reports</p>
+      </a>
+    </div>
+  </div>
+
+  <!-- Stats Cards -->
+  <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+    <!-- Products Stats -->
+    <div
+      class="bg-white/80 backdrop-blur-md rounded-2xl p-6 shadow-lg animate__animated animate__fadeInUp"
+      style="animation-delay: 0.5s"
+    >
+      <div class="flex items-center justify-between mb-4">
+        <div
+          class="w-12 h-12 bg-gradient-to-br from-blue-100 to-blue-200 rounded-xl flex items-center justify-center"
+        >
+          <i class="fas fa-box text-blue-600 text-xl"></i>
+        </div>
+        <span class="text-sm text-gray-500">Products</span>
+      </div>
+      <h3
+        class="text-3xl font-bold text-gray-800 mb-1"
+        x-text="stats.products.total"
+      >
+        0
+      </h3>
+      <div class="flex items-center space-x-4 text-sm">
+        <span class="text-green-600 flex items-center">
+          <i class="fas fa-check-circle mr-1"></i>
+          <span x-text="stats.products.available">0</span> Available
+        </span>
+        <span class="text-gray-500 flex items-center">
+          <i class="fas fa-circle mr-1"></i>
+          <span x-text="stats.products.sold">0</span> Sold
+        </span>
+      </div>
+    </div>
+
+    <!-- Tickets Stats -->
+    <div
+      class="bg-white/80 backdrop-blur-md rounded-2xl p-6 shadow-lg animate__animated animate__fadeInUp"
+      style="animation-delay: 0.6s"
+    >
+      <div class="flex items-center justify-between mb-4">
+        <div
+          class="w-12 h-12 bg-gradient-to-br from-green-100 to-green-200 rounded-xl flex items-center justify-center"
+        >
+          <i class="fas fa-ticket text-green-600 text-xl"></i>
+        </div>
+        <span class="text-sm text-gray-500">Tickets</span>
+      </div>
+      <h3
+        class="text-3xl font-bold text-gray-800 mb-1"
+        x-text="stats.tickets.total"
+      >
+        0
+      </h3>
+      <div class="flex items-center space-x-4 text-sm">
+        <span class="text-amber-600 flex items-center">
+          <i class="fas fa-clock mr-1"></i>
+          <span x-text="stats.tickets.pending">0</span> Pending
+        </span>
+        <span class="text-green-600 flex items-center">
+          <i class="fas fa-check mr-1"></i>
+          <span x-text="stats.tickets.completed">0</span> Done
+        </span>
+      </div>
+    </div>
+
+    <!-- Revenue Stats -->
+    <div
+      class="bg-white/80 backdrop-blur-md rounded-2xl p-6 shadow-lg animate__animated animate__fadeInUp"
+      style="animation-delay: 0.7s"
+    >
+      <div class="flex items-center justify-between mb-4">
+        <div
+          class="w-12 h-12 bg-gradient-to-br from-purple-100 to-purple-200 rounded-xl flex items-center justify-center"
+        >
+          <i class="fas fa-indian-rupee-sign text-purple-600 text-xl"></i>
+        </div>
+        <span class="text-sm text-gray-500">Revenue</span>
+      </div>
+      <h3 class="text-3xl font-bold text-gray-800 mb-1">
+        ₹<span x-text="formatNumber(stats.revenue)">0</span>
+      </h3>
+      <p class="text-sm text-gray-500">From service tickets</p>
+    </div>
+  </div>
+
+  <!-- Recent Activity -->
+  <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+    <!-- Recent Products -->
+    <div
+      class="bg-white/80 backdrop-blur-md rounded-2xl p-6 shadow-lg animate__animated animate__fadeInUp"
+      style="animation-delay: 0.8s"
+    >
+      <h3 class="text-lg font-semibold text-gray-800 mb-4 flex items-center">
+        <i class="fas fa-box text-primary-500 mr-2"></i>
+        Recent Products
+      </h3>
+      <div class="space-y-3">
+        <template x-for="product in recentProducts" :key="product._id">
+          <div
+            class="flex items-center justify-between p-3 rounded-lg hover:bg-gray-50 transition-colors"
+          >
+            <div class="flex-1">
+              <p class="font-medium text-gray-800" x-text="product.name"></p>
+              <p
+                class="text-sm text-gray-500"
+                x-text="product.category?.name"
+              ></p>
+            </div>
+            <span
+              class="px-3 py-1 rounded-full text-xs font-medium"
+              :class="product.isSold ? 'bg-gray-100 text-gray-600' : 'bg-green-100 text-green-700'"
+              x-text="product.isSold ? 'Sold' : 'Available'"
+            ></span>
+          </div>
+        </template>
+        <template x-if="recentProducts.length === 0">
+          <p class="text-gray-500 text-center py-4">No products yet</p>
+        </template>
+      </div>
+      <a
+        href="/products"
+        class="block text-center mt-4 text-primary-600 hover:text-primary-700 font-medium"
+      >
+        View All Products →
+      </a>
+    </div>
+
+    <!-- Recent Tickets -->
+    <div
+      class="bg-white/80 backdrop-blur-md rounded-2xl p-6 shadow-lg animate__animated animate__fadeInUp"
+      style="animation-delay: 0.9s"
+    >
+      <h3 class="text-lg font-semibold text-gray-800 mb-4 flex items-center">
+        <i class="fas fa-ticket text-primary-500 mr-2"></i>
+        Recent Tickets
+      </h3>
+      <div class="space-y-3">
+        <template x-for="ticket in recentTickets" :key="ticket._id">
+          <div
+            class="flex items-center justify-between p-3 rounded-lg hover:bg-gray-50 transition-colors"
+          >
+            <div class="flex-1">
+              <p class="font-medium text-gray-800">
+                #<span x-text="ticket.ticketNumber"></span>
+              </p>
+              <p
+                class="text-sm text-gray-500"
+                x-text="ticket.deviceDetails.substring(0, 30) + '...'"
+              ></p>
+            </div>
+            <span
+              class="px-3 py-1 rounded-full text-xs font-medium"
+              :class="{
+                    'bg-yellow-100 text-yellow-700': ticket.status === 'Pending',
+                    'bg-blue-100 text-blue-700': ticket.status === 'In Progress',
+                    'bg-green-100 text-green-700': ticket.status === 'Completed',
+                    'bg-purple-100 text-purple-700': ticket.status === 'Delivered'
+                  }"
+              x-text="ticket.status"
+            ></span>
+          </div>
+        </template>
+        <template x-if="recentTickets.length === 0">
+          <p class="text-gray-500 text-center py-4">No tickets yet</p>
+        </template>
+      </div>
+      <a
+        href="/service-tickets"
+        class="block text-center mt-4 text-primary-600 hover:text-primary-700 font-medium"
+      >
+        View All Tickets →
+      </a>
+    </div>
+  </div>
+</div>
+
+<script>
+  function dashboardData() {
+    return {
+      stats: {
+        products: { total: 0, available: 0, sold: 0 },
+        tickets: { total: 0, pending: 0, completed: 0 },
+        revenue: 0,
+      },
+      recentProducts: [],
+      recentTickets: [],
+
+      async init() {
+        await this.loadStats();
+        await this.loadRecentActivity();
+      },
+
+      async loadStats() {
+        try {
+          const [productStats, ticketStats] = await Promise.all([
+            this.api("/products/stats"),
+            this.api("/service-tickets/stats"),
+          ]);
+
+          this.stats.products = {
+            total: productStats.data.total,
+            available: productStats.data.available,
+            sold: productStats.data.sold,
+          };
+
+          this.stats.tickets = {
+            total: ticketStats.data.total,
+            pending: ticketStats.data.byStatus?.Pending || 0,
+            completed: ticketStats.data.byStatus?.Completed || 0,
+          };
+
+          this.stats.revenue = ticketStats.data.totalRevenue || 0;
+        } catch (error) {
+          console.error("Error loading stats:", error);
+        }
+      },
+
+      async loadRecentActivity() {
+        try {
+          const [products, tickets] = await Promise.all([
+            this.api("/products?limit=5"),
+            this.api("/service-tickets?limit=5"),
+          ]);
+
+          this.recentProducts = products.data;
+          this.recentTickets = tickets.data;
+        } catch (error) {
+          console.error("Error loading recent activity:", error);
+        }
+      },
+
+      formatNumber(num) {
+        return new Intl.NumberFormat("en-IN").format(num);
+      },
+    };
+  }
+</script>
