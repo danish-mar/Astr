@@ -13,6 +13,28 @@ services:
       MONGO_INITDB_DATABASE: astr
     volumes:
       - mongo_data:/data/db
+    networks:
+      - astr-network
+
+  astr-app:
+    image: ghcr.io/danish-mar/astr:latest
+    container_name: astr-app
+    restart: always
+    ports:
+      - "3000:3000"   # host:container
+    environment:
+      NODE_ENV: production
+      MONGODB_URI: mongodb://root:rootasdf@astr-mongo:27017/astr?authSource=admin
+      JWT_SECRET: ${JWT_SECRET:-your-secret-key-change-in-production}
+      PORT: 3000
+    depends_on:
+      - astr-mongo
+    networks:
+      - astr-network
 
 volumes:
   mongo_data:
+
+networks:
+  astr-network:
+    driver: bridge

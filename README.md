@@ -9,14 +9,10 @@
 [![MongoDB](https://img.shields.io/badge/MongoDB-47A248?style=for-the-badge&logo=mongodb&logoColor=white)](https://www.mongodb.com/)
 [![Alpine.js](https://img.shields.io/badge/Alpine.js-8BC0D0?style=for-the-badge&logo=alpinedotjs&logoColor=black)](https://alpinejs.dev/)
 [![TailwindCSS](https://img.shields.io/badge/Tailwind_CSS-38B2AC?style=for-the-badge&logo=tailwind-css&logoColor=white)](https://tailwindcss.com/)
-
-![Lines of Code](https://img.shields.io/badge/Lines%20of%20Code-10k%2B-brightgreen?style=flat-square)
-![Build Status](https://img.shields.io/badge/Build-Passing-success?style=flat-square)
-![Development Time](https://img.shields.io/badge/Dev%20Time-Lightning%20Fast%20%E2%9A%A1-orange?style=flat-square)
+[![Docker](https://img.shields.io/badge/Docker-2496ED?style=for-the-badge&logo=docker&logoColor=white)](https://www.docker.com/)
+[![GitHub Actions](https://img.shields.io/badge/GitHub_Actions-2088FF?style=for-the-badge&logo=github-actions&logoColor=white)](https://github.com/features/actions)
 
 ---
-
-### 🎯 *Complex architecture. Simple experience. Zero compromises.*
 
 </div>
 
@@ -137,7 +133,9 @@ EJS Templates + Alpine.js + TailwindCSS
 
 </div>
 
-```
+### Option 1: Local Development
+
+```bash
 # 📥 Clone the repository
 git clone https://git.sangonomiya.icu/danish-mar/Astr.git
 cd Astr
@@ -156,6 +154,41 @@ npm run seed
 npm run dev
 ```
 
+### Option 2: Docker Compose (Recommended)
+
+```bash
+# 📥 Clone the repository
+git clone https://git.sangonomiya.icu/danish-mar/Astr.git
+cd Astr
+
+# ⚙️ Set JWT secret (optional, defaults to a placeholder)
+export JWT_SECRET="your-super-secret-jwt-key"
+
+# 🐳 Start all services (MongoDB + Astr)
+docker-compose up -d
+
+# 📊 Check service status
+docker-compose ps
+
+# 📝 View logs
+docker-compose logs -f astr-app
+```
+
+### Option 3: Pull from GitHub Container Registry
+
+```bash
+# 🐳 Pull the latest image
+docker pull ghcr.io/danish-mar/astr:latest
+
+# 🚀 Run the container
+docker run -d \
+  -p 3000:3000 \
+  -e MONGODB_URI="your-mongodb-uri" \
+  -e JWT_SECRET="your-jwt-secret" \
+  --name astr-app \
+  ghcr.io/danish-mar/astr:latest
+```
+
 <div align="center">
 
 🎉 **Visit `http://localhost:3000`**
@@ -163,6 +196,38 @@ npm run dev
 **Default Admin Login:** `admin` / `admin123`
 
 </div>
+
+<br/>
+
+<div align="center">
+
+## 🐳 Docker & CI/CD
+
+</div>
+
+### Automated Builds
+
+Every push to the `main` branch automatically:
+- ✅ Runs CI checks (TypeScript build validation)
+- 🐳 Builds optimized Docker image
+- 📦 Pushes to GitHub Container Registry
+- 🏷️ Tags with both `latest` and commit SHA
+
+### Docker Image Details
+
+- **Registry:** `ghcr.io/danish-mar/astr`
+- **Base Image:** Node.js 24 Alpine (minimal footprint)
+- **Build Type:** Multi-stage (optimized for production)
+- **Image Size:** ~150MB (production dependencies only)
+
+### Environment Variables
+
+| Variable | Description | Default |
+|----------|-------------|----------|
+| `PORT` | Application port | `3000` |
+| `MONGODB_URI` | MongoDB connection string | Required |
+| `JWT_SECRET` | Secret key for JWT tokens | Required |
+| `NODE_ENV` | Environment mode | `production` |
 
 <br/>
 
@@ -257,28 +322,12 @@ Feel free to check the [issues page](../../issues).
 
 <br/>
 
-<div align="center">
-
-## 📜 License
-
-This project is **private and proprietary**.
-
-</div>
-
-<br/>
-
 ---
 
 <div align="center">
 
 ### 💻 Built with ⚡ by [@danish-mar](https://github.com/danish-mar)
 
-<sub>*Proving that complex systems can be built at lightning speed* ⚡🚀</sub>
-
 <br/>
-
-![Made with Love](https://img.shields.io/badge/Made%20with-❤️-red?style=for-the-badge)
-![Powered by Coffee](https://img.shields.io/badge/Powered%20by-☕-brown?style=for-the-badge)
-![TypeScript](https://img.shields.io/badge/Built%20in-TypeScript-blue?style=for-the-badge&logo=typescript&logoColor=white)
 
 </div>
