@@ -10,7 +10,7 @@
         <p class="text-gray-600">Manage your product inventory</p>
       </div>
       <button @click="openAddModal()"
-        class="bg-gradient-to-r from-primary-500 to-emerald-600 hover:from-primary-600 hover:to-emerald-700 text-white px-6 py-3 rounded-xl font-medium shadow-lg hover:shadow-xl transition-all flex items-center justify-center space-x-2">
+        class="bg-primary-500 hover:bg-primary-600 text-white px-6 py-3 rounded-xl font-medium shadow-lg hover:shadow-xl transition-all flex items-center justify-center space-x-2">
         <i class="fas fa-plus"></i>
         <span>Add Product</span>
       </button>
@@ -96,8 +96,7 @@
         <!-- Product ID Badge -->
         <div class="relative p-4 pb-0">
           <div class="flex items-center justify-between">
-            <span x-show="product.productID"
-              class="px-3 py-1 bg-gradient-to-r from-primary-500 to-emerald-600 text-white text-xs font-bold rounded-full"
+            <span x-show="product.productID" class="px-3 py-1 bg-primary-500 text-white text-xs font-bold rounded-full"
               x-text="product.productID"></span>
             <span x-show="product.isSold"
               class="px-3 py-1 bg-gray-500 text-white text-xs font-bold rounded-full flex items-center">
@@ -121,7 +120,8 @@
             <i class="fas fa-tag text-primary-500"></i>
             <span x-text="product.category?.name"></span>
             <span class="mx-2 text-gray-300">|</span>
-            <span class="font-bold text-gray-800">₹<span x-text="product.price"></span></span>
+            <span class="font-bold text-gray-800">₹<span
+                x-text="Number(product.price).toLocaleString('en-IN')"></span></span>
           </div>
 
           <!-- Tags -->
@@ -193,7 +193,8 @@
                 <span class="text-sm text-gray-600" x-text="product.source?.name"></span>
               </td>
               <td class="px-4 py-3">
-                <span class="text-sm font-medium text-gray-800">₹<span x-text="product.price"></span></span>
+                <span class="text-sm font-medium text-gray-800">₹<span
+                    x-text="Number(product.price).toLocaleString('en-IN')"></span></span>
               </td>
               <td class="px-4 py-3">
                 <span :class="product.isSold ? 'bg-gray-100 text-gray-600' : 'bg-green-100 text-green-700'"
@@ -229,7 +230,7 @@
     <h3 class="text-xl font-semibold text-gray-800 mb-2">No Products Found</h3>
     <p class="text-gray-600 mb-6">Start by adding your first product</p>
     <button @click="openAddModal()"
-      class="bg-gradient-to-r from-primary-500 to-emerald-600 text-white px-6 py-3 rounded-xl font-medium inline-flex items-center space-x-2">
+      class="bg-primary-500 text-white px-6 py-3 rounded-xl font-medium inline-flex items-center space-x-2">
       <i class="fas fa-plus"></i>
       <span>Add Product</span>
     </button>
@@ -448,7 +449,7 @@
             Cancel
           </button>
           <button type="submit" :disabled="saving"
-            class="px-6 py-2 bg-gradient-to-r from-primary-500 to-emerald-600 text-white rounded-lg hover:from-primary-600 hover:to-emerald-700 font-medium transition-all disabled:opacity-50 disabled:cursor-not-allowed">
+            class="px-6 py-2 bg-primary-500 text-white rounded-lg hover:bg-primary-600 font-medium transition-all disabled:opacity-50 disabled:cursor-not-allowed">
             <i :class="saving ? 'fas fa-spinner fa-spin' : 'fas fa-save'" class="mr-2"></i>
             <span x-text="saving ? 'Saving...' : (editMode ? 'Update' : 'Save')"></span>
           </button>

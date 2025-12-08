@@ -29,8 +29,6 @@ document.addEventListener('alpine:init', () => {
 
         async loadStats() {
             try {
-                // We need to create a route for fetching dashboard stats
-                // Assuming /api/v1/statistics/dashboard will be created
                 const response = await window.api.get('/statistics/dashboard');
                 const data = response.data;
 
@@ -55,45 +53,54 @@ document.addEventListener('alpine:init', () => {
             // Revenue Chart
             const revenueCtx = document.getElementById('revenueChart');
             if (revenueCtx && this.charts.revenueTrend) {
-                const labels = this.charts.revenueTrend.map(item => {
-                    const date = new Date(item._id);
-                    return date.toLocaleDateString('en-US', { weekday: 'short', day: 'numeric' });
-                });
-                const data = this.charts.revenueTrend.map(item => item.total);
+                const ctx = revenueCtx.getContext('2d');
 
-                new Chart(revenueCtx, {
+                // Create gradient
+                const gradient = ctx.createLinearGradient(0, 0, 0, 300);
+                gradient.addColorStop(0, 'rgba(0, 122, 255, 0.2)'); // Primary Blue
+                gradient.addColorStop(1, 'rgba(0, 122, 255, 0)');
+
+                new Chart(ctx, {
                     type: 'line',
                     data: {
-                        labels: labels,
+                        labels: this.charts.revenueTrend.map(d => {
+                            const date = new Date(d._id);
+                            return date.toLocaleDateString('en-US', { weekday: 'short' });
+                        }),
                         datasets: [{
-                            label: 'Revenue (₹)',
-                            data: data,
-                            borderColor: '#10b981', // primary-500
-                            backgroundColor: 'rgba(16, 185, 129, 0.1)',
-                            borderWidth: 2,
-                            tension: 0.4,
-                            fill: true,
-                            pointBackgroundColor: '#fff',
-                            pointBorderColor: '#10b981',
-                            pointRadius: 4
+                            label: 'Revenue',
+                            data: this.charts.revenueTrend.map(d => d.total),
+                            borderColor: '#007aff', // Primary Blue
+                            backgroundColor: gradient,
+                            borderWidth: 3,
+                            tension: 0.4, // Smooth curve
+                            pointBackgroundColor: '#ffffff',
+                            pointBorderColor: '#007aff',
+                            pointBorderWidth: 2,
+                            pointRadius: 4,
+                            pointHoverRadius: 6,
+                            fill: true
                         }]
                     },
                     options: {
                         responsive: true,
                         maintainAspectRatio: false,
                         plugins: {
-                            legend: { display: false },
+                            legend: {
+                                display: false
+                            },
                             tooltip: {
+                                backgroundColor: 'rgba(255, 255, 255, 0.9)',
+                                titleColor: '#1f2937',
+                                bodyColor: '#4b5563',
+                                borderColor: 'rgba(0,0,0,0.05)',
+                                borderWidth: 1,
+                                padding: 12,
+                                cornerRadius: 12,
+                                displayColors: false,
                                 callbacks: {
                                     label: function (context) {
-                                        let label = context.dataset.label || '';
-                                        if (label) {
-                                            label += ': ';
-                                        }
-                                        if (context.parsed.y !== null) {
-                                            label += new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(context.parsed.y);
-                                        }
-                                        return label;
+                                        return '₹' + context.parsed.y.toLocaleString('en-IN');
                                     }
                                 }
                             }
@@ -101,12 +108,46 @@ document.addEventListener('alpine:init', () => {
                         scales: {
                             y: {
                                 beginAtZero: true,
-                                grid: { borderDash: [2, 2] }
+                                grid: {
+                                    color: 'rgba(0, 0, 0, 0.03)',
+                                    drawBorder: false,
+                                },
+                                ticks: {
+                                    font: {
+                                        family: "'Inter', sans-serif",
+                                        size: 11
+                                    },
+                                    color: '#9ca3af',
+                                    callback: function (value) {
+                                        if (value >= 1000) return '₹' + (value / 1000) + 'k';
+                                        return '₹' + value;
+                                    }
+                                },
+                                border: {
+                                    display: false
+                                }
                             },
                             x: {
-                                grid: { display: false }
+                                grid: {
+                                    display: false,
+                                    drawBorder: false,
+                                },
+                                ticks: {
+                                    font: {
+                                        family: "'Inter', sans-serif",
+                                        size: 11
+                                    },
+                                    color: '#9ca3af'
+                                },
+                                border: {
+                                    display: false
+                                }
                             }
-                        }
+                        },
+                        interaction: {
+                            intersect: false,
+                            mode: 'index',
+                        },
                     }
                 });
             }
@@ -119,11 +160,11 @@ document.addEventListener('alpine:init', () => {
 
                 // Define colors for statuses
                 const colors = {
-                    'Pending': '#f59e0b', // amber-500
-                    'In Progress': '#3b82f6', // blue-500
-                    'Completed': '#10b981', // green-500
-                    'Delivered': '#a855f7', // purple-500
-                    'Cancelled': '#ef4444' // red-500
+                    'Pending': '#fbbf24', // Amber
+                    'In Progress': '#3b82f6', // Blue
+                    'Completed': '#34c759', // Green
+                    'Delivered': '#a855f7', // Purple
+                    'Cancelled': '#ff3b30' // Red
                 };
 
                 const bgColors = labels.map(status => colors[status] || '#9ca3af');
@@ -142,16 +183,36 @@ document.addEventListener('alpine:init', () => {
                     options: {
                         responsive: true,
                         maintainAspectRatio: false,
+                        cutout: '75%',
+                        borderRadius: 20,
                         plugins: {
                             legend: {
-                                position: 'right',
+                                position: 'bottom',
                                 labels: {
                                     usePointStyle: true,
-                                    padding: 20
+                                    padding: 20,
+                                    font: {
+                                        family: "'Inter', sans-serif",
+                                        size: 12
+                                    },
+                                    color: '#6b7280'
+                                }
+                            },
+                            tooltip: {
+                                backgroundColor: 'rgba(255, 255, 255, 0.9)',
+                                bodyColor: '#4b5563',
+                                borderColor: 'rgba(0,0,0,0.05)',
+                                borderWidth: 1,
+                                padding: 12,
+                                cornerRadius: 12,
+                                displayColors: true,
+                                callbacks: {
+                                    label: function (context) {
+                                        return ' ' + context.label + ': ' + context.parsed;
+                                    }
                                 }
                             }
-                        },
-                        cutout: '70%'
+                        }
                     }
                 });
             }

@@ -32,6 +32,10 @@
                 phone: ''
             },
 
+            technicians: [],
+            showViewModal: false,
+            selectedTicket: null,
+
             get token() { return window.api.token; },
             get user() { return window.api.user; },
 
@@ -42,7 +46,8 @@
                 }
                 await Promise.all([
                     this.loadTickets(),
-                    this.loadCustomers()
+                    this.loadCustomers(),
+                    this.loadTechnicians()
                 ]);
 
                 // Check if we should open the add modal
@@ -82,6 +87,19 @@
                 }
             },
 
+            async loadTechnicians() {
+                try {
+                    const response = await window.api.get('/employees');
+                    if (response.data && Array.isArray(response.data)) {
+                        // Filter for technicians if needed, or show all staff
+                        // For now, showing all employees as potential assignees
+                        this.technicians = response.data;
+                    }
+                } catch (error) {
+                    console.error('Error loading technicians:', error);
+                }
+            },
+
             changePage(page) {
                 this.pagination.page = page;
                 this.loadTickets();
@@ -114,6 +132,16 @@
                     notes: ticket.notes || ''
                 };
                 this.showModal = true;
+            },
+
+            viewTicket(ticket) {
+                this.selectedTicket = ticket;
+                this.showViewModal = true;
+            },
+
+            closeViewModal() {
+                this.showViewModal = false;
+                this.selectedTicket = null;
             },
 
             async saveTicket() {

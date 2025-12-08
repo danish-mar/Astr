@@ -68,7 +68,7 @@ app.get("/service-tickets", (req: Request, res: Response) => {
 });
 
 app.get("/service-tickets/add", (req: Request, res: Response) => {
-  res.render("service-tickets", { title: "Astr - Add Service Ticket" });
+  res.render("service-tickets-add", { title: "Astr - Add Service Ticket" });
 });
 
 // Contacts

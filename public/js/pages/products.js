@@ -71,9 +71,8 @@
                     if (this.filters.isSold !== null) query += `&isSold=${this.filters.isSold}`;
 
                     const response = await window.api.get(`/products${query}`);
-                    this.products = response.data;
+                    this.products = response.data; // For paginated response, data is in response.data
                 } catch (error) {
-                    console.error('Error loading products:', error);
                     console.error('Error loading products:', error);
                     window.showNotification('Error loading products. Please try again.', 'error');
                 } finally {
@@ -93,7 +92,7 @@
             async loadContacts() {
                 try {
                     const response = await window.api.get('/contacts?page=1&limit=100');
-                    this.contacts = response.data;
+                    this.contacts = response.data; // For paginated response, data is in response.data
                 } catch (error) {
                     console.error('Error loading contacts:', error);
                 }
