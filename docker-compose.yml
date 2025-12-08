@@ -21,13 +21,14 @@ services:
     container_name: astr-app
     restart: always
     ports:
-      - "${PORT:-3000}:3000"   # host:container
+      - "${PORT:-3000}:3000"
     env_file:
       - .env
     environment:
       NODE_ENV: ${NODE_ENV:-production}
-      MONGODB_URI: ${MONGODB_URI:-mongodb://root:rootasdf@astr-mongo:27017/astr?authSource=admin}
+      MONGO_URI: ${MONGO_URI:-mongodb://root:rootasdf@astr-mongo:27017/astr?authSource=admin}
       JWT_SECRET: ${JWT_SECRET}
+      JWT_EXPIRE: ${JWT_EXPIRE:-7d}
       PORT: 3000
     depends_on:
       - astr-mongo
