@@ -8,9 +8,9 @@ services:
     ports:
       - "6545:27017"   # host:container
     environment:
-      MONGO_INITDB_ROOT_USERNAME: root
-      MONGO_INITDB_ROOT_PASSWORD: rootasdf
-      MONGO_INITDB_DATABASE: astr
+      MONGO_INITDB_ROOT_USERNAME: ${MONGO_ROOT_USERNAME:-root}
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_ROOT_PASSWORD:-rootasdf}
+      MONGO_INITDB_DATABASE: ${MONGO_DATABASE:-astr}
     volumes:
       - mongo_data:/data/db
     networks:
@@ -21,11 +21,13 @@ services:
     container_name: astr-app
     restart: always
     ports:
-      - "3000:3000"   # host:container
+      - "${PORT:-3000}:3000"   # host:container
+    env_file:
+      - .env
     environment:
-      NODE_ENV: production
-      MONGODB_URI: mongodb://root:rootasdf@astr-mongo:27017/astr?authSource=admin
-      JWT_SECRET: ${JWT_SECRET:-your-secret-key-change-in-production}
+      NODE_ENV: ${NODE_ENV:-production}
+      MONGODB_URI: ${MONGODB_URI:-mongodb://root:rootasdf@astr-mongo:27017/astr?authSource=admin}
+      JWT_SECRET: ${JWT_SECRET}
       PORT: 3000
     depends_on:
       - astr-mongo
