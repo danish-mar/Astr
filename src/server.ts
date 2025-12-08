@@ -1,3 +1,4 @@
+import { hostname } from 'os';
 import app from './app';
 import connectDB from './config/database';
 
@@ -8,5 +9,5 @@ connectDB();
 
 // Start server
 app.listen(PORT, () => {
-  console.log(`Server running on http://localhost:${PORT}`);
+  console.log(`Server running at http://0.0.0.0:${PORT}`);
 });
