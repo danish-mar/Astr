@@ -5,6 +5,7 @@ import productRoutes from "../productRoutes";
 import serviceTicketRoutes from "../serviceTicketRoutes";
 import shopSettingsRoutes from "../shopSettingsRoutes";
 import employeeRoutes from "../employeeRoutes";
+import statisticsRoutes from "../statisticsRoutes";
 
 const router = Router();
 
@@ -15,5 +16,6 @@ router.use("/products", productRoutes);
 router.use("/service-tickets", serviceTicketRoutes);
 router.use("/settings", shopSettingsRoutes);
 router.use("/employees", employeeRoutes);
+router.use("/statistics", statisticsRoutes);
 
 export default router;

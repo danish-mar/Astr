@@ -35,8 +35,9 @@ export const getAllServiceTickets = async (req: Request, res: Response) => {
 
     // Search by ticket number or device details
     if (search) {
+      const searchStr = (search as string).replace("#", "");
       filter.$or = [
-        { ticketNumber: { $regex: search, $options: "i" } },
+        { ticketNumber: { $regex: searchStr, $options: "i" } },
         { deviceDetails: { $regex: search, $options: "i" } },
       ];
     }

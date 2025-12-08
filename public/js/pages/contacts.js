@@ -1,0 +1,141 @@
+(function () {
+    const initComponent = () => {
+        Alpine.data('contactsData', () => ({
+            contacts: [],
+            loading: true,
+            filters: {
+                search: '',
+                contactType: 'All'
+            },
+            pagination: {
+                page: 1,
+                limit: 10,
+                total: 0
+            },
+            viewMode: 'list',
+            showModal: false,
+            editMode: false,
+            saving: false,
+            formData: {
+                name: '',
+                phone: '',
+                contactType: 'Customer',
+                companyName: '',
+                address: '',
+                notes: ''
+            },
+
+            get token() { return window.api.token; },
+
+            async init() {
+                if (!this.token) {
+                    window.location.href = '/login';
+                    return;
+                }
+                await this.loadContacts();
+
+                // Check if we should open the add modal
+                if (window.location.pathname === '/contacts/add') {
+                    this.openAddModal();
+                }
+            },
+
+            async loadContacts() {
+                this.loading = true;
+                try {
+                    let query = `?page=${this.pagination.page}&limit=${this.pagination.limit}`;
+                    if (this.filters.search) query += `&search=${this.filters.search}`;
+                    if (this.filters.contactType !== 'All') query += `&contactType=${this.filters.contactType}`;
+
+                    const response = await window.api.get(`/contacts${query}`);
+                    this.contacts = response.data;
+                    if (response.pagination) {
+                        this.pagination = response.pagination;
+                    }
+                } catch (error) {
+                    console.error('Error loading contacts:', error);
+                } finally {
+                    this.loading = false;
+                }
+            },
+
+            changePage(page) {
+                this.pagination.page = page;
+                this.loadContacts();
+            },
+
+            openAddModal() {
+                this.editMode = false;
+                this.formData = {
+                    name: '',
+                    phone: '',
+                    contactType: 'Customer',
+                    companyName: '',
+                    address: '',
+                    notes: ''
+                };
+                this.showModal = true;
+            },
+
+            editContact(contact) {
+                this.editMode = true;
+                this.formData = {
+                    _id: contact._id,
+                    name: contact.name,
+                    phone: contact.phone,
+                    contactType: contact.contactType,
+                    companyName: contact.companyName || '',
+                    address: contact.address || '',
+                    notes: contact.notes || ''
+                };
+                this.showModal = true;
+            },
+
+            async saveContact() {
+                if (!this.formData.name || !this.formData.phone) {
+                    window.showNotification('Name and phone are required', 'error');
+                    return;
+                }
+
+                this.saving = true;
+                try {
+                    if (this.editMode) {
+                        await window.api.put(`/contacts/${this.formData._id}`, this.formData);
+                        window.showNotification('Contact updated successfully');
+                    } else {
+                        await window.api.post('/contacts', this.formData);
+                        window.showNotification('Contact created successfully');
+                    }
+                    this.closeModal();
+                    this.loadContacts();
+                } catch (error) {
+                    window.showNotification('Error saving contact: ' + (error.response?.data?.message || error.message), 'error');
+                } finally {
+                    this.saving = false;
+                }
+            },
+
+            async deleteContact(id) {
+                window.showConfirm('Delete Contact', 'Are you sure you want to delete this contact?', async () => {
+                    try {
+                        await window.api.delete(`/contacts/${id}`);
+                        window.showNotification('Contact deleted successfully');
+                        this.loadContacts();
+                    } catch (error) {
+                        window.showNotification('Error deleting contact: ' + (error.response?.data?.message || error.message), 'error');
+                    }
+                });
+            },
+
+            closeModal() {
+                this.showModal = false;
+            }
+        }));
+    };
+
+    if (window.Alpine) {
+        initComponent();
+    } else {
+        document.addEventListener('alpine:init', initComponent);
+    }
+})();

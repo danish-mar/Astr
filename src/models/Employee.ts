@@ -102,8 +102,8 @@ const employeeSchema = new Schema<IEmployee, IEmployeeModel>(
   }
 );
 
-// 3. Add indexes
-employeeSchema.index({ username: 1 });
+// 4. Add indexes for better query performance
+// username and email are already indexed by unique: true
 employeeSchema.index({ position: 1 });
 employeeSchema.index({ isActive: 1 });
 

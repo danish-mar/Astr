@@ -28,7 +28,6 @@ const serviceTicketSchema = new Schema<IServiceTicket>(
   {
     ticketNumber: {
       type: String,
-      required: true,
       unique: true,
       length: 6,
       validate: {
@@ -87,7 +86,7 @@ const serviceTicketSchema = new Schema<IServiceTicket>(
 );
 
 // 4. Add indexes for better query performance
-serviceTicketSchema.index({ ticketNumber: 1 });
+// ticketNumber is already indexed by unique: true
 serviceTicketSchema.index({ customer: 1 });
 serviceTicketSchema.index({ status: 1 });
 serviceTicketSchema.index({ createdAt: -1 });

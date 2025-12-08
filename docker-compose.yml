@@ -1,9 +1,9 @@
 version: "3.9"
 
 services:
-  mongodb:
+  astr-mongo:
     image: mongo:4.4
-    container_name: mongodb
+    container_name: astr-mongo
     restart: always
     ports:
       - "6545:27017"   # host:container

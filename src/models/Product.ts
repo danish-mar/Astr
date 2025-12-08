@@ -9,6 +9,7 @@ export interface IProduct extends Document {
   name: string;
   category: Types.ObjectId | ICategory;
   source: Types.ObjectId | IContact;
+  price: number;
   specifications: Map<string, any>;
   tags: string[];
   isSold: boolean;
@@ -55,6 +56,11 @@ const productSchema = new Schema<IProduct>(
       ref: "Contact",
       required: [true, "Source contact is required"],
     },
+    price: {
+      type: Number,
+      required: [true, "Price is required"],
+      default: 0,
+    },
     specifications: {
       type: Map,
       of: Schema.Types.Mixed,
@@ -82,10 +88,10 @@ const productSchema = new Schema<IProduct>(
 );
 
 // 4. Add indexes for better query performance
-productSchema.index({ productID: 1 });
-productSchema.index({ name: 1 });
+// productID is already indexed by unique: true
 productSchema.index({ category: 1 });
 productSchema.index({ source: 1 });
+productSchema.index({ price: 1 });
 productSchema.index({ isSold: 1 });
 productSchema.index({ tags: 1 });
 

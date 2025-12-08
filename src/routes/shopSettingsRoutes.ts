@@ -1,16 +1,16 @@
 import { Router } from "express";
 import {
-  getShopSettings,
-  updateShopSettings,
+  getSettings,
+  updateSettings,
 } from "../controllers/shopSettingsController";
-import { authenticate, authorize } from "../middleware";
+import { authenticate as protect, authorize } from "../middleware/auth";
 
 const router = Router();
 
-// Public route (can be viewed by anyone)
-router.get("/", getShopSettings);
+// Protect all routes
+router.use(protect);
 
-// Protected route (Admin, CEO only)
-router.put("/", authenticate, authorize("Admin", "CEO"), updateShopSettings);
+router.get("/", getSettings);
+router.put("/", authorize("Admin", "CEO", "Manager"), updateSettings);
 
 export default router;

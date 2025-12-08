@@ -8,6 +8,7 @@ export interface IShopSettings extends Document {
   phone?: string;
   email?: string;
   logo?: string;
+  themeColor?: string;
   updatedAt: Date;
 }
 
@@ -54,6 +55,11 @@ const shopSettingsSchema = new Schema<IShopSettings>(
       type: String,
       trim: true,
     },
+    themeColor: {
+      type: String,
+      default: "#3B82F6", // blue-500
+      trim: true,
+    },
   },
   {
     timestamps: { createdAt: false, updatedAt: true }, // Only track updates, not creation
@@ -68,6 +74,7 @@ shopSettingsSchema.statics.getSettings = async function () {
   if (!settings) {
     settings = await this.create({
       shopName: "Astr Computer Shop",
+      themeColor: "#3B82F6",
     });
   }
 

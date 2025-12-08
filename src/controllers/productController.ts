@@ -128,6 +128,7 @@ export const createProduct = async (req: Request, res: Response) => {
       tags,
       notes,
       assignProductID,
+      price,
     } = req.body;
 
     // Validate required fields
@@ -161,6 +162,7 @@ export const createProduct = async (req: Request, res: Response) => {
       specifications: specifications || {},
       tags: tags || [],
       notes,
+      price: price || 0,
     });
 
     // Assign product ID if requested
@@ -183,7 +185,7 @@ export const createProduct = async (req: Request, res: Response) => {
 export const updateProduct = async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
-    const { name, category, source, specifications, tags, notes, isSold } =
+    const { name, category, source, specifications, tags, notes, isSold, price } =
       req.body;
 
     if (!isValidObjectId(id)) {
@@ -204,6 +206,7 @@ export const updateProduct = async (req: Request, res: Response) => {
     if (tags) product.tags = tags;
     if (notes !== undefined) product.notes = notes;
     if (isSold !== undefined) product.isSold = isSold;
+    if (price !== undefined) product.price = price;
 
     await product.save();
     await product.populate("category source");

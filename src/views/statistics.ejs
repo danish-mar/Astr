@@ -1,0 +1,178 @@
+<div x-data="statisticsData" x-init="init()">
+    <!-- Page Header -->
+    <div class="mb-6 animate__animated animate__fadeInDown">
+        <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+            <div>
+                <h1 class="text-3xl font-bold text-gray-800 mb-2">
+                    <i class="fas fa-chart-bar text-primary-500"></i>
+                    Statistics
+                </h1>
+                <p class="text-gray-600">Detailed reports and analytics</p>
+            </div>
+
+            <!-- Date Range Picker (Simplified for now) -->
+            <div class="flex items-center space-x-2 bg-white rounded-lg shadow-sm p-1 border border-gray-200">
+                <button @click="setRange('7d')"
+                    :class="range === '7d' ? 'bg-primary-50 text-primary-600' : 'text-gray-600 hover:bg-gray-50'"
+                    class="px-3 py-1.5 rounded-md text-sm font-medium transition-colors">7 Days</button>
+                <button @click="setRange('30d')"
+                    :class="range === '30d' ? 'bg-primary-50 text-primary-600' : 'text-gray-600 hover:bg-gray-50'"
+                    class="px-3 py-1.5 rounded-md text-sm font-medium transition-colors">30 Days</button>
+                <button @click="setRange('90d')"
+                    :class="range === '90d' ? 'bg-primary-50 text-primary-600' : 'text-gray-600 hover:bg-gray-50'"
+                    class="px-3 py-1.5 rounded-md text-sm font-medium transition-colors">3 Months</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Summary Cards -->
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+        <div class="bg-white/80 backdrop-blur-md rounded-2xl p-6 shadow-lg animate__animated animate__fadeInUp"
+            style="animation-delay: 0.1s">
+            <div class="flex items-center justify-between mb-4">
+                <div
+                    class="w-12 h-12 bg-gradient-to-br from-green-100 to-green-200 rounded-xl flex items-center justify-center">
+                    <i class="fas fa-indian-rupee-sign text-green-600 text-xl"></i>
+                </div>
+                <span class="text-sm text-gray-500">Total Revenue</span>
+            </div>
+            <h3 class="text-2xl font-bold text-gray-800 mb-1">₹<span x-text="formatNumber(stats.totalRevenue)">0</span>
+            </h3>
+            <p class="text-sm text-green-600 flex items-center">
+                <i class="fas fa-arrow-up mr-1"></i>
+                <span x-text="stats.revenueGrowth">0</span>% vs last period
+            </p>
+        </div>
+
+        <div class="bg-white/80 backdrop-blur-md rounded-2xl p-6 shadow-lg animate__animated animate__fadeInUp"
+            style="animation-delay: 0.2s">
+            <div class="flex items-center justify-between mb-4">
+                <div
+                    class="w-12 h-12 bg-gradient-to-br from-blue-100 to-blue-200 rounded-xl flex items-center justify-center">
+                    <i class="fas fa-ticket text-blue-600 text-xl"></i>
+                </div>
+                <span class="text-sm text-gray-500">Tickets Closed</span>
+            </div>
+            <h3 class="text-2xl font-bold text-gray-800 mb-1" x-text="stats.ticketsClosed">0</h3>
+            <p class="text-sm text-gray-500">In selected period</p>
+        </div>
+
+        <div class="bg-white/80 backdrop-blur-md rounded-2xl p-6 shadow-lg animate__animated animate__fadeInUp"
+            style="animation-delay: 0.3s">
+            <div class="flex items-center justify-between mb-4">
+                <div
+                    class="w-12 h-12 bg-gradient-to-br from-purple-100 to-purple-200 rounded-xl flex items-center justify-center">
+                    <i class="fas fa-box text-purple-600 text-xl"></i>
+                </div>
+                <span class="text-sm text-gray-500">Products Sold</span>
+            </div>
+            <h3 class="text-2xl font-bold text-gray-800 mb-1" x-text="stats.productsSold">0</h3>
+            <p class="text-sm text-gray-500">In selected period</p>
+        </div>
+
+        <div class="bg-white/80 backdrop-blur-md rounded-2xl p-6 shadow-lg animate__animated animate__fadeInUp"
+            style="animation-delay: 0.4s">
+            <div class="flex items-center justify-between mb-4">
+                <div
+                    class="w-12 h-12 bg-gradient-to-br from-amber-100 to-amber-200 rounded-xl flex items-center justify-center">
+                    <i class="fas fa-star text-amber-600 text-xl"></i>
+                </div>
+                <span class="text-sm text-gray-500">Avg. Ticket Value</span>
+            </div>
+            <h3 class="text-2xl font-bold text-gray-800 mb-1">₹<span
+                    x-text="formatNumber(stats.avgTicketValue)">0</span></h3>
+            <p class="text-sm text-gray-500">Per completed ticket</p>
+        </div>
+    </div>
+
+    <!-- Charts Row 1 -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+        <!-- Revenue Trend -->
+        <div class="bg-white/80 backdrop-blur-md rounded-2xl p-6 shadow-lg animate__animated animate__fadeInUp"
+            style="animation-delay: 0.5s">
+            <h3 class="text-lg font-semibold text-gray-800 mb-4">Revenue Trend</h3>
+            <div class="h-80">
+                <canvas id="detailedRevenueChart"></canvas>
+            </div>
+        </div>
+
+        <!-- Category Distribution -->
+        <div class="bg-white/80 backdrop-blur-md rounded-2xl p-6 shadow-lg animate__animated animate__fadeInUp"
+            style="animation-delay: 0.6s">
+            <h3 class="text-lg font-semibold text-gray-800 mb-4">Sales by Category</h3>
+            <div class="h-80 flex justify-center">
+                <canvas id="categoryChart"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <!-- Top Performers & Products -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+        <!-- Top Products -->
+        <div class="bg-white/80 backdrop-blur-md rounded-2xl p-6 shadow-lg animate__animated animate__fadeInUp"
+            style="animation-delay: 0.7s">
+            <h3 class="text-lg font-semibold text-gray-800 mb-4">Top Selling Products</h3>
+            <div class="overflow-x-auto">
+                <table class="w-full">
+                    <thead class="bg-gray-50 rounded-lg">
+                        <tr>
+                            <th class="px-4 py-2 text-left text-xs font-semibold text-gray-600 uppercase">Product</th>
+                            <th class="px-4 py-2 text-right text-xs font-semibold text-gray-600 uppercase">Sold</th>
+                            <th class="px-4 py-2 text-right text-xs font-semibold text-gray-600 uppercase">Revenue</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-gray-100">
+                        <template x-for="product in topProducts" :key="product._id">
+                            <tr class="hover:bg-gray-50 transition-colors">
+                                <td class="px-4 py-3">
+                                    <p class="font-medium text-gray-800" x-text="product.name"></p>
+                                    <p class="text-xs text-gray-500" x-text="product.category"></p>
+                                </td>
+                                <td class="px-4 py-3 text-right font-medium text-gray-700" x-text="product.count"></td>
+                                <td class="px-4 py-3 text-right text-gray-600">₹<span
+                                        x-text="formatNumber(product.revenue)"></span></td>
+                            </tr>
+                        </template>
+                        <template x-if="topProducts.length === 0">
+                            <tr>
+                                <td colspan="3" class="px-4 py-8 text-center text-gray-500">No data available</td>
+                            </tr>
+                        </template>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Top Employees -->
+        <div class="bg-white/80 backdrop-blur-md rounded-2xl p-6 shadow-lg animate__animated animate__fadeInUp"
+            style="animation-delay: 0.8s">
+            <h3 class="text-lg font-semibold text-gray-800 mb-4">Top Technicians</h3>
+            <div class="space-y-4">
+                <template x-for="(employee, index) in topEmployees" :key="employee._id">
+                    <div
+                        class="flex items-center justify-between p-3 rounded-xl hover:bg-gray-50 transition-colors border border-transparent hover:border-gray-100">
+                        <div class="flex items-center space-x-4">
+                            <div
+                                class="w-8 h-8 rounded-full bg-primary-100 text-primary-600 flex items-center justify-center font-bold text-sm">
+                                <span x-text="index + 1"></span>
+                            </div>
+                            <div>
+                                <p class="font-medium text-gray-800" x-text="employee.name"></p>
+                                <p class="text-xs text-gray-500" x-text="employee.position"></p>
+                            </div>
+                        </div>
+                        <div class="text-right">
+                            <p class="font-bold text-gray-800" x-text="employee.ticketsClosed"></p>
+                            <p class="text-xs text-gray-500">Tickets Closed</p>
+                        </div>
+                    </div>
+                </template>
+                <template x-if="topEmployees.length === 0">
+                    <p class="text-center text-gray-500 py-8">No data available</p>
+                </template>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="/js/pages/statistics.js"></script>

@@ -4,6 +4,9 @@ import dotenv from "dotenv";
 import expressLayouts from "express-ejs-layouts";
 import { requestLogger, errorHandler, notFoundHandler } from "./middleware";
 import v1Routes from "./routes/v1";
+import serviceTicketRoutes from "./routes/serviceTicketRoutes";
+import shopSettingsRoutes from "./routes/shopSettingsRoutes";
+import statisticsRoutes from "./routes/statisticsRoutes";
 
 dotenv.config();
 
@@ -27,6 +30,7 @@ app.set("layout", "layouts/main");
 app.set("layout extractScripts", true);
 app.set("layout extractStyles", true);
 
+// API Routes (v1)
 // API Routes (v1)
 app.use("/api/v1", v1Routes);
 
@@ -54,9 +58,17 @@ app.get("/products", (req: Request, res: Response) => {
   res.render("products", { title: "Astr - Products" });
 });
 
+app.get("/products/add", (req: Request, res: Response) => {
+  res.render("products", { title: "Astr - Add Product" });
+});
+
 // Service Tickets
 app.get("/service-tickets", (req: Request, res: Response) => {
   res.render("service-tickets", { title: "Astr - Service Tickets" });
+});
+
+app.get("/service-tickets/add", (req: Request, res: Response) => {
+  res.render("service-tickets", { title: "Astr - Add Service Ticket" });
 });
 
 // Contacts
@@ -64,9 +76,22 @@ app.get("/contacts", (req: Request, res: Response) => {
   res.render("contacts", { title: "Astr - Contacts" });
 });
 
+app.get("/contacts/add", (req: Request, res: Response) => {
+  res.render("contacts", { title: "Astr - Add Contact" });
+});
+
 // Categories
 app.get("/categories", (req: Request, res: Response) => {
   res.render("categories", { title: "Astr - Categories" });
+});
+
+app.get("/categories/add", (req: Request, res: Response) => {
+  res.render("categories", { title: "Astr - Add Category" });
+});
+
+// Statistics
+app.get("/statistics", (req: Request, res: Response) => {
+  res.render("statistics", { title: "Astr - Statistics" });
 });
 
 // Settings
@@ -80,7 +105,7 @@ app.get("/about", (req: Request, res: Response) => {
 });
 
 // 404 handler for API routes
-// app.use("/api/*", notFoundHandler);
+app.use("/api", notFoundHandler);
 
 // 404 handler for web routes
 app.use((req: Request, res: Response) => {
