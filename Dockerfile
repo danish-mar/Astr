@@ -24,14 +24,16 @@ WORKDIR /app
 COPY package*.json ./
 
 # Install production dependencies only
-RUN npm ci --only=production
+RUN npm ci --omit=dev
 
-# Copy built files from builder
+# Copy built JavaScript files from builder
 COPY --from=builder /app/dist ./dist
 
-# Copy public assets and views
-COPY public ./public
-COPY src/views ./src/views
+# Copy views to dist/views (app expects views at __dirname/views which is dist/views)
+COPY --from=builder /app/src/views ./dist/views
+
+# Copy public assets to root (app expects public at __dirname/../public which is /app/public)
+COPY --from=builder /app/public ./public
 
 # Expose port
 EXPOSE 3000
