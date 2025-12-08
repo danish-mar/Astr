@@ -471,9 +471,6 @@
 <script>
   function productsData() {
     return {
-      // Inherit parent scope methods
-      ...this.$parent,
-      
       // Component-specific data
       products: [],
       categories: [],
@@ -506,6 +503,23 @@
         contactType: ''
       },
       
+      // Get parent data
+      get token() {
+        return localStorage.getItem('astr_token');
+      },
+      
+      get user() {
+        const userStr = localStorage.getItem('astr_user');
+        if (userStr) {
+          try {
+            return JSON.parse(userStr);
+          } catch (e) {
+            return null;
+          }
+        }
+        return null;
+      },
+      
       async init() {
         // Check authentication
         if (!this.token) {
@@ -518,6 +532,38 @@
           this.loadCategories(),
           this.loadContacts()
         ]);
+      },
+      
+      // API helper method
+      async api(endpoint, method = 'GET', data = null) {
+        const config = {
+          method,
+          url: `/api/v1${endpoint}`,
+          headers: {
+            'Content-Type': 'application/json',
+          }
+        };
+        
+        if (this.token) {
+          config.headers['Authorization'] = `Bearer ${this.token}`;
+        }
+        
+        if (data) {
+          config.data = data;
+        }
+        
+        try {
+          const response = await axios(config);
+          return response.data;
+        } catch (error) {
+          console.error('API Error:', error);
+          if (error.response?.status === 401) {
+            localStorage.removeItem('astr_token');
+            localStorage.removeItem('astr_user');
+            window.location.href = '/login';
+          }
+          throw error;
+        }
       },
       
       async loadProducts() {

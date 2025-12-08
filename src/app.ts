@@ -30,29 +30,61 @@ app.set("layout extractStyles", true);
 // API Routes (v1)
 app.use("/api/v1", v1Routes);
 
+// ============================================
 // Frontend Routes
-app.get("/", (req: Request, res: Response) => {
-  res.render("index", { title: "Astr - Home" });
+// ============================================
+
+// Login route (no layout)
+app.get("/login", (req: Request, res: Response) => {
+  res.render("login", { layout: false });
 });
 
-app.get("/about", (req: Request, res: Response) => {
-  res.render("about", { title: "Astr - About" });
-});
-
-// ejs routes :
-// Add after existing routes
-app.get("/dashboard", (req: Request, res: Response) => {
-  res.render("dashboard", { title: "Astr - Dashboard" });
-});
-
-// Update home route to redirect to dashboard
+// Root route - redirect to dashboard
 app.get("/", (req: Request, res: Response) => {
   res.redirect("/dashboard");
 });
 
-// Add after dashboard route
+// Dashboard
+app.get("/dashboard", (req: Request, res: Response) => {
+  res.render("dashboard", { title: "Astr - Dashboard" });
+});
+
+// Products
 app.get("/products", (req: Request, res: Response) => {
   res.render("products", { title: "Astr - Products" });
+});
+
+// Service Tickets
+app.get("/service-tickets", (req: Request, res: Response) => {
+  res.render("service-tickets", { title: "Astr - Service Tickets" });
+});
+
+// Contacts
+app.get("/contacts", (req: Request, res: Response) => {
+  res.render("contacts", { title: "Astr - Contacts" });
+});
+
+// Categories
+app.get("/categories", (req: Request, res: Response) => {
+  res.render("categories", { title: "Astr - Categories" });
+});
+
+// Settings
+app.get("/settings", (req: Request, res: Response) => {
+  res.render("settings", { title: "Astr - Settings" });
+});
+
+// About (legacy route)
+app.get("/about", (req: Request, res: Response) => {
+  res.render("about", { title: "Astr - About" });
+});
+
+// 404 handler for API routes
+// app.use("/api/*", notFoundHandler);
+
+// 404 handler for web routes
+app.use((req: Request, res: Response) => {
+  res.status(404).render("404", { title: "404 - Not Found", layout: false });
 });
 
 // Error handling middleware
