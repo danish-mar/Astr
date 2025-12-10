@@ -210,6 +210,111 @@
             </div>
         </div>
     </div>
+
+    <!-- Success Modal - Ticket Created -->
+    <div x-show="showSuccessModal" x-transition:enter="transition ease-out duration-300"
+        x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100"
+        x-transition:leave="transition ease-in duration-200" x-transition:leave-start="opacity-100"
+        x-transition:leave-end="opacity-0"
+        class="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4"
+        style="display: none;">
+
+        <div x-show="showSuccessModal" x-transition:enter="transition ease-out duration-300 transform"
+            x-transition:enter-start="opacity-0 scale-95" x-transition:enter-end="opacity-100 scale-100"
+            x-transition:leave="transition ease-in duration-200 transform"
+            x-transition:leave-start="opacity-100 scale-100" x-transition:leave-end="opacity-0 scale-95"
+            class="bg-white rounded-3xl shadow-2xl max-w-md w-full overflow-hidden">
+
+            <!-- Success Header -->
+            <div class="bg-gradient-to-r from-green-500 to-green-600 p-6 text-center">
+                <div class="w-16 h-16 bg-white rounded-full flex items-center justify-center mx-auto mb-4">
+                    <i class="fas fa-check text-green-500 text-3xl"></i>
+                </div>
+                <h3 class="text-2xl font-bold text-white">Ticket Created!</h3>
+                <p class="text-green-100 mt-2">Service ticket has been created successfully</p>
+            </div>
+
+            <!-- Ticket Number Display -->
+            <div class="p-8">
+                <div
+                    class="bg-gradient-to-br from-primary-50 to-blue-50 rounded-2xl p-6 border-2 border-primary-200 mb-6">
+                    <p class="text-sm font-medium text-gray-600 text-center mb-2">Ticket Number</p>
+                    <div class="text-center">
+                        <p class="text-5xl font-bold text-primary-600 tracking-wider mb-4"
+                            x-text="'#' + (createdTicket?.ticketNumber || '')"></p>
+                        <div class="flex items-center justify-center space-x-2">
+                            <button @click="copyTicketNumber()"
+                                class="px-4 py-2 bg-white text-primary-600 rounded-lg hover:bg-primary-50 transition-all flex items-center text-sm font-medium shadow-sm">
+                                <i class="fas fa-copy mr-2"></i>
+                                Copy Number
+                            </button>
+                            <button @click="printTicket()"
+                                class="px-4 py-2 bg-white text-gray-600 rounded-lg hover:bg-gray-50 transition-all flex items-center text-sm font-medium shadow-sm">
+                                <i class="fas fa-print mr-2"></i>
+                                Print
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Instructions -->
+                <div class="bg-yellow-50 border border-yellow-200 rounded-xl p-4 mb-6">
+                    <div class="flex items-start">
+                        <i class="fas fa-lightbulb text-yellow-600 mt-1 mr-3"></i>
+                        <div>
+                            <p class="text-sm font-semibold text-yellow-900 mb-1">Important!</p>
+                            <p class="text-xs text-yellow-800">Write this ticket number on a sticker and attach it to
+                                the customer's device for easy identification.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Customer Info -->
+                <div class="bg-gray-50 rounded-xl p-4 mb-6">
+                    <p class="text-xs font-medium text-gray-500 mb-2">Customer</p>
+                    <p class="text-sm font-semibold text-gray-800" x-text="createdTicket?.customer?.name"></p>
+                    <p class="text-xs text-gray-600" x-text="createdTicket?.customer?.phone"></p>
+                </div>
+
+                <!-- Actions -->
+                <div class="flex flex-col space-y-2">
+                    <button @click="goToTickets()"
+                        class="w-full px-6 py-3 bg-primary-500 text-white rounded-xl hover:bg-primary-600 font-semibold transition-all flex items-center justify-center">
+                        <i class="fas fa-list mr-2"></i>
+                        View All Tickets
+                    </button>
+                    <button @click="showSuccessModal = false; window.location.reload()"
+                        class="w-full px-6 py-3 bg-gray-100 text-gray-700 rounded-xl hover:bg-gray-200 font-medium transition-all flex items-center justify-center">
+                        <i class="fas fa-plus mr-2"></i>
+                        Create Another Ticket
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
 
 <script src="/js/pages/service-tickets-add.js"></script>
+
+<!-- Print Styles -->
+<style media="print">
+    @page {
+        margin: 0;
+    }
+
+    body * {
+        visibility: hidden;
+    }
+
+    [x-show="showSuccessModal"] * {
+        visibility: visible;
+    }
+
+    [x-show="showSuccessModal"] {
+        position: fixed;
+        left: 0;
+        top: 0;
+        width: 100%;
+        background: white;
+    }
+</style>

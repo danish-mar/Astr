@@ -33,6 +33,8 @@
                 phone: '',
                 contactType: ''
             },
+            showViewModal: false,
+            viewData: {},
 
             // Get parent data
             get token() {
@@ -212,10 +214,27 @@
                 });
             },
 
-            viewProduct(product) {
-                // TODO: Implement product detail view
-                console.log('View product:', product);
-                window.showNotification('Product detail view - Coming soon!', 'info');
+            async viewProduct(product) {
+                try {
+                    // Fetch fresh product data with populated fields
+                    const response = await window.api.get(`/products/${product._id}`);
+                    this.viewData = response.data;
+                    this.showViewModal = true;
+                } catch (error) {
+                    console.error('Error loading product details:', error);
+                    window.showNotification('Error loading product details. Please try again.', 'error');
+                }
+            },
+
+            closeViewModal() {
+                this.showViewModal = false;
+                this.viewData = {};
+            },
+
+            editProductFromView() {
+                // Close view modal and open edit modal with the current product
+                this.closeViewModal();
+                this.editProduct(this.viewData);
             },
 
             closeModal() {

@@ -113,6 +113,7 @@ export const createServiceTicket = async (req: Request, res: Response) => {
     const {
       customer,
       deviceDetails,
+      status,
       assignedTechnician,
       serviceCharge,
       notes,
@@ -151,6 +152,7 @@ export const createServiceTicket = async (req: Request, res: Response) => {
     const ticket = new ServiceTicket({
       customer,
       deviceDetails,
+      status: status || "Pending", // Use provided status or default to Pending
       assignedTechnician,
       serviceCharge: serviceCharge || 0,
       notes,

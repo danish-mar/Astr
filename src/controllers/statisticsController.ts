@@ -19,11 +19,16 @@ export const getDashboardStats = async (req: Request, res: Response) => {
             status: "Completed",
         });
 
-        // 3. Revenue (Sum of service charges for completed/delivered tickets)
-        const revenueResult = await ServiceTicket.aggregate([
+        // 3. Revenue (Last 7 Days)
+        const sevenDaysAgo = new Date();
+        sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+
+        // Service Ticket Revenue (Sum of service charges for completed/delivered tickets)
+        const serviceRevenueResult = await ServiceTicket.aggregate([
             {
                 $match: {
                     status: { $in: ["Completed", "Delivered"] },
+                    updatedAt: { $gte: sevenDaysAgo },
                 },
             },
             {
@@ -33,7 +38,27 @@ export const getDashboardStats = async (req: Request, res: Response) => {
                 },
             },
         ]);
-        const revenue = revenueResult.length > 0 ? revenueResult[0].total : 0;
+        const serviceRevenue = serviceRevenueResult.length > 0 ? serviceRevenueResult[0].total : 0;
+
+        // Product Sales Revenue (Last 7 Days)
+        const productRevenueResult = await Product.aggregate([
+            {
+                $match: {
+                    isSold: true,
+                    updatedAt: { $gte: sevenDaysAgo },
+                },
+            },
+            {
+                $group: {
+                    _id: null,
+                    total: { $sum: "$price" },
+                },
+            },
+        ]);
+        const productRevenue = productRevenueResult.length > 0 ? productRevenueResult[0].total : 0;
+
+        // Total Revenue
+        const revenue = productRevenue + serviceRevenue;
 
         // 4. Recent Activity
         const recentProducts = await Product.find()
@@ -56,9 +81,6 @@ export const getDashboardStats = async (req: Request, res: Response) => {
         ]);
 
         // 6. Chart Data: Revenue Last 7 Days
-        const sevenDaysAgo = new Date();
-        sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
-
         const revenueOverTime = await ServiceTicket.aggregate([
             {
                 $match: {
@@ -88,6 +110,8 @@ export const getDashboardStats = async (req: Request, res: Response) => {
                     completed: completedTickets,
                 },
                 revenue,
+                productRevenue,
+                serviceRevenue,
             },
             recentProducts,
             recentTickets,
@@ -164,6 +188,30 @@ export const getDetailedStats = async (req: Request, res: Response) => {
         } else if (totalRevenue > 0) {
             revenueGrowth = 100;
         }
+
+        // Product Sales Revenue
+        console.log("Calculating product revenue...");
+        const productRevenueResult = await Product.aggregate([
+            {
+                $match: {
+                    isSold: true,
+                    updatedAt: { $gte: startDate }
+                }
+            },
+            {
+                $group: {
+                    _id: null,
+                    total: { $sum: "$price" }
+                }
+            }
+        ]);
+        const productRevenue = productRevenueResult.length > 0 ? productRevenueResult[0].total : 0;
+
+        // Service Ticket Revenue (already calculated as totalRevenue)
+        const serviceRevenue = totalRevenue;
+
+        // Combined Total Revenue
+        const combinedTotalRevenue = productRevenue + serviceRevenue;
 
         // Tickets Closed
         const ticketsClosed = await ServiceTicket.countDocuments({
@@ -292,7 +340,9 @@ export const getDetailedStats = async (req: Request, res: Response) => {
 
         return sendSuccess(res, {
             stats: {
-                totalRevenue,
+                totalRevenue: combinedTotalRevenue,
+                productRevenue,
+                serviceRevenue,
                 revenueGrowth,
                 ticketsClosed,
                 productsSold,

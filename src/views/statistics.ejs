@@ -1,4 +1,4 @@
-<div x-data="statisticsData" x-init="init()">
+<div x-data="statisticsData">
     <!-- Page Header -->
     <div class="mb-6 animate__animated animate__fadeInDown">
         <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
@@ -38,10 +38,48 @@
             </div>
             <h3 class="text-2xl font-bold text-gray-800 mb-1">₹<span x-text="formatNumber(stats.totalRevenue)">0</span>
             </h3>
-            <p class="text-sm text-green-600 flex items-center">
+            <p class="text-sm text-green-600 flex items-center mb-4">
                 <i class="fas fa-arrow-up mr-1"></i>
                 <span x-text="stats.revenueGrowth">0</span>% vs last period
             </p>
+
+            <!-- Revenue Breakdown -->
+            <div class="space-y-2 pt-3 border-t border-gray-200">
+                <div class="flex items-center justify-between text-xs">
+                    <div class="flex items-center">
+                        <div class="w-2 h-2 rounded-full bg-blue-500 mr-2"></div>
+                        <span class="text-gray-600">Products</span>
+                    </div>
+                    <div class="flex items-center space-x-2">
+                        <span class="font-semibold text-gray-800">₹<span
+                                x-text="formatNumber(stats.productRevenue || 0)">0</span></span>
+                        <span class="text-[10px] text-gray-500"
+                            x-text="stats.totalRevenue > 0 ? '(' + Math.round((stats.productRevenue / stats.totalRevenue) * 100) + '%)' : ''"></span>
+                    </div>
+                </div>
+                <div class="flex items-center justify-between text-xs">
+                    <div class="flex items-center">
+                        <div class="w-2 h-2 rounded-full bg-purple-500 mr-2"></div>
+                        <span class="text-gray-600">Services</span>
+                    </div>
+                    <div class="flex items-center space-x-2">
+                        <span class="font-semibold text-gray-800">₹<span
+                                x-text="formatNumber(stats.serviceRevenue || 0)">0</span></span>
+                        <span class="text-[10px] text-gray-500"
+                            x-text="stats.totalRevenue > 0 ? '(' + Math.round((stats.serviceRevenue / stats.totalRevenue) * 100) + '%)' : ''"></span>
+                    </div>
+                </div>
+
+                <!-- Visual Progress Bar -->
+                <div class="flex h-2 rounded-full overflow-hidden mt-2" x-show="stats.totalRevenue > 0">
+                    <div class="bg-blue-500 transition-all duration-500"
+                        :style="`width: ${stats.productRevenue && stats.totalRevenue ? (stats.productRevenue / stats.totalRevenue * 100) : 0}%`">
+                    </div>
+                    <div class="bg-purple-500 transition-all duration-500"
+                        :style="`width: ${stats.serviceRevenue && stats.totalRevenue ? (stats.serviceRevenue / stats.totalRevenue * 100) : 0}%`">
+                    </div>
+                </div>
+            </div>
         </div>
 
         <div class="bg-white/80 backdrop-blur-md rounded-2xl p-6 shadow-lg animate__animated animate__fadeInUp"
@@ -53,8 +91,10 @@
                 </div>
                 <span class="text-sm text-gray-500">Tickets Closed</span>
             </div>
-            <h3 class="text-2xl font-bold text-gray-800 mb-1" x-text="stats.ticketsClosed">0</h3>
-            <p class="text-sm text-gray-500">In selected period</p>
+            <h3 class="text-2xl font-bold text-gray-800 mb-1"><span x-text="stats.ticketsClosed">0</span></h3>
+            <p class="text-sm text-gray-500">
+                Avg Value: ₹<span x-text="formatNumber(stats.avgTicketValue)">0</span>
+            </p>
         </div>
 
         <div class="bg-white/80 backdrop-blur-md rounded-2xl p-6 shadow-lg animate__animated animate__fadeInUp"

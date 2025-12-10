@@ -18,6 +18,10 @@
             saving: false,
             errors: {},
 
+            // Success modal
+            showSuccessModal: false,
+            createdTicket: null,
+
             // Quick Add Customer
             showQuickAddModal: false,
             quickCustomer: {
@@ -127,15 +131,29 @@
 
                 this.saving = true;
                 try {
-                    await window.api.post('/service-tickets', this.formData);
-                    window.showNotification('Ticket created successfully');
-                    setTimeout(() => {
-                        window.location.href = '/service-tickets';
-                    }, 1000);
+                    const response = await window.api.post('/service-tickets', this.formData);
+                    this.createdTicket = response.data;
+                    this.showSuccessModal = true;
+                    this.saving = false;
                 } catch (error) {
                     window.showNotification('Error creating ticket: ' + (error.response?.data?.message || error.message), 'error');
                     this.saving = false;
                 }
+            },
+
+            copyTicketNumber() {
+                if (this.createdTicket?.ticketNumber) {
+                    navigator.clipboard.writeText(this.createdTicket.ticketNumber);
+                    window.showNotification('Ticket number copied!', 'success');
+                }
+            },
+
+            printTicket() {
+                window.print();
+            },
+
+            goToTickets() {
+                window.location.href = '/service-tickets';
             }
         }));
     };
