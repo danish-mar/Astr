@@ -35,6 +35,15 @@
             },
             showViewModal: false,
             viewData: {},
+            // AI Ad Generation
+            showAdsModal: false,
+            generatingAd: false,
+            generatedAds: {
+                short: '',
+                medium: '',
+                long: ''
+            },
+            copiedMessage: '',
 
             // Get parent data
             get token() {
@@ -240,6 +249,47 @@
             closeModal() {
                 this.showModal = false;
                 this.showQuickAddContact = false;
+            },
+
+            // AI Ad Generation Functions
+            async generateAd(productId) {
+                this.generatingAd = true;
+                try {
+                    const response = await window.api.post('/ai/generate-product-ad', { productId });
+                    this.generatedAds = response.data.messages;
+                    this.showAdsModal = true;
+                } catch (error) {
+                    console.error('Error generating ad:', error);
+                    if (error.response?.data?.code === 'AI_NOT_CONFIGURED') {
+                        window.showNotification('AI is not configured. Please set up AI in Settings first.', 'error');
+                    } else if (error.response?.data?.code === 'INVALID_API_KEY') {
+                        window.showNotification('Invalid API key. Please check your AI settings.', 'error');
+                    } else {
+                        window.showNotification('Failed to generate ad: ' + (error.response?.data?.message || error.message), 'error');
+                    }
+                } finally {
+                    this.generatingAd = false;
+                }
+            },
+
+            closeAdsModal() {
+                this.showAdsModal = false;
+                this.copiedMessage = '';
+            },
+
+            async copyToClipboard(text, messageType) {
+                try {
+                    await navigator.clipboard.writeText(text);
+                    this.copiedMessage = messageType;
+                    window.showNotification('Message copied to clipboard!', 'success');
+                    // Reset after 2 seconds
+                    setTimeout(() => {
+                        this.copiedMessage = '';
+                    }, 2000);
+                } catch (error) {
+                    console.error('Failed to copy:', error);
+                    window.showNotification('Failed to copy message', 'error');
+                }
             }
         }));
     };

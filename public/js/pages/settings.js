@@ -6,7 +6,10 @@ document.addEventListener('alpine:init', () => {
             themeColor: '#3B82F6',
             phone: '',
             email: '',
-            address: ''
+            address: '',
+            aiProvider: 'none',
+            aiApiKey: '',
+            aiEnabled: false
         },
         users: [],
         showUserModal: false,
@@ -20,6 +23,12 @@ document.addEventListener('alpine:init', () => {
         },
         saving: false,
         loading: false,
+        // AI Settings
+        showApiKey: false,
+        testingConnection: false,
+        connectionTestResult: false,
+        connectionTestSuccess: false,
+        connectionTestMessage: '',
 
         async init() {
             await this.loadSettings();
@@ -142,6 +151,23 @@ document.addEventListener('alpine:init', () => {
                     window.showNotification('Error deleting user: ' + (error.response?.data?.message || error.message), 'error');
                 }
             });
+        },
+
+        async testAIConnection() {
+            this.testingConnection = true;
+            this.connectionTestResult = false;
+            try {
+                const response = await window.api.post('/ai/test-connection');
+                this.connectionTestSuccess = true;
+                this.connectionTestMessage = response.message || 'Connection successful!';
+                this.connectionTestResult = true;
+            } catch (error) {
+                this.connectionTestSuccess = false;
+                this.connectionTestMessage = error.response?.data?.message || 'Connection failed. Please check your API key.';
+                this.connectionTestResult = true;
+            } finally {
+                this.testingConnection = false;
+            }
         }
     }));
 });

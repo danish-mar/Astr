@@ -9,6 +9,10 @@ export interface IShopSettings extends Document {
   email?: string;
   logo?: string;
   themeColor?: string;
+  // AI Configuration
+  aiProvider?: 'gemini' | 'openai' | 'none';
+  aiApiKey?: string; // Encrypted
+  aiEnabled?: boolean;
   updatedAt: Date;
 }
 
@@ -59,6 +63,21 @@ const shopSettingsSchema = new Schema<IShopSettings>(
       type: String,
       default: "#3B82F6", // blue-500
       trim: true,
+    },
+    // AI Configuration
+    aiProvider: {
+      type: String,
+      enum: ['gemini', 'openai', 'none'],
+      default: 'none',
+    },
+    aiApiKey: {
+      type: String,
+      trim: true,
+      select: false, // Don't return by default for security
+    },
+    aiEnabled: {
+      type: Boolean,
+      default: false,
     },
   },
   {

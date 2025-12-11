@@ -29,6 +29,16 @@
                         </div>
                         <span class="font-semibold">Team Members</span>
                     </button>
+
+                    <button @click="activeTab = 'ai'"
+                        class="w-full flex items-center space-x-3 px-4 py-3 rounded-2xl transition-all duration-200"
+                        :class="activeTab === 'ai' ? 'bg-primary-50 text-primary-600 shadow-sm' : 'text-gray-500 hover:bg-gray-50 hover:text-gray-900'">
+                        <div class="w-8 h-8 rounded-xl flex items-center justify-center"
+                            :class="activeTab === 'ai' ? 'bg-white text-primary-500' : 'bg-gray-100 text-gray-400'">
+                            <i class="fas fa-robot text-sm"></i>
+                        </div>
+                        <span class="font-semibold">AI Settings</span>
+                    </button>
                 </nav>
             </div>
         </div>
@@ -179,6 +189,111 @@
                             </tbody>
                         </table>
                     </div>
+                </div>
+            </div>
+
+            <!-- AI Settings Tab -->
+            <div x-show="activeTab === 'ai'" class="space-y-6 animate__animated animate__fadeIn">
+                <div class="glass rounded-[2rem] p-8 shadow-ios">
+                    <div class="flex items-center justify-between mb-8">
+                        <div>
+                            <h2 class="text-xl font-bold text-gray-900">AI Configuration</h2>
+                            <p class="text-gray-500 text-sm mt-1">Configure AI provider for smart features</p>
+                        </div>
+                        <div
+                            class="w-12 h-12 bg-purple-50 rounded-2xl flex items-center justify-center text-purple-500">
+                            <i class="fas fa-robot text-xl"></i>
+                        </div>
+                    </div>
+
+                    <form @submit.prevent="saveSettings()" class="space-y-8">
+                        <!-- Enable AI Toggle -->
+                        <div class="flex items-center justify-between p-4 bg-gray-50 rounded-xl">
+                            <div>
+                                <h3 class="font-semibold text-gray-900">Enable AI Features</h3>
+                                <p class="text-sm text-gray-500 mt-1">Turn on AI-powered marketing and automation</p>
+                            </div>
+                            <label class="relative inline-flex items-center cursor-pointer">
+                                <input type="checkbox" x-model="settings.aiEnabled" class="sr-only peer">
+                                <div
+                                    class="w-14 h-7 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-primary-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-[4px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-6 after:w-6 after:transition-all peer-checked:bg-primary-500">
+                                </div>
+                            </label>
+                        </div>
+
+                        <!-- AI Provider Selection -->
+                        <div class="space-y-2">
+                            <label class="text-sm font-semibold text-gray-700 ml-1">AI Provider</label>
+                            <select x-model="settings.aiProvider" required
+                                class="block w-full px-4 py-3 bg-gray-50 border-none rounded-xl text-gray-900 focus:ring-2 focus:ring-primary-500/50 focus:bg-white transition-all">
+                                <option value="none">None (Disabled)</option>
+                                <option value="gemini">Google Gemini (Recommended - Free Tier)</option>
+                                <option value="openai">OpenAI GPT (Paid)</option>
+                            </select>
+                            <p class="text-xs text-gray-500 ml-1 mt-1">
+                                <i class="fas fa-info-circle mr-1"></i>
+                                Gemini offers a generous free tier, perfect for getting started
+                            </p>
+                        </div>
+
+                        <!-- API Key Input -->
+                        <div class="space-y-2" x-show="settings.aiProvider !== 'none'">
+                            <label class="text-sm font-semibold text-gray-700 ml-1">API Key</label>
+                            <div class="relative">
+                                <input :type="showApiKey ? 'text' : 'password'" x-model="settings.aiApiKey"
+                                    :required="settings.aiProvider !== 'none'" placeholder="Enter your API key"
+                                    class="block w-full px-4 py-3 pr-12 bg-gray-50 border-none rounded-xl text-gray-900 placeholder-gray-400 focus:ring-2 focus:ring-primary-500/50 focus:bg-white transition-all">
+                                <button type="button" @click="showApiKey = !showApiKey"
+                                    class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
+                                    <i :class="showApiKey ? 'fas fa-eye-slash' : 'fas fa-eye'"></i>
+                                </button>
+                            </div>
+                            <div class="flex items-start space-x-2 mt-2">
+                                <i class="fas fa-lightbulb text-yellow-500 mt-0.5"></i>
+                                <div class="text-xs text-gray-600">
+                                    <p class="font-semibold mb-1">How to get your API key:</p>
+                                    <ul class="list-disc list-inside space-y-1 ml-2">
+                                        <li x-show="settings.aiProvider === 'gemini'">
+                                            Visit <a href="https://makersuite.google.com/app/apikey" target="_blank"
+                                                class="text-primary-600 hover:underline">Google AI Studio</a> and create
+                                            a free API key
+                                        </li>
+                                        <li x-show="settings.aiProvider === 'openai'">
+                                            Visit <a href="https://platform.openai.com/api-keys" target="_blank"
+                                                class="text-primary-600 hover:underline">OpenAI Platform</a> and create
+                                            an API key
+                                        </li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Test Connection Button -->
+                        <div x-show="settings.aiProvider !== 'none' && settings.aiApiKey"
+                            class="pt-4 border-t border-gray-100">
+                            <button type="button" @click="testAIConnection()" :disabled="testingConnection"
+                                class="w-full px-6 py-3 bg-gray-100 text-gray-700 rounded-xl font-semibold hover:bg-gray-200 active:scale-95 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center">
+                                <i :class="testingConnection ? 'fas fa-circle-notch fa-spin' : 'fas fa-plug'"
+                                    class="mr-2"></i>
+                                <span x-text="testingConnection ? 'Testing Connection...' : 'Test Connection'"></span>
+                            </button>
+                            <div x-show="connectionTestResult" class="mt-3 p-3 rounded-xl"
+                                :class="connectionTestSuccess ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700'">
+                                <i :class="connectionTestSuccess ? 'fas fa-check-circle' : 'fas fa-exclamation-circle'"
+                                    class="mr-2"></i>
+                                <span x-text="connectionTestMessage"></span>
+                            </div>
+                        </div>
+
+                        <!-- Save Button -->
+                        <div class="flex justify-end pt-4 border-t border-gray-100">
+                            <button type="submit" :disabled="saving"
+                                class="px-8 py-3 bg-primary-500 text-white rounded-xl font-semibold shadow-lg shadow-primary-500/30 hover:shadow-primary-500/40 hover:bg-primary-600 active:scale-95 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center">
+                                <i :class="saving ? 'fas fa-circle-notch fa-spin' : 'fas fa-save'" class="mr-2"></i>
+                                <span x-text="saving ? 'Saving Changes...' : 'Save Changes'"></span>
+                            </button>
+                        </div>
+                    </form>
                 </div>
             </div>
         </div>
