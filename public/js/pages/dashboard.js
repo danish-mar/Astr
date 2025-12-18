@@ -108,11 +108,13 @@ document.addEventListener('alpine:init', () => {
                         scales: {
                             y: {
                                 beginAtZero: true,
+                                suggestedMax: 10,
                                 grid: {
                                     color: 'rgba(0, 0, 0, 0.03)',
                                     drawBorder: false,
                                 },
                                 ticks: {
+                                    stepSize: 1, // Ensure whole numbers if values are low
                                     font: {
                                         family: "'Inter', sans-serif",
                                         size: 11

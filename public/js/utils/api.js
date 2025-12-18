@@ -19,13 +19,15 @@ const api = {
     },
 
     // Generic request method
-    async request(endpoint, method = 'GET', data = null) {
+    async request(endpoint, method = 'GET', data = null, options = {}) {
         const config = {
             method,
             url: `/api/v1${endpoint}`,
             headers: {
                 'Content-Type': 'application/json',
-            }
+                ...options.headers
+            },
+            ...options
         };
 
         if (this.token) {
@@ -34,6 +36,11 @@ const api = {
 
         if (data) {
             config.data = data;
+        }
+
+        // Auto-detect FormData and let browser set Content-Type with boundary
+        if (data instanceof FormData) {
+            delete config.headers['Content-Type'];
         }
 
         try {
@@ -51,24 +58,24 @@ const api = {
     },
 
     // Convenience methods
-    get(endpoint) {
-        return this.request(endpoint, 'GET');
+    get(endpoint, options = {}) {
+        return this.request(endpoint, 'GET', null, options);
     },
 
-    post(endpoint, data) {
-        return this.request(endpoint, 'POST', data);
+    post(endpoint, data, options = {}) {
+        return this.request(endpoint, 'POST', data, options);
     },
 
-    put(endpoint, data) {
-        return this.request(endpoint, 'PUT', data);
+    put(endpoint, data, options = {}) {
+        return this.request(endpoint, 'PUT', data, options);
     },
 
-    patch(endpoint, data) {
-        return this.request(endpoint, 'PATCH', data);
+    patch(endpoint, data, options = {}) {
+        return this.request(endpoint, 'PATCH', data, options);
     },
 
-    delete(endpoint) {
-        return this.request(endpoint, 'DELETE');
+    delete(endpoint, options = {}) {
+        return this.request(endpoint, 'DELETE', null, options);
     }
 };
 

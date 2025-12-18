@@ -1,0 +1,208 @@
+(function () {
+    const initComponent = () => {
+        Alpine.data('productEditData', () => ({
+            saving: false,
+            loading: true,
+            productId: null,
+            categories: [],
+            contacts: [],
+            selectedCategoryTemplate: [],
+            newTag: '',
+            showQuickAddContact: false,
+            quickContact: {
+                name: '',
+                phone: '',
+                contactType: ''
+            },
+            formData: {
+                name: '',
+                price: '',
+                category: '',
+                source: '',
+                specifications: {},
+                tags: [],
+                notes: '',
+                productID: ''
+            },
+
+            get token() {
+                return window.api.token;
+            },
+
+            async init() {
+                if (!this.token) {
+                    window.location.href = '/login';
+                    return;
+                }
+
+                // Get ID from URL: /products/edit/:id
+                const pathParts = window.location.pathname.split('/');
+                this.productId = pathParts[pathParts.length - 1];
+
+                if (!this.productId) {
+                    window.showNotification('Invalid product ID', 'error');
+                    this.loading = false;
+                    return;
+                }
+
+                // Load dependencies and product
+                try {
+                    const [categoriesRes, contactsRes, productRes] = await Promise.all([
+                        window.api.get('/categories'),
+                        window.api.get('/contacts?limit=100'),
+                        window.api.get(`/products/${this.productId}`)
+                    ]);
+                    this.categories = categoriesRes.data;
+                    this.contacts = contactsRes.data;
+                    const product = productRes.data;
+
+                    this.formData = {
+                        name: product.name,
+                        price: product.price,
+                        category: product.category._id || product.category, // handle populated or unpopulated
+                        source: product.source._id || product.source,
+                        specifications: product.specifications || {},
+                        tags: product.tags || [],
+                        notes: product.notes || '',
+                        productID: product.productID
+                    };
+
+                    // Trigger category template load
+                    this.onCategoryChange();
+                    this.loading = false;
+
+                } catch (error) {
+                    console.error('Error loading data', error);
+                    window.showNotification('Error loading product data: ' + (error.response?.data?.message || error.message), 'error');
+                    this.loading = false;
+                }
+            },
+
+            onCategoryChange() {
+                const category = this.categories.find(c => c._id === this.formData.category);
+                this.selectedCategoryTemplate = category?.specificationsTemplate || [];
+                // In edit mode, we DO NOT reset specifications when loading initial data
+                // Only if user manually changes category, we might consider it, but let's keep data valid for now
+                // Actually, if we change category manually, we *should* clear specs usually.
+                // But init calls this too. Add check?
+                // For simplicity: if formData.specifications is empty (which it isn't on init), reset? 
+                // No, sticking with "keep existing values" is safer for edit.
+            },
+
+            getOptionValue(option) {
+                return typeof option === 'string' ? option : option.value;
+            },
+
+            hasLinkedFields(fieldName) {
+                const field = this.selectedCategoryTemplate.find(f => f.fieldName === fieldName);
+                if (!field) return false;
+
+                const selectedValue = this.formData.specifications[fieldName];
+                if (!selectedValue) return false;
+
+                const option = field.options.find(o => this.getOptionValue(o) === selectedValue);
+                return typeof option === 'object' && option.linkedFields && option.linkedFields.length > 0;
+            },
+
+            getLinkedFields(fieldName) {
+                const field = this.selectedCategoryTemplate.find(f => f.fieldName === fieldName);
+                if (!field) return [];
+
+                const selectedValue = this.formData.specifications[fieldName];
+                const option = field.options.find(o => this.getOptionValue(o) === selectedValue);
+                return option && typeof option === 'object' ? option.linkedFields : [];
+            },
+
+            hasSubOptions(fieldName) {
+                const field = this.selectedCategoryTemplate.find(f => f.fieldName === fieldName);
+                if (!field) return false;
+
+                const selectedValue = this.formData.specifications[fieldName];
+                if (!selectedValue) return false;
+
+                const option = field.options.find(o => this.getOptionValue(o) === selectedValue);
+                return typeof option === 'object' && option.subOptions && option.subOptions.length > 0;
+            },
+
+            getSubOptions(fieldName) {
+                const field = this.selectedCategoryTemplate.find(f => f.fieldName === fieldName);
+                if (!field) return [];
+
+                const selectedValue = this.formData.specifications[fieldName];
+                const option = field.options.find(o => this.getOptionValue(o) === selectedValue);
+                return option && typeof option === 'object' ? option.subOptions : [];
+            },
+
+            onSpecChange(fieldName) {
+                // Clear sub-option if main option changes
+                if (this.formData.specifications[fieldName + '_sub']) {
+                    delete this.formData.specifications[fieldName + '_sub'];
+                }
+
+                // Clear linked fields logic (same as Add)
+                const field = this.selectedCategoryTemplate.find(f => f.fieldName === fieldName);
+                if (field && field.options) {
+                    field.options.forEach(opt => {
+                        if (typeof opt === 'object' && opt.linkedFields) {
+                            opt.linkedFields.forEach(lf => {
+                                if (!this.getLinkedFields(fieldName).find(validLf => validLf.fieldName === lf.fieldName)) {
+                                    delete this.formData.specifications[lf.fieldName];
+                                }
+                            });
+                        }
+                    });
+                }
+            },
+
+            addTag() {
+                if (this.newTag.trim() && !this.formData.tags.includes(this.newTag.trim())) {
+                    this.formData.tags.push(this.newTag.trim());
+                    this.newTag = '';
+                }
+            },
+
+            async saveQuickContact() {
+                if (!this.quickContact.name || !this.quickContact.phone || !this.quickContact.contactType) {
+                    window.showNotification('Please fill all required fields', 'error');
+                    return;
+                }
+
+                try {
+                    const response = await window.api.post('/contacts', this.quickContact);
+                    this.contacts.push(response.data);
+                    this.formData.source = response.data._id;
+                    this.showQuickAddContact = false;
+                    this.quickContact = { name: '', phone: '', contactType: '' };
+                    window.showNotification('Contact added successfully!');
+                } catch (error) {
+                    window.showNotification('Error creating contact: ' + (error.response?.data?.message || error.message), 'error');
+                }
+            },
+
+            async saveProduct() {
+                if (!this.formData.name || !this.formData.category || !this.formData.source || !this.formData.price) {
+                    window.showNotification('Please fill all required fields', 'error');
+                    return;
+                }
+
+                this.saving = true;
+                try {
+                    await window.api.put(`/products/${this.productId}`, this.formData);
+                    window.showNotification('Product updated successfully!');
+                    setTimeout(() => {
+                        window.location.href = '/products';
+                    }, 1000);
+                } catch (error) {
+                    window.showNotification('Error updating product: ' + (error.response?.data?.message || error.message), 'error');
+                    this.saving = false;
+                }
+            }
+        }));
+    };
+
+    if (window.Alpine) {
+        initComponent();
+    } else {
+        document.addEventListener('alpine:init', initComponent);
+    }
+})();

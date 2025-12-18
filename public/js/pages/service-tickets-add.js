@@ -7,7 +7,8 @@
                 status: 'Pending',
                 assignedTechnician: '',
                 serviceCharge: 0,
-                notes: ''
+                notes: '',
+                receivedDate: new Date().toISOString().split('T')[0]
             },
             searchQuery: '',
             searchResults: [],
@@ -48,6 +49,13 @@
                 } catch (error) {
                     console.error('Error loading technicians:', error);
                 }
+            },
+
+            getTechnicianName(tech) {
+                if (!tech) return 'Awaiting Assignment';
+                if (typeof tech === 'object') return tech.name || 'Unknown Tech';
+                const technician = this.technicians.find(t => t._id === tech || t.username === tech || t.name === tech);
+                return technician ? (technician.name || technician.username) : tech;
             },
 
             async searchContacts() {

@@ -81,76 +81,92 @@
   </style>
 </head>
 
-<body class="bg-gray-50 min-h-screen flex items-center justify-center p-4 relative overflow-hidden">
+<body class="bg-[#f9fafb] min-h-screen flex items-center justify-center p-6 relative overflow-hidden font-sans">
 
-  <!-- Background Elements -->
-  <div class="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-blue-400/20 rounded-full blur-[100px] animate-pulse">
+  <!-- Background Atmospheric Elements -->
+  <div
+    class="absolute -top-[20%] -left-[10%] w-[60%] h-[60%] bg-blue-100/40 rounded-full blur-[120px] animate__animated animate__pulse animate__infinite animate__slow">
   </div>
   <div
-    class="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-purple-400/20 rounded-full blur-[100px] animate-pulse"
+    class="absolute -bottom-[20%] -right-[10%] w-[60%] h-[60%] bg-purple-100/40 rounded-full blur-[120px] animate__animated animate__pulse animate__infinite animate__slow"
     style="animation-delay: 2s"></div>
 
-  <!-- Login Card -->
+  <!-- Login Canvas -->
   <div
-    class="w-full max-w-md glass rounded-[2.5rem] shadow-2xl p-8 md:p-12 relative z-10 animate__animated animate__zoomIn">
+    class="w-full max-w-[480px] bg-white border border-gray-100 rounded-[48px] shadow-2xl shadow-gray-200/50 p-12 md:p-16 relative z-10 animate__animated animate__fadeInUp">
 
-    <!-- Header -->
-    <div class="text-center mb-10">
+    <!-- Premium Branding -->
+    <div class="text-center mb-12">
       <div
-        class="w-20 h-20 bg-gradient-to-br from-primary-500 to-blue-600 rounded-3xl flex items-center justify-center mx-auto mb-6 shadow-lg shadow-primary-500/30 transform rotate-3 hover:rotate-6 transition-transform duration-300">
-        <i class="fas fa-star text-4xl text-white"></i>
+        class="w-20 h-20 bg-gray-900 rounded-[28px] flex items-center justify-center mx-auto mb-8 shadow-2xl shadow-gray-300 transform transition-transform hover:scale-110 duration-500">
+        <i class="fas fa-ghost text-3xl text-white"></i>
       </div>
-      <h1 class="text-3xl font-bold text-gray-900 tracking-tight mb-2">Welcome Back</h1>
-      <p class="text-gray-500">Sign in to access your dashboard</p>
+      <div class="flex items-center justify-center gap-2 mb-3">
+        <span
+          class="px-2.5 py-0.5 bg-gray-100 text-gray-500 text-[9px] font-black rounded-full tracking-widest uppercase">System
+          Alpha</span>
+        <div class="w-1 h-1 rounded-full bg-gray-300"></div>
+        <span class="text-[9px] font-black text-gray-400 uppercase tracking-widest">v2.4.0</span>
+      </div>
+      <h1 class="text-4xl font-black text-gray-900 tracking-tighter mb-4">Astr Protocol</h1>
+      <p class="text-gray-400 font-medium text-lg leading-relaxed px-4">Authenticate your credentials to access the
+        operational bridge</p>
     </div>
 
-    <!-- Login Form -->
-    <form id="loginForm" class="space-y-6" x-data="loginForm()" @submit.prevent="submit">
+    <!-- Authentication Form -->
+    <form id="loginForm" class="space-y-8" x-data="loginForm()" @submit.prevent="submit">
 
-      <!-- Username Input -->
-      <div class="space-y-2">
-        <label for="username" class="text-sm font-semibold text-gray-700 ml-1">Username</label>
-        <div class="relative">
-          <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-            <i class="fas fa-user text-gray-400"></i>
+      <div class="space-y-3">
+        <label for="username" class="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Personnel
+          Identifier</label>
+        <div class="relative group">
+          <div
+            class="absolute inset-y-0 left-6 flex items-center pointer-events-none text-gray-300 group-focus-within:text-gray-900 transition-colors">
+            <i class="fas fa-fingerprint text-sm"></i>
           </div>
           <input type="text" id="username" x-model="username" required
-            class="block w-full pl-11 pr-4 py-4 bg-gray-50 border-none rounded-2xl text-gray-900 placeholder-gray-400 focus:ring-2 focus:ring-primary-500/50 focus:bg-white transition-all duration-200"
-            placeholder="Enter your username">
+            class="block w-full pl-14 pr-6 py-5 bg-gray-50 border border-transparent rounded-[24px] text-gray-900 font-bold placeholder-gray-300 focus:ring-4 focus:ring-blue-50 focus:bg-white focus:border-blue-100 outline-none transition-all duration-300"
+            placeholder="ID / Username">
         </div>
       </div>
 
-      <!-- Password Input -->
-      <div class="space-y-2">
-        <label for="password" class="text-sm font-semibold text-gray-700 ml-1">Password</label>
-        <div class="relative">
-          <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-            <i class="fas fa-lock text-gray-400"></i>
+      <div class="space-y-3">
+        <label for="password" class="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Access
+          Cipher</label>
+        <div class="relative group">
+          <div
+            class="absolute inset-y-0 left-6 flex items-center pointer-events-none text-gray-300 group-focus-within:text-gray-900 transition-colors">
+            <i class="fas fa-shield-alt text-sm"></i>
           </div>
           <input type="password" id="password" x-model="password" required
-            class="block w-full pl-11 pr-4 py-4 bg-gray-50 border-none rounded-2xl text-gray-900 placeholder-gray-400 focus:ring-2 focus:ring-primary-500/50 focus:bg-white transition-all duration-200"
+            class="block w-full pl-14 pr-6 py-5 bg-gray-50 border border-transparent rounded-[24px] text-gray-900 font-bold placeholder-gray-300 focus:ring-4 focus:ring-blue-50 focus:bg-white focus:border-blue-100 outline-none transition-all duration-300"
             placeholder="••••••••">
         </div>
       </div>
 
-      <!-- Submit Button -->
-      <button type="submit"
-        class="w-full flex justify-center py-4 px-4 border border-transparent rounded-2xl shadow-lg shadow-primary-500/30 text-base font-semibold text-white bg-primary-500 hover:bg-primary-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 active:scale-[0.98] transition-all duration-200"
-        :class="{ 'opacity-75 cursor-not-allowed': loading }" :disabled="loading">
-        <span x-show="!loading">Sign In</span>
-        <span x-show="loading" class="flex items-center">
-          <i class="fas fa-circle-notch fa-spin mr-2"></i>
-          Signing in...
-        </span>
-      </button>
-
+      <div class="pt-4">
+        <button type="submit"
+          class="w-full flex items-center justify-center gap-4 py-5 bg-gray-900 text-white rounded-[26px] text-xs font-black uppercase tracking-[0.2em] shadow-2xl shadow-gray-200 hover:bg-black active:scale-[0.97] disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-500"
+          :disabled="loading">
+          <span x-show="!loading" class="flex items-center gap-3">
+            Initiate Sequence
+            <i class="fas fa-arrow-right text-[10px] transition-transform group-hover:translate-x-1"></i>
+          </span>
+          <span x-show="loading" class="flex items-center">
+            <i class="fas fa-spinner fa-spin mr-3"></i>
+            Verifying...
+          </span>
+        </button>
+      </div>
     </form>
 
-    <!-- Footer -->
-    <div class="mt-8 text-center">
-      <p class="text-sm text-gray-500">
-        Don't have an account?
-        <a href="#" class="font-semibold text-primary-600 hover:text-primary-500 transition-colors">Contact Admin</a>
+    <!-- Dynamic Feedback -->
+    <div class="mt-12 text-center">
+      <p class="text-[11px] font-bold text-gray-400 tracking-wide">
+        Restricted access. In case of disruption,
+        <a href="#"
+          class="text-gray-900 underline hover:text-blue-600 transition-colors decoration-gray-200 underline-offset-4">contact
+          site command</a>
       </p>
     </div>
   </div>

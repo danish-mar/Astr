@@ -1,316 +1,499 @@
-<div x-data="contactsData" x-init="init()">
-    <!-- Page Header -->
-    <div class="mb-6 animate__animated animate__fadeInDown">
-        <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-            <div>
-                <h1 class="text-3xl font-bold text-gray-800 mb-2">
-                    <i class="fas fa-address-book text-primary-500"></i>
-                    Contacts
-                </h1>
-                <p class="text-gray-600">Manage vendors, suppliers, and customers</p>
-            </div>
-            <button @click="openAddModal()"
-                class="bg-primary-500 hover:bg-primary-600 text-white px-6 py-3 rounded-xl font-medium shadow-lg hover:shadow-xl transition-all flex items-center justify-center space-x-2">
-                <i class="fas fa-plus"></i>
-                <span>Add Contact</span>
-            </button>
-        </div>
-    </div>
+<div x-data="contactsData" x-init="init()" class="min-h-screen bg-[#f9fafb] pb-20">
+    <!-- Premium Header -->
+    <div class="sticky top-0 z-50 bg-white/70 backdrop-blur-xl border-b border-gray-100 mb-12">
+        <div class="max-w-[1600px] mx-auto px-8 py-10">
+            <div class="flex flex-col md:flex-row md:items-end justify-between gap-8">
+                <div class="animate__animated animate__fadeIn">
+                    <div class="flex items-center gap-3 mb-4">
+                        <span
+                            class="px-3 py-1 bg-blue-50 text-blue-600 text-[10px] font-bold rounded-full tracking-wider uppercase">Directory</span>
+                        <div class="w-1 h-1 rounded-full bg-gray-300"></div>
+                        <span class="text-[10px] font-bold text-gray-400 uppercase tracking-widest"
+                            x-text="`${pagination.total} Records`"></span>
+                    </div>
+                    <h1 class="text-4xl md:text-5xl font-bold text-gray-900 tracking-tighter mb-2">Contacts</h1>
+                    <p class="text-gray-400 text-lg font-medium">Manage your ecosystem of vendors, suppliers, and
+                        customers</p>
+                </div>
 
-    <!-- Filters & Search -->
-    <div class="bg-white/80 backdrop-blur-md rounded-2xl p-4 md:p-6 shadow-lg mb-6 animate__animated animate__fadeInUp">
-        <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
-            <!-- Search -->
-            <div class="md:col-span-2">
-                <div class="relative">
-                    <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"></i>
-                    <input type="text" x-model="filters.search" @input.debounce.300ms="loadContacts()"
-                        placeholder="Search contacts..."
-                        class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none transition-all">
+                <div class="flex items-center gap-3 animate__animated animate__fadeIn">
+                    <button @click="openAddModal()"
+                        class="bg-gray-900 hover:bg-black text-white px-8 py-4 rounded-[20px] font-bold shadow-xl shadow-gray-200 transition-all active:scale-95 flex items-center gap-3">
+                        <i class="fas fa-plus text-xs"></i>
+                        <span>New Contact</span>
+                    </button>
                 </div>
             </div>
 
-            <!-- Type Filter -->
-            <div>
-                <select x-model="filters.contactType" @change="loadContacts()"
-                    class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none transition-all">
-                    <option value="All">All Types</option>
-                    <option value="Customer">Customer</option>
-                    <option value="Vendor">Vendor</option>
-                    <option value="Supplier">Supplier</option>
-                    <option value="Custom">Custom</option>
-                </select>
-            </div>
+            <!-- Integrated Filters -->
+            <div class="mt-12 flex flex-col md:flex-row items-center gap-4">
+                <div class="relative flex-1 group">
+                    <i
+                        class="fas fa-search absolute left-5 top-1/2 -translate-y-1/2 text-gray-300 group-focus-within:text-blue-500 transition-colors"></i>
+                    <input type="text" x-model="filters.search" @input.debounce.300ms="loadContacts()"
+                        placeholder="Search by name, phone or company..."
+                        class="w-full pl-14 pr-6 py-4 bg-gray-50/50 border border-gray-100 rounded-[22px] focus:ring-4 focus:ring-blue-50 focus:bg-white focus:border-blue-200 outline-none transition-all font-medium text-gray-900 placeholder:text-gray-400">
+                </div>
 
-            <!-- Refresh Button -->
-            <div>
-                <button @click="loadContacts()"
-                    class="w-full px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-all font-medium flex items-center justify-center space-x-2">
-                    <i class="fas fa-sync-alt" :class="{'fa-spin': loading}"></i>
-                    <span>Refresh</span>
-                </button>
-            </div>
-
-            <!-- View Toggle -->
-            <div class="flex bg-gray-100 rounded-lg p-1">
-                <button @click="viewMode = 'list'"
-                    :class="{'bg-white shadow text-primary-600': viewMode === 'list', 'text-gray-500 hover:text-gray-700': viewMode !== 'list'}"
-                    class="flex-1 px-4 py-2 rounded-md transition-all flex items-center justify-center">
-                    <i class="fas fa-list"></i>
-                </button>
-                <button @click="viewMode = 'grid'"
-                    :class="{'bg-white shadow text-primary-600': viewMode === 'grid', 'text-gray-500 hover:text-gray-700': viewMode !== 'grid'}"
-                    class="flex-1 px-4 py-2 rounded-md transition-all flex items-center justify-center">
-                    <i class="fas fa-th-large"></i>
-                </button>
-            </div>
-        </div>
-    </div>
-
-    <!-- Loading State -->
-    <div x-show="loading" class="text-center py-12">
-        <i class="fas fa-spinner fa-spin text-4xl text-primary-500 mb-4"></i>
-        <p class="text-gray-600">Loading contacts...</p>
-    </div>
-
-    <!-- Contacts List View -->
-    <div x-show="!loading && viewMode === 'list'"
-        class="bg-white/80 backdrop-blur-md rounded-2xl shadow-lg overflow-hidden animate__animated animate__fadeInUp">
-        <div class="overflow-x-auto">
-            <table class="w-full">
-                <thead class="bg-gray-50 border-b border-gray-200">
-                    <tr>
-                        <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Name</th>
-                        <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Type</th>
-                        <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Phone</th>
-                        <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Company</th>
-                        <th class="px-6 py-3 text-right text-xs font-semibold text-gray-600 uppercase">Actions</th>
-                    </tr>
-                </thead>
-                <tbody class="divide-y divide-gray-200">
-                    <template x-for="contact in contacts" :key="contact._id">
-                        <tr class="hover:bg-gray-50 transition-colors">
-                            <td class="px-6 py-4">
-                                <div class="flex items-center">
-                                    <div
-                                        class="w-8 h-8 rounded-full bg-primary-100 text-primary-600 flex items-center justify-center font-bold mr-3">
-                                        <span x-text="contact.name.charAt(0)"></span>
-                                    </div>
-                                    <span class="font-medium text-gray-800" x-text="contact.name"></span>
-                                </div>
-                            </td>
-                            <td class="px-6 py-4">
-                                <span class="px-3 py-1 rounded-full text-xs font-medium" :class="{
-                                        'bg-blue-100 text-blue-700': contact.contactType === 'Customer',
-                                        'bg-purple-100 text-purple-700': contact.contactType === 'Vendor',
-                                        'bg-orange-100 text-orange-700': contact.contactType === 'Supplier',
-                                        'bg-gray-100 text-gray-700': contact.contactType === 'Custom'
-                                    }" x-text="contact.contactType">
-                                </span>
-                            </td>
-                            <td class="px-6 py-4">
-                                <span class="text-gray-600" x-text="contact.phone"></span>
-                            </td>
-                            <td class="px-6 py-4">
-                                <span class="text-gray-600" x-text="contact.companyName || '-'"></span>
-                            </td>
-                            <td class="px-6 py-4 text-right space-x-2">
-                                <button @click="editContact(contact)" class="text-blue-600 hover:text-blue-700"
-                                    title="Edit">
-                                    <i class="fas fa-edit"></i>
-                                </button>
-                                <button @click="deleteContact(contact._id)" class="text-red-600 hover:text-red-700"
-                                    title="Delete">
-                                    <i class="fas fa-trash"></i>
-                                </button>
-                            </td>
-                        </tr>
+                <div class="flex items-center gap-3 bg-gray-50/50 p-1.5 rounded-[24px] border border-gray-100">
+                    <template x-for="type in ['All', 'Customer', 'Vendor', 'Supplier']" :key="type">
+                        <button @click="filters.contactType = type; loadContacts()"
+                            :class="filters.contactType === type ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-400 hover:text-gray-600'"
+                            class="px-5 py-2.5 rounded-[18px] text-[11px] font-bold uppercase tracking-widest transition-all"
+                            x-text="type">
+                        </button>
                     </template>
-                    <template x-if="contacts.length === 0">
-                        <tr>
-                            <td colspan="5" class="px-6 py-12 text-center text-gray-500">
-                                <i class="fas fa-address-book text-4xl mb-3 text-gray-300"></i>
-                                <p>No contacts found</p>
-                            </td>
-                        </tr>
-                    </template>
-                </tbody>
-            </table>
-        </div>
+                </div>
 
-        <!-- Pagination -->
-        <div class="px-6 py-4 border-t border-gray-200 flex items-center justify-between" x-show="pagination.total > 0">
-            <span class="text-sm text-gray-600">
-                Showing <span class="font-medium" x-text="(pagination.page - 1) * pagination.limit + 1"></span>
-                to <span class="font-medium"
-                    x-text="Math.min(pagination.page * pagination.limit, pagination.total)"></span>
-                of <span class="font-medium" x-text="pagination.total"></span> results
-            </span>
-            <div class="flex space-x-2">
-                <button @click="changePage(pagination.page - 1)" :disabled="pagination.page === 1"
-                    class="px-3 py-1 border border-gray-300 rounded-md text-sm disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50">
-                    Previous
-                </button>
-                <button @click="changePage(pagination.page + 1)"
-                    :disabled="pagination.page * pagination.limit >= pagination.total"
-                    class="px-3 py-1 border border-gray-300 rounded-md text-sm disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50">
-                    Next
-                </button>
+                <div class="flex items-center gap-2 bg-gray-50/50 p-1.5 rounded-[24px] border border-gray-100">
+                    <button @click="viewMode = 'grid'"
+                        :class="viewMode === 'grid' ? 'bg-white text-blue-600 shadow-sm' : 'text-gray-400'"
+                        class="w-11 h-11 rounded-[18px] flex items-center justify-center transition-all">
+                        <i class="fas fa-th-large text-sm"></i>
+                    </button>
+                    <button @click="viewMode = 'list'"
+                        :class="viewMode === 'list' ? 'bg-white text-blue-600 shadow-sm' : 'text-gray-400'"
+                        class="w-11 h-11 rounded-[18px] flex items-center justify-center transition-all">
+                        <i class="fas fa-list text-sm"></i>
+                    </button>
+                </div>
             </div>
         </div>
     </div>
 
-    <!-- Contacts Grid View -->
-    <div x-show="!loading && viewMode === 'grid'"
-        class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 animate__animated animate__fadeInUp">
-        <template x-for="contact in contacts" :key="contact._id">
+    <div class="max-w-[1600px] mx-auto px-8">
+        <!-- Loading Stream -->
+        <div x-show="loading" class="flex flex-col items-center justify-center py-32 animate__animated animate__fadeIn">
+            <div class="w-16 h-16 border-4 border-gray-100 border-t-blue-600 rounded-full animate-spin mb-6"></div>
+            <p class="text-[10px] font-bold text-gray-400 uppercase tracking-[0.2em]">Loading Contacts</p>
+        </div>
+
+        <!-- Empty State -->
+        <div x-show="!loading && contacts.length === 0"
+            class="flex flex-col items-center justify-center py-40 animate__animated animate__fadeIn">
             <div
-                class="bg-white/80 backdrop-blur-md rounded-2xl p-6 shadow-lg hover:shadow-xl transition-all border border-gray-100 group">
-                <div class="flex justify-between items-start mb-4">
-                    <div class="flex items-center">
-                        <div
-                            class="w-10 h-10 rounded-full bg-primary-100 text-primary-600 flex items-center justify-center font-bold text-lg mr-3">
-                            <span x-text="contact.name.charAt(0)"></span>
+                class="w-24 h-24 bg-gray-50 rounded-[40px] flex items-center justify-center mb-8 border border-gray-100">
+                <i class="fas fa-user-friends text-gray-200 text-3xl"></i>
+            </div>
+            <h3 class="text-2xl font-bold text-gray-900 mb-2">No contacts found</h3>
+            <p class="text-gray-400 font-medium mb-10">Try adjusting your search or filters to expand the scope</p>
+            <button @click="openAddModal()"
+                class="px-8 py-4 bg-gray-900 text-white rounded-2xl font-bold transition-all active:scale-95">
+                Register First Contact
+            </button>
+        </div>
+
+        <!-- Contacts Display -->
+        <div x-show="!loading && contacts.length > 0">
+            <!-- Grid View -->
+            <div x-show="viewMode === 'grid'"
+                class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
+                <template x-for="contact in contacts" :key="contact._id">
+                    <div
+                        class="group bg-white border border-gray-100 rounded-[40px] p-8 shadow-sm hover:shadow-2xl hover:shadow-gray-200/50 transition-all duration-500 animate__animated animate__fadeInUp">
+                        <div class="flex items-start justify-between mb-8">
+                            <div
+                                class="w-16 h-16 rounded-3xl bg-gray-50 border border-gray-100 flex items-center justify-center text-2xl font-bold text-gray-200 group-hover:bg-blue-600 group-hover:text-white group-hover:border-blue-600 transition-all duration-500">
+                                <span x-text="contact.name.charAt(0)"></span>
+                            </div>
+                            <div class="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                                <button @click="viewContact(contact)"
+                                    class="w-10 h-10 rounded-xl bg-gray-50 hover:bg-gray-900 text-gray-400 hover:text-white transition-all shadow-sm">
+                                    <i class="fas fa-eye text-xs"></i>
+                                </button>
+                                <button @click="editContact(contact)"
+                                    class="w-10 h-10 rounded-xl bg-gray-50 hover:bg-blue-50 text-gray-400 hover:text-blue-600 transition-all shadow-sm">
+                                    <i class="fas fa-edit text-xs"></i>
+                                </button>
+                                <button @click="deleteContact(contact._id)"
+                                    class="w-10 h-10 rounded-xl bg-gray-50 hover:bg-red-50 text-gray-400 hover:text-red-600 transition-all shadow-sm">
+                                    <i class="fas fa-trash text-xs"></i>
+                                </button>
+                            </div>
                         </div>
-                        <div>
-                            <h3 class="font-semibold text-gray-800" x-text="contact.name"></h3>
-                            <span class="px-2 py-0.5 rounded-full text-xs font-medium" :class="{
-                                    'bg-blue-100 text-blue-700': contact.contactType === 'Customer',
-                                    'bg-purple-100 text-purple-700': contact.contactType === 'Vendor',
-                                    'bg-orange-100 text-orange-700': contact.contactType === 'Supplier',
-                                    'bg-gray-100 text-gray-700': contact.contactType === 'Custom'
-                                }" x-text="contact.contactType">
-                            </span>
+
+                        <div class="mb-8">
+                            <div class="flex items-center gap-2 mb-2">
+                                <h3 class="text-xl font-bold text-gray-900 tracking-tight" x-text="contact.name"></h3>
+                                <div class="w-1.5 h-1.5 rounded-full" :class="{
+                                    'bg-blue-500': contact.contactType === 'Customer',
+                                    'bg-purple-500': contact.contactType === 'Vendor',
+                                    'bg-orange-500': contact.contactType === 'Supplier',
+                                    'bg-gray-300': contact.contactType === 'Custom'
+                                }"></div>
+                            </div>
+                            <p class="text-[10px] font-bold text-gray-400 uppercase tracking-[0.1em]"
+                                x-text="contact.companyName || 'Private Individual'"></p>
+                        </div>
+
+                        <div class="space-y-4 pt-6 border-t border-gray-50">
+                            <div class="flex items-center justify-between">
+                                <span class="text-[10px] font-bold text-gray-300 uppercase">Communication</span>
+                                <span class="text-xs font-bold text-gray-900" x-text="contact.phone"></span>
+                            </div>
+                            <div class="flex items-center justify-between" x-show="contact.address">
+                                <span class="text-[10px] font-bold text-gray-300 uppercase">Location</span>
+                                <span class="text-xs font-bold text-gray-900 text-right truncate max-w-[150px]"
+                                    x-text="contact.address"></span>
+                            </div>
                         </div>
                     </div>
-                    <div class="relative" x-data="{ open: false }">
-                        <button @click="open = !open" @click.outside="open = false"
-                            class="p-2 text-gray-500 hover:bg-gray-100 rounded-lg transition-colors">
-                            <i class="fas fa-ellipsis-v"></i>
+                </template>
+            </div>
+
+            <!-- List View -->
+            <div x-show="viewMode === 'list'"
+                class="bg-white border border-gray-100 rounded-[40px] overflow-hidden shadow-sm">
+                <table class="w-full text-left">
+                    <thead>
+                        <tr class="bg-gray-50/50">
+                            <th
+                                class="px-8 py-5 text-[10px] font-bold text-gray-400 uppercase tracking-widest whitespace-nowrap">
+                                Identity</th>
+                            <th
+                                class="px-8 py-5 text-[10px] font-bold text-gray-400 uppercase tracking-widest whitespace-nowrap">
+                                Category</th>
+                            <th
+                                class="px-8 py-5 text-[10px] font-bold text-gray-400 uppercase tracking-widest whitespace-nowrap">
+                                Communication</th>
+                            <th
+                                class="px-8 py-5 text-[10px] font-bold text-gray-400 uppercase tracking-widest whitespace-nowrap text-right">
+                                Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-gray-50">
+                        <template x-for="contact in contacts" :key="contact._id">
+                            <tr class="group hover:bg-gray-50/50 transition-colors">
+                                <td class="px-8 py-5">
+                                    <div class="flex items-center gap-4">
+                                        <div class="w-10 h-10 rounded-xl bg-gray-100 flex items-center justify-center font-bold text-gray-400 group-hover:bg-white group-hover:shadow-sm"
+                                            x-text="contact.name.charAt(0)"></div>
+                                        <div>
+                                            <p class="text-sm font-bold text-gray-900" x-text="contact.name"></p>
+                                            <p class="text-[10px] font-bold text-gray-400 uppercase"
+                                                x-text="contact.companyName || 'Private'"></p>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td class="px-8 py-5">
+                                    <span class="px-3 py-1 rounded-lg text-[9px] font-bold uppercase tracking-widest"
+                                        :class="{
+                                        'bg-blue-50 text-blue-600': contact.contactType === 'Customer',
+                                        'bg-purple-50 text-purple-600': contact.contactType === 'Vendor',
+                                        'bg-orange-50 text-orange-600': contact.contactType === 'Supplier',
+                                        'bg-gray-100 text-gray-400': contact.contactType === 'Custom'
+                                    }" x-text="contact.contactType"></span>
+                                </td>
+                                <td class="px-8 py-5 text-sm font-bold text-gray-900" x-text="contact.phone"></td>
+                                <td class="px-8 py-5 text-right">
+                                    <div
+                                        class="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-all duration-300 transform translate-x-4 group-hover:translate-x-0">
+                                        <button @click="viewContact(contact)"
+                                            class="w-8 h-8 rounded-lg bg-white border border-gray-100 flex items-center justify-center text-gray-400 hover:text-gray-900 hover:border-gray-200 transition-all">
+                                            <i class="fas fa-eye text-[10px]"></i>
+                                        </button>
+                                        <button @click="editContact(contact)"
+                                            class="w-8 h-8 rounded-lg bg-white border border-gray-100 flex items-center justify-center text-gray-400 hover:text-blue-600 hover:border-blue-100 transition-all">
+                                            <i class="fas fa-edit text-[10px]"></i>
+                                        </button>
+                                        <button @click="deleteContact(contact._id)"
+                                            class="w-8 h-8 rounded-lg bg-white border border-gray-100 flex items-center justify-center text-gray-400 hover:text-red-600 hover:border-red-100 transition-all">
+                                            <i class="fas fa-trash text-[10px]"></i>
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                        </template>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Apple-Style Pagination -->
+            <div x-show="pagination.total > 0" class="mt-12">
+                <div
+                    class="flex flex-col md:flex-row items-center justify-between bg-white border border-gray-100 rounded-[32px] px-8 py-6 shadow-sm gap-6">
+                    <div class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">
+                        Showing <span class="text-gray-900 font-bold"
+                            x-text="(pagination.page - 1) * pagination.limit + 1"></span>
+                        to <span class="text-gray-900 font-bold"
+                            x-text="Math.min(pagination.page * pagination.limit, pagination.total)"></span>
+                        of <span class="text-gray-900 font-bold" x-text="pagination.total"></span> records
+                    </div>
+                    <div class="flex items-center gap-3">
+                        <button @click="changePage(pagination.page - 1)" :disabled="pagination.page === 1"
+                            class="px-6 py-3 bg-gray-50 border border-transparent text-[11px] font-bold uppercase tracking-widest text-gray-500 rounded-2xl hover:bg-gray-100 disabled:opacity-30 disabled:cursor-not-allowed transition-all">
+                            Previous
                         </button>
-                        <div x-show="open"
-                            class="absolute right-0 top-full mt-1 w-32 bg-white rounded-lg shadow-xl z-20 border border-gray-100"
-                            style="display: none;">
-                            <div class="py-1">
-                                <button @click="editContact(contact); open = false"
-                                    class="block w-full text-left px-4 py-2 text-sm text-blue-600 hover:bg-gray-100">
-                                    <i class="fas fa-edit mr-2"></i> Edit
-                                </button>
-                                <button @click="deleteContact(contact._id); open = false"
-                                    class="block w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-gray-100">
-                                    <i class="fas fa-trash mr-2"></i> Delete
-                                </button>
+                        <button @click="changePage(pagination.page + 1)"
+                            :disabled="pagination.page * pagination.limit >= pagination.total"
+                            class="px-8 py-3 bg-gray-900 border border-transparent text-[11px] font-bold uppercase tracking-widest text-white rounded-2xl hover:bg-black disabled:opacity-30 disabled:cursor-not-allowed shadow-xl shadow-gray-200 transition-all">
+                            Next
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Redesigned Add/Edit Modal -->
+    <div x-show="showModal" x-transition:enter="transition ease-out duration-300" x-transition:enter-start="opacity-0"
+        x-transition:enter-end="opacity-100" x-transition:leave="transition ease-in duration-200"
+        x-transition:leave-start="opacity-100" x-transition:leave-end="opacity-0"
+        class="fixed inset-0 bg-gray-900/40 backdrop-blur-xl z-[60] flex items-center justify-center p-4"
+        @click.self="closeModal()" style="display: none;">
+
+        <div x-show="showModal" x-transition:enter="transition ease-out duration-500 transform"
+            x-transition:enter-start="opacity-0 translate-y-8 scale-95"
+            x-transition:enter-end="opacity-100 translate-y-0 scale-100"
+            x-transition:leave="transition ease-in duration-300 transform"
+            x-transition:leave-start="opacity-100 scale-100" x-transition:leave-end="opacity-0 scale-95"
+            class="bg-white rounded-[40px] shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-hidden flex flex-col">
+
+            <div class="overflow-y-auto flex-1">
+                <div class="p-8 md:p-12">
+                    <div class="flex items-start justify-between mb-12">
+                        <div class="flex-1">
+                            <div class="flex items-center gap-3 mb-4">
+                                <span
+                                    class="px-3 py-1 bg-blue-50 text-blue-600 text-[10px] font-bold rounded-full tracking-wider uppercase"
+                                    x-text="editMode ? 'Registry Edit' : 'New Entry'"></span>
+                                <i class="fas fa-id-card text-blue-400 text-xs"></i>
+                            </div>
+                            <h2 class="text-4xl font-bold text-gray-900 tracking-tight leading-tight"
+                                x-text="editMode ? 'Edit Contact' : 'New Contact'"></h2>
+                            <p class="text-gray-500 mt-2 text-sm font-medium">Update contact details and preferences.
+                            </p>
+                        </div>
+
+                        <button @click="closeModal()"
+                            class="p-3 bg-gray-50 text-gray-400 hover:text-gray-900 rounded-full transition-colors group">
+                            <i class="fas fa-times text-xl group-hover:rotate-90 transition-transform duration-300"></i>
+                        </button>
+                    </div>
+
+                    <form @submit.prevent="saveContact()" class="space-y-8">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                            <div class="space-y-2">
+                                <label
+                                    class="block text-[10px] font-bold text-gray-400 uppercase tracking-widest ml-1">Full
+                                    Name</label>
+                                <input type="text" x-model="formData.name" required placeholder="John Doe"
+                                    class="w-full px-6 py-4 bg-gray-50/50 border border-gray-100 rounded-[22px] focus:ring-4 focus:ring-blue-50 focus:bg-white focus:border-blue-200 outline-none transition-all font-bold text-gray-900 placeholder:text-gray-300">
+                            </div>
+
+                            <div class="space-y-2">
+                                <label
+                                    class="block text-[10px] font-bold text-gray-400 uppercase tracking-widest ml-1">Phone
+                                    Number</label>
+                                <input type="tel" x-model="formData.phone" required maxlength="10"
+                                    placeholder="9876543210"
+                                    class="w-full px-6 py-4 bg-gray-50/50 border border-gray-100 rounded-[22px] focus:ring-4 focus:ring-blue-50 focus:bg-white focus:border-blue-200 outline-none transition-all font-bold text-gray-900 placeholder:text-gray-300">
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                            <div class="space-y-2">
+                                <label
+                                    class="block text-[10px] font-bold text-gray-400 uppercase tracking-widest ml-1">Contact
+                                    Type</label>
+                                <select x-model="formData.contactType" required
+                                    class="w-full px-6 py-4 bg-gray-50/50 border border-gray-100 rounded-[22px] focus:ring-4 focus:ring-blue-50 focus:bg-white focus:border-blue-100 outline-none transition-all font-bold text-gray-900 cursor-pointer appearance-none">
+                                    <option value="Customer">Customer</option>
+                                    <option value="Vendor">Vendor</option>
+                                    <option value="Supplier">Supplier</option>
+                                    <option value="Custom">Custom</option>
+                                </select>
+                            </div>
+
+                            <div class="space-y-2">
+                                <label
+                                    class="block text-[10px] font-bold text-gray-400 uppercase tracking-widest ml-1">Company
+                                    (Optional)</label>
+                                <input type="text" x-model="formData.companyName" placeholder="Business Name"
+                                    class="w-full px-6 py-4 bg-gray-50/50 border border-gray-100 rounded-[22px] focus:ring-4 focus:ring-blue-50 focus:bg-white focus:border-blue-200 outline-none transition-all font-bold text-gray-900 placeholder:text-gray-300">
+                            </div>
+                        </div>
+
+                        <div class="space-y-2">
+                            <label
+                                class="block text-[10px] font-bold text-gray-400 uppercase tracking-widest ml-1">Address</label>
+                            <textarea x-model="formData.address" rows="1" placeholder="City, State, Country"
+                                class="w-full px-6 py-4 bg-gray-50/50 border border-gray-100 rounded-[22px] focus:ring-4 focus:ring-blue-50 focus:bg-white focus:border-blue-200 outline-none transition-all font-bold text-gray-900 placeholder:text-gray-300 resize-none"></textarea>
+                        </div>
+
+                        <div class="space-y-2">
+                            <label
+                                class="block text-[10px] font-bold text-gray-400 uppercase tracking-widest ml-1">Internal
+                                Notes</label>
+                            <textarea x-model="formData.notes" rows="3" placeholder="Key details or history..."
+                                class="w-full px-6 py-4 bg-gray-50/50 border border-gray-100 rounded-[22px] focus:ring-4 focus:ring-blue-50 focus:bg-white focus:border-blue-200 outline-none transition-all font-bold text-gray-900 placeholder:text-gray-300"></textarea>
+                        </div>
+
+                        <div class="flex items-center justify-end gap-3 pt-6 border-t border-gray-50">
+                            <button @click.prevent="closeModal()" type="button"
+                                class="px-8 py-4 bg-white border border-gray-200 text-gray-500 text-xs font-bold uppercase tracking-widest rounded-[20px] hover:bg-gray-50 transition-all">
+                                Cancel
+                            </button>
+                            <button type="submit" :disabled="saving"
+                                class="px-10 py-4 bg-gray-900 text-white text-xs font-bold uppercase tracking-widest rounded-[20px] hover:bg-black transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-xl shadow-gray-200 flex items-center gap-3">
+                                <i :class="saving ? 'fas fa-spinner fa-spin' : 'fas fa-shield-check'"></i>
+                                <span
+                                    x-text="saving ? 'Processing' : (editMode ? 'Save Changes' : 'Create Contact')"></span>
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- Registry View Modal -->
+    <div x-show="showViewModal" x-transition:enter="transition ease-out duration-300"
+        x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100"
+        x-transition:leave="transition ease-in duration-200" x-transition:leave-start="opacity-100"
+        x-transition:leave-end="opacity-0"
+        class="fixed inset-0 bg-gray-900/40 backdrop-blur-xl z-[60] flex items-center justify-center p-4"
+        @click.self="closeViewModal()" style="display: none;">
+
+        <div x-show="showViewModal" x-transition:enter="transition ease-out duration-500 transform"
+            x-transition:enter-start="opacity-0 translate-y-8 scale-95"
+            x-transition:enter-end="opacity-100 translate-y-0 scale-100"
+            x-transition:leave="transition ease-in duration-300 transform"
+            x-transition:leave-start="opacity-100 scale-100" x-transition:leave-end="opacity-0 scale-95"
+            class="bg-white rounded-[40px] shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-hidden flex flex-col">
+
+            <!-- Modal Header -->
+            <div class="p-8 md:p-10 border-b border-gray-50 flex items-start justify-between bg-gray-50/30">
+                <div class="flex items-center gap-6">
+                    <div
+                        class="w-20 h-20 rounded-[28px] bg-white shadow-sm border border-gray-100 flex items-center justify-center text-3xl font-bold text-gray-900">
+                        <span x-text="selectedContact?.name?.charAt(0)"></span>
+                    </div>
+                    <div>
+                        <div class="flex items-center gap-3 mb-1.5">
+                            <h2 class="text-3xl font-bold text-gray-900 tracking-tight" x-text="selectedContact?.name">
+                            </h2>
+                            <span class="px-3 py-1 rounded-full text-[9px] font-bold uppercase tracking-widest" :class="{
+                                    'bg-blue-50 text-blue-600': selectedContact?.contactType === 'Customer',
+                                    'bg-purple-50 text-purple-600': selectedContact?.contactType === 'Vendor',
+                                    'bg-orange-50 text-orange-600': selectedContact?.contactType === 'Supplier',
+                                    'bg-gray-100 text-gray-400': selectedContact?.contactType === 'Custom'
+                                }" x-text="selectedContact?.contactType"></span>
+                        </div>
+                        <p class="text-sm font-medium text-gray-400"
+                            x-text="selectedContact?.companyName || 'Private Registry Entry'"></p>
+                    </div>
+                </div>
+                <button @click="closeViewModal()"
+                    class="p-3 bg-white border border-gray-100 text-gray-400 hover:text-gray-900 rounded-full transition-all group shadow-sm">
+                    <i class="fas fa-times text-xl group-hover:rotate-90 transition-transform duration-300"></i>
+                </button>
+            </div>
+
+            <!-- Modal Content -->
+            <div class="flex-1 overflow-y-auto p-8 md:p-10">
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-10">
+                    <!-- Left Column: Details -->
+                    <div class="lg:col-span-1 space-y-8">
+                        <div class="space-y-6">
+                            <h3 class="text-[10px] font-bold text-gray-400 uppercase tracking-[0.2em]">Contact Integrity
+                            </h3>
+
+                            <div class="space-y-4">
+                                <div class="bg-gray-50/50 rounded-2xl p-5 border border-gray-100">
+                                    <label class="block text-[9px] font-bold text-gray-300 uppercase mb-1">Phone</label>
+                                    <p class="text-sm font-bold text-gray-900" x-text="selectedContact?.phone"></p>
+                                </div>
+
+                                <div class="bg-gray-50/50 rounded-2xl p-5 border border-gray-100"
+                                    x-show="selectedContact?.address">
+                                    <label
+                                        class="block text-[9px] font-bold text-gray-300 uppercase mb-1">Location</label>
+                                    <p class="text-sm font-bold text-gray-900 leading-relaxed"
+                                        x-text="selectedContact?.address"></p>
+                                </div>
+
+                                <div class="bg-gray-50/50 rounded-2xl p-5 border border-gray-100"
+                                    x-show="selectedContact?.notes">
+                                    <label class="block text-[9px] font-bold text-gray-300 uppercase mb-1">Internal
+                                        Memoranda</label>
+                                    <p class="text-sm font-medium text-gray-500 italic leading-relaxed"
+                                        x-text="selectedContact?.notes"></p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Right Column: Activity History -->
+                    <div class="lg:col-span-2 space-y-8">
+                        <div class="space-y-6">
+                            <div class="flex items-center justify-between">
+                                <h3 class="text-[10px] font-bold text-gray-400 uppercase tracking-[0.2em]">Service
+                                    Relationship</h3>
+                                <div class="flex items-center gap-2">
+                                    <span class="text-xs font-bold text-gray-900" x-text="contactTickets.length"></span>
+                                    <span class="text-[10px] font-bold text-gray-400 uppercase">Documents</span>
+                                </div>
+                            </div>
+
+                            <div class="space-y-3">
+                                <template x-for="ticket in contactTickets" :key="ticket._id">
+                                    <div
+                                        class="group bg-white border border-gray-100 rounded-3xl p-5 flex items-center justify-between hover:border-blue-200 hover:shadow-xl hover:shadow-blue-50/50 transition-all duration-300">
+                                        <div class="flex items-center gap-4">
+                                            <div
+                                                class="w-12 h-12 rounded-2xl bg-gray-50 border border-gray-100 flex items-center justify-center text-gray-400 group-hover:bg-blue-600 group-hover:text-white group-hover:border-blue-600 transition-all duration-500">
+                                                <i class="fas fa-ticket-alt"></i>
+                                            </div>
+                                            <div>
+                                                <div class="flex items-center gap-2 mb-1">
+                                                    <span class="text-sm font-bold text-gray-900"
+                                                        x-text="`#${ticket.ticketNumber}`"></span>
+                                                    <span
+                                                        class="px-2 py-0.5 rounded-lg text-[8px] font-bold uppercase tracking-widest shadow-sm"
+                                                        :class="{
+                                                            'bg-amber-500 text-white': ticket.status === 'Pending',
+                                                            'bg-blue-500 text-white': ticket.status === 'In Progress',
+                                                            'bg-green-500 text-white': ticket.status === 'Completed',
+                                                            'bg-gray-900 text-white': ticket.status === 'Delivered',
+                                                            'bg-red-500 text-white': ticket.status === 'Cancelled'
+                                                        }" x-text="ticket.status"></span>
+                                                </div>
+                                                <p class="text-xs font-medium text-gray-400 truncate max-w-[200px]"
+                                                    x-text="ticket.deviceDetails"></p>
+                                            </div>
+                                        </div>
+                                        <div class="flex items-center gap-6">
+                                            <div class="text-right hidden sm:block">
+                                                <p class="text-xs font-bold text-gray-900 mb-0.5"
+                                                    x-text="`₹${Number(ticket.serviceCharge).toLocaleString('en-IN')}`">
+                                                </p>
+                                                <p class="text-[9px] font-bold text-gray-300 uppercase"
+                                                    x-text="new Date(ticket.createdAt).toLocaleDateString('en-IN', {day: '2-digit', month: 'short', year: 'numeric'})">
+                                                </p>
+                                            </div>
+                                            <a :href="`/service-tickets/${ticket._id}`"
+                                                class="w-10 h-10 rounded-xl bg-gray-50 flex items-center justify-center text-gray-300 hover:text-blue-600 hover:bg-blue-50 transition-all">
+                                                <i class="fas fa-arrow-right text-[10px]"></i>
+                                            </a>
+                                        </div>
+                                    </div>
+                                </template>
+
+                                <!-- Empty State for History -->
+                                <div x-show="contactTickets.length === 0"
+                                    class="py-12 flex flex-col items-center justify-center bg-gray-50/50 rounded-[32px] border border-dashed border-gray-200">
+                                    <div
+                                        class="w-16 h-16 bg-white rounded-2xl border border-gray-100 flex items-center justify-center mb-4 text-gray-200">
+                                        <i class="fas fa-history text-2xl"></i>
+                                    </div>
+                                    <p class="text-xs font-bold text-gray-400 uppercase tracking-widest">No service
+                                        history</p>
+                                </div>
                             </div>
                         </div>
                     </div>
                 </div>
-
-                <div class="space-y-2 mb-4">
-                    <div class="flex items-center text-sm text-gray-600">
-                        <i class="fas fa-phone w-5 text-gray-400"></i>
-                        <span x-text="contact.phone"></span>
-                    </div>
-                    <div class="flex items-center text-sm text-gray-600" x-show="contact.companyName">
-                        <i class="fas fa-building w-5 text-gray-400"></i>
-                        <span x-text="contact.companyName"></span>
-                    </div>
-                    <div class="flex items-start text-sm text-gray-600" x-show="contact.address">
-                        <i class="fas fa-map-marker-alt w-5 text-gray-400 mt-1"></i>
-                        <span x-text="contact.address" class="line-clamp-2"></span>
-                    </div>
-                </div>
             </div>
-        </template>
-
-        <template x-if="contacts.length === 0">
-            <div
-                class="col-span-full text-center py-12 text-gray-500 bg-white/80 backdrop-blur-md rounded-2xl shadow-lg">
-                <i class="fas fa-address-book text-4xl mb-3 text-gray-300"></i>
-                <p>No contacts found</p>
-            </div>
-        </template>
-    </div>
-
-    <!-- Add/Edit Modal -->
-    <div x-show="showModal" x-transition:enter="transition ease-out duration-300" x-transition:enter-start="opacity-0"
-        x-transition:enter-end="opacity-100" x-transition:leave="transition ease-in duration-200"
-        x-transition:leave-start="opacity-100" x-transition:leave-end="opacity-0"
-        class="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4"
-        @click.self="closeModal()" style="display: none;">
-
-        <div x-show="showModal" x-transition:enter="transition ease-out duration-300 transform"
-            x-transition:enter-start="opacity-0 scale-95" x-transition:enter-end="opacity-100 scale-100"
-            x-transition:leave="transition ease-in duration-200 transform"
-            x-transition:leave-start="opacity-100 scale-100" x-transition:leave-end="opacity-0 scale-95"
-            class="bg-white rounded-2xl shadow-2xl max-w-lg w-full max-h-[90vh] overflow-y-auto">
-
-            <div
-                class="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between z-10">
-                <h2 class="text-2xl font-bold text-gray-800">
-                    <span x-text="editMode ? 'Edit Contact' : 'New Contact'"></span>
-                </h2>
-                <button @click="closeModal()" class="text-gray-500 hover:text-gray-700 text-2xl">
-                    <i class="fas fa-times"></i>
-                </button>
-            </div>
-
-            <form @submit.prevent="saveContact()" class="p-6 space-y-4">
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">Name <span
-                            class="text-red-500">*</span></label>
-                    <input type="text" x-model="formData.name" required
-                        class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none transition-all">
-                </div>
-
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">Phone <span
-                            class="text-red-500">*</span></label>
-                    <input type="tel" x-model="formData.phone" required maxlength="10"
-                        class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none transition-all">
-                </div>
-
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">Type <span
-                            class="text-red-500">*</span></label>
-                    <select x-model="formData.contactType" required
-                        class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none transition-all">
-                        <option value="Customer">Customer</option>
-                        <option value="Vendor">Vendor</option>
-                        <option value="Supplier">Supplier</option>
-                        <option value="Custom">Custom</option>
-                    </select>
-                </div>
-
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">Company Name</label>
-                    <input type="text" x-model="formData.companyName"
-                        class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none transition-all">
-                </div>
-
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">Address</label>
-                    <textarea x-model="formData.address" rows="2"
-                        class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none transition-all"></textarea>
-                </div>
-
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">Notes</label>
-                    <textarea x-model="formData.notes" rows="2"
-                        class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none transition-all"></textarea>
-                </div>
-
-                <div class="flex items-center justify-end space-x-3 pt-4 border-t border-gray-200">
-                    <button @click.prevent="closeModal()" type="button"
-                        class="px-6 py-2 border-2 border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 font-medium transition-all">
-                        Cancel
-                    </button>
-                    <button type="submit" :disabled="saving"
-                        class="px-6 py-2 bg-primary-500 text-white rounded-lg hover:bg-primary-600 font-medium transition-all disabled:opacity-50 disabled:cursor-not-allowed">
-                        <i :class="saving ? 'fas fa-spinner fa-spin' : 'fas fa-save'" class="mr-2"></i>
-                        <span x-text="saving ? 'Saving...' : (editMode ? 'Update' : 'Save')"></span>
-                    </button>
-                </div>
-            </form>
         </div>
     </div>
 </div>

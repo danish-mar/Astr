@@ -24,7 +24,8 @@
                 status: 'Pending',
                 assignedTechnician: '',
                 serviceCharge: 0,
-                notes: ''
+                notes: '',
+                receivedDate: new Date().toISOString().split('T')[0]
             },
             showQuickAddCustomer: false,
             quickCustomer: {
@@ -33,8 +34,12 @@
             },
 
             technicians: [],
-            showViewModal: false,
-            selectedTicket: null,
+
+
+            // Search in Modal
+            searchResults: [],
+            isSearching: false,
+            selectedCustomer: null,
 
             get token() { return window.api.token; },
             get user() { return window.api.user; },
@@ -53,6 +58,26 @@
                 // Check if we should open the add modal
                 if (window.location.pathname === '/service-tickets/add') {
                     this.openAddModal();
+                }
+
+                // Check for edit query param
+                const urlParams = new URLSearchParams(window.location.search);
+                const editId = urlParams.get('edit');
+                if (editId) {
+                    const ticketToEdit = this.tickets.find(t => t._id === editId);
+                    if (ticketToEdit) {
+                        this.editTicket(ticketToEdit);
+                    } else {
+                        // If not in first page, fetch specifically
+                        try {
+                            const response = await window.api.get(`/service-tickets/${editId}`);
+                            if (response.data) {
+                                this.editTicket(response.data);
+                            }
+                        } catch (e) {
+                            console.error('Failed to fetch ticket for editing', e);
+                        }
+                    }
                 }
             },
 
@@ -89,7 +114,7 @@
 
             async loadTechnicians() {
                 try {
-                    const response = await window.api.get('/employees');
+                    const response = await window.api.get('/employees?limit=100');
                     if (response.data && Array.isArray(response.data)) {
                         // Filter for technicians if needed, or show all staff
                         // For now, showing all employees as potential assignees
@@ -114,7 +139,8 @@
                     status: 'Pending',
                     assignedTechnician: '',
                     serviceCharge: 0,
-                    notes: ''
+                    notes: '',
+                    receivedDate: new Date().toISOString().split('T')[0]
                 };
                 this.showModal = true;
             },
@@ -129,19 +155,18 @@
                     status: ticket.status,
                     assignedTechnician: ticket.assignedTechnician || '',
                     serviceCharge: ticket.serviceCharge || 0,
-                    notes: ticket.notes || ''
+                    notes: ticket.notes || '',
+                    receivedDate: ticket.receivedDate ? new Date(ticket.receivedDate).toISOString().split('T')[0] : (ticket.createdAt ? new Date(ticket.createdAt).toISOString().split('T')[0] : '')
                 };
+
+                // Set selectedCustomer for modal display
+                this.selectedCustomer = typeof ticket.customer === 'object' ? ticket.customer : null;
+
                 this.showModal = true;
             },
 
             viewTicket(ticket) {
-                this.selectedTicket = ticket;
-                this.showViewModal = true;
-            },
-
-            closeViewModal() {
-                this.showViewModal = false;
-                this.selectedTicket = null;
+                window.location.href = `/service-tickets/${ticket._id}`;
             },
 
             async saveTicket() {
@@ -202,6 +227,45 @@
             closeModal() {
                 this.showModal = false;
                 this.showQuickAddCustomer = false;
+                this.selectedCustomer = null;
+                this.searchResults = [];
+            },
+
+            async searchContactsInModal(query) {
+                if (query.length < 2) {
+                    this.searchResults = [];
+                    return;
+                }
+
+                this.isSearching = true;
+                try {
+                    const response = await window.api.get(`/contacts?search=${query}&limit=5`);
+                    if (response.data) {
+                        this.searchResults = response.data.filter(c => c.contactType === 'Customer');
+                    }
+                } catch (error) {
+                    console.error('Error searching contacts:', error);
+                } finally {
+                    this.isSearching = false;
+                }
+            },
+
+            getTechnicianName(tech) {
+                if (!tech) return 'Awaiting Assignment';
+                if (typeof tech === 'object') return tech.name || 'Unknown Tech';
+                const technician = this.technicians.find(t => t._id === tech || t.username === tech);
+                return technician ? (technician.name || technician.username) : tech;
+            },
+
+            selectCustomerInModal(contact) {
+                this.selectedCustomer = contact;
+                this.formData.customer = contact._id;
+                this.searchResults = [];
+            },
+
+            clearCustomerSelection() {
+                this.selectedCustomer = null;
+                this.formData.customer = '';
             }
         }));
     };

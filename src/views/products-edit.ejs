@@ -1,0 +1,305 @@
+<div x-data="productEditData" x-init="init()" class="min-h-screen bg-[#f9fafb] pb-20">
+    <!-- Premium Header -->
+    <div class="bg-white/70 backdrop-blur-xl border-b border-gray-100 mb-12">
+        <div class="max-w-[1400px] mx-auto px-8 py-10">
+            <div
+                class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-8 animate__animated animate__fadeIn">
+                <div>
+                    <div class="flex items-center gap-3 mb-4">
+                        <a href="/products"
+                            class="px-3 py-1 bg-gray-100 text-gray-500 text-[10px] font-black rounded-full tracking-wider uppercase hover:bg-gray-200 transition-colors">
+                            <i class="fas fa-arrow-left mr-2"></i>Exit to Inventory
+                        </a>
+                        <div class="w-1 h-1 rounded-full bg-gray-300"></div>
+                        <span
+                            class="text-[10px] font-black text-gray-400 uppercase tracking-widest text-opacity-80">Metadata
+                            Recalibration</span>
+                    </div>
+                    <h1 class="text-4xl font-black text-gray-900 tracking-tighter mb-2">Refine Asset Details</h1>
+                    <p class="text-gray-400 text-lg font-medium">Modify operational parameters and technical
+                        specifications</p>
+                </div>
+
+                <button @click="saveProduct()" :disabled="saving"
+                    class="px-10 py-5 bg-gray-900 text-white rounded-[24px] text-[11px] font-black uppercase tracking-[0.2em] shadow-2xl shadow-gray-200 hover:bg-black active:scale-95 transition-all disabled:opacity-50 flex items-center justify-center gap-4">
+                    <i :class="saving ? 'fas fa-spinner fa-spin' : 'fas fa-sync-alt'" class="text-[10px]"></i>
+                    <span x-text="saving ? 'Recalibrating...' : 'Update Integration'"></span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Loading State -->
+    <div x-show="loading" class="text-center py-32 animate__animated animate__fadeIn">
+        <div class="relative w-20 h-20 mx-auto mb-8">
+            <div class="absolute inset-0 border-4 border-gray-100 rounded-full"></div>
+            <div class="absolute inset-0 border-4 border-gray-900 rounded-full border-t-transparent animate-spin"></div>
+        </div>
+        <p class="text-[10px] font-black text-gray-400 uppercase tracking-[0.3em]">Deciphering Asset Data...</p>
+    </div>
+
+    <!-- Main Canvas -->
+    <div x-show="!loading" class="max-w-[1400px] mx-auto px-8">
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-12 animate__animated animate__fadeInUp">
+
+            <!-- Left Architecture: Basic Info & Specs -->
+            <div class="lg:col-span-8 space-y-12">
+                <!-- Basic Configuration -->
+                <div class="bg-white border border-gray-100 rounded-[40px] p-10 shadow-sm">
+                    <div class="flex items-center justify-between mb-12">
+                        <div>
+                            <h3 class="text-2xl font-black text-gray-900 tracking-tight">Core Configuration</h3>
+                            <p class="text-gray-400 font-medium text-sm mt-1">Fundamental identification parameters</p>
+                        </div>
+                        <div
+                            class="w-14 h-14 bg-blue-50 rounded-[22px] flex items-center justify-center text-blue-600 shadow-xl shadow-blue-50">
+                            <i class="fas fa-cube text-lg"></i>
+                        </div>
+                    </div>
+
+                    <div class="space-y-10">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                            <div class="space-y-3">
+                                <label class="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Asset
+                                    Designation <span class="text-red-500">*</span></label>
+                                <input type="text" x-model="formData.name" required placeholder="Display Name / Model"
+                                    class="block w-full px-6 py-4 bg-gray-50 border border-transparent rounded-[22px] text-gray-900 font-bold focus:ring-4 focus:ring-blue-50 focus:bg-white focus:border-blue-100 outline-none transition-all">
+                            </div>
+                            <div class="space-y-3">
+                                <label
+                                    class="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Market
+                                    Valuation (₹) <span class="text-red-500">*</span></label>
+                                <input type="number" x-model="formData.price" required min="0" placeholder="0.00"
+                                    class="block w-full px-6 py-4 bg-gray-50 border border-transparent rounded-[22px] text-gray-900 font-bold focus:ring-4 focus:ring-blue-50 focus:bg-white focus:border-blue-100 outline-none transition-all">
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                            <div class="space-y-3">
+                                <label
+                                    class="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Taxonomy
+                                    Class <span class="text-red-500">*</span></label>
+                                <select x-model="formData.category" @change="onCategoryChange()" required
+                                    class="block w-full px-6 py-4 bg-gray-50 border border-transparent rounded-[22px] text-gray-900 font-bold focus:ring-4 focus:ring-blue-50 focus:bg-white focus:border-blue-100 outline-none transition-all appearance-none cursor-pointer">
+                                    <option value="">Select Protocol</option>
+                                    <template x-for="category in categories" :key="category._id">
+                                        <option :value="category._id" x-text="category.name"></option>
+                                    </template>
+                                </select>
+                            </div>
+                            <div class="space-y-3">
+                                <label
+                                    class="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Acquisition
+                                    Source <span class="text-red-500">*</span></label>
+                                <div class="flex items-center gap-3">
+                                    <select x-model="formData.source" required
+                                        class="flex-1 px-6 py-4 bg-gray-50 border border-transparent rounded-[22px] text-gray-900 font-bold focus:ring-4 focus:ring-blue-50 focus:bg-white focus:border-blue-100 outline-none transition-all appearance-none cursor-pointer">
+                                        <option value="">Select Variant</option>
+                                        <template x-for="contact in contacts" :key="contact._id">
+                                            <option :value="contact._id">
+                                                <span x-text="contact.name + ' (' + contact.contactType + ')'"></span>
+                                            </option>
+                                        </template>
+                                    </select>
+                                    <button @click.prevent="showQuickAddContact = !showQuickAddContact" type="button"
+                                        class="w-14 h-14 bg-gray-900 text-white rounded-[22px] flex items-center justify-center hover:bg-black active:scale-95 shadow-xl shadow-gray-200 transition-all">
+                                        <i class="fas fa-plus text-xs"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Quick Intake Protocol -->
+                        <div x-show="showQuickAddContact" x-transition
+                            class="bg-blue-50/50 border border-blue-100 rounded-[32px] p-8 space-y-6 animate__animated animate__fadeIn">
+                            <div class="flex items-center justify-between">
+                                <h4 class="text-[10px] font-black text-blue-900 uppercase tracking-[0.2em]">Rapid
+                                    Contact intake</h4>
+                                <button @click.prevent="showQuickAddContact = false"
+                                    class="w-8 h-8 flex items-center justify-center text-blue-400 hover:text-blue-600 transition-colors"><i
+                                        class="fas fa-times text-xs"></i></button>
+                            </div>
+                            <div class="grid grid-cols-2 gap-6">
+                                <input type="text" x-model="quickContact.name" placeholder="Legal Name *"
+                                    class="px-5 py-3 bg-white border border-blue-100 rounded-xl text-xs font-bold focus:ring-2 focus:ring-blue-200 outline-none">
+                                <input type="tel" x-model="quickContact.phone" placeholder="Protocol Number *"
+                                    maxlength="10"
+                                    class="px-5 py-3 bg-white border border-blue-100 rounded-xl text-xs font-bold focus:ring-2 focus:ring-blue-200 outline-none">
+                            </div>
+                            <div class="flex items-center gap-6">
+                                <select x-model="quickContact.contactType"
+                                    class="flex-1 px-5 py-3 bg-white border border-blue-100 rounded-xl text-xs font-bold focus:ring-2 focus:ring-blue-200 outline-none appearance-none cursor-pointer">
+                                    <option value="">Classification *</option>
+                                    <option value="Vendor">Vendor Entity</option>
+                                    <option value="Supplier">Supplier Hub</option>
+                                    <option value="Customer">Standard Customer</option>
+                                </select>
+                                <button @click.prevent="saveQuickContact()"
+                                    class="px-8 py-3 bg-blue-600 text-white rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-blue-700 shadow-lg shadow-blue-100 transition-all">Secure
+                                    Entry</button>
+                            </div>
+                        </div>
+
+                        <!-- Static Identifiers -->
+                        <div
+                            class="flex items-center justify-between p-8 bg-gray-50 rounded-[32px] border border-gray-100">
+                            <div>
+                                <p class="text-sm font-black text-gray-900 tracking-tight">System Identifier</p>
+                                <p class="text-[11px] font-bold text-gray-400 mt-1 uppercase tracking-wider">Immutable
+                                    cryptographic asset reference</p>
+                            </div>
+                            <div class="px-6 py-2 bg-white border border-gray-100 rounded-full font-black text-gray-900 text-xs tracking-widest"
+                                x-text="formData.productID || 'Not assigned'"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Technical Specifications -->
+                <div class="bg-white border border-gray-100 rounded-[40px] p-10 shadow-sm"
+                    x-show="selectedCategoryTemplate && selectedCategoryTemplate.length > 0"
+                    x-transition:enter="transition ease-out duration-500"
+                    x-transition:enter-start="opacity-0 translate-y-8"
+                    x-transition:enter-end="opacity-100 translate-y-0">
+                    <div class="flex items-center justify-between mb-12">
+                        <div>
+                            <h3 class="text-2xl font-black text-gray-900 tracking-tight">Technical Matrix</h3>
+                            <p class="text-gray-400 font-medium text-sm mt-1">Deep-level attribute specification</p>
+                        </div>
+                        <div
+                            class="w-14 h-14 bg-indigo-50 rounded-[22px] flex items-center justify-center text-indigo-600 shadow-xl shadow-indigo-50">
+                            <i class="fas fa-list-ul text-lg"></i>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-10">
+                        <template x-for="field in selectedCategoryTemplate" :key="field.fieldName">
+                            <div class="space-y-4">
+                                <label class="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] ml-1">
+                                    <span x-text="field.fieldName"></span>
+                                    <span x-show="field.required" class="text-indigo-400">*</span>
+                                </label>
+
+                                <template x-if="field.fieldType === 'text' || field.fieldType === 'number'">
+                                    <input :type="field.fieldType" x-model="formData.specifications[field.fieldName]"
+                                        :required="field.required"
+                                        class="block w-full px-6 py-4 bg-gray-50 border border-transparent rounded-[22px] text-gray-900 font-bold focus:ring-4 focus:ring-indigo-50 focus:bg-white focus:border-indigo-100 outline-none transition-all">
+                                </template>
+
+                                <template x-if="field.fieldType === 'textarea'">
+                                    <textarea x-model="formData.specifications[field.fieldName]"
+                                        :required="field.required" rows="3"
+                                        class="block w-full px-6 py-4 bg-gray-50 border border-transparent rounded-[22px] text-gray-900 font-bold focus:ring-4 focus:ring-indigo-50 focus:bg-white focus:border-indigo-100 outline-none transition-all resize-none"></textarea>
+                                </template>
+
+                                <template x-if="field.fieldType === 'select'">
+                                    <div class="space-y-4">
+                                        <select x-model="formData.specifications[field.fieldName]"
+                                            @change="onSpecChange(field.fieldName)" :required="field.required"
+                                            class="block w-full px-6 py-4 bg-gray-50 border border-transparent rounded-[22px] text-gray-900 font-bold focus:ring-4 focus:ring-indigo-50 focus:bg-white focus:border-indigo-100 outline-none transition-all appearance-none cursor-pointer">
+                                            <option value="">Select Property...</option>
+                                            <template x-for="option in field.options" :key="getOptionValue(option)">
+                                                <option :value="getOptionValue(option)" x-text="getOptionValue(option)">
+                                                </option>
+                                            </template>
+                                        </select>
+
+                                        <!-- Nested Logic Matrix -->
+                                        <template x-if="hasLinkedFields(field.fieldName)">
+                                            <div
+                                                class="mt-6 p-8 bg-indigo-100/30 rounded-[32px] border border-indigo-100/50 space-y-8">
+                                                <template x-for="linkedField in getLinkedFields(field.fieldName)"
+                                                    :key="linkedField.fieldName">
+                                                    <div class="space-y-4">
+                                                        <label
+                                                            class="text-[10px] font-black text-indigo-900 uppercase tracking-widest ml-1">
+                                                            <span x-text="linkedField.fieldName"></span>
+                                                            <span x-show="linkedField.required"
+                                                                class="text-red-400">*</span>
+                                                        </label>
+
+                                                        <template
+                                                            x-if="linkedField.fieldType === 'text' || linkedField.fieldType === 'number'">
+                                                            <input :type="linkedField.fieldType"
+                                                                x-model="formData.specifications[linkedField.fieldName]"
+                                                                :required="linkedField.required"
+                                                                class="block w-full px-5 py-3 bg-white border border-transparent rounded-xl text-gray-900 font-bold focus:ring-4 focus:ring-white focus:border-indigo-200 outline-none transition-all">
+                                                        </template>
+
+                                                        <template x-if="linkedField.fieldType === 'select'">
+                                                            <select
+                                                                x-model="formData.specifications[linkedField.fieldName]"
+                                                                :required="linkedField.required"
+                                                                class="block w-full px-5 py-3 bg-white border border-transparent rounded-xl text-gray-900 font-bold focus:ring-4 focus:ring-white focus:border-indigo-200 outline-none transition-all appearance-none cursor-pointer">
+                                                                <option value="">Variant Option...</option>
+                                                                <template x-for="opt in linkedField.options" :key="opt">
+                                                                    <option :value="opt" x-text="opt"></option>
+                                                                </template>
+                                                            </select>
+                                                        </template>
+                                                    </div>
+                                                </template>
+                                            </div>
+                                        </template>
+                                    </div>
+                                </template>
+                            </div>
+                        </template>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Console: Meta & Notes -->
+            <div class="lg:col-span-4 space-y-12">
+                <!-- Taxonomy Labels -->
+                <div class="bg-white border border-gray-100 rounded-[40px] p-8 shadow-sm">
+                    <div class="flex items-center gap-3 mb-8">
+                        <div class="w-10 h-10 bg-purple-50 rounded-xl flex items-center justify-center text-purple-600">
+                            <i class="fas fa-tags text-xs"></i>
+                        </div>
+                        <h3 class="text-xl font-black text-gray-900 tracking-tight">Taxonomy Markers</h3>
+                    </div>
+
+                    <div class="space-y-6">
+                        <div class="flex flex-wrap gap-2">
+                            <template x-for="(tag, index) in formData.tags" :key="index">
+                                <span
+                                    class="group flex items-center gap-2 px-4 py-2 bg-gray-50 text-[10px] font-black text-gray-900 uppercase tracking-widest rounded-xl border border-gray-100 hover:bg-white hover:shadow-sm transition-all">
+                                    <span x-text="tag"></span>
+                                    <button @click.prevent="formData.tags.splice(index, 1)"
+                                        class="text-gray-300 group-hover:text-red-500 transition-colors">
+                                        <i class="fas fa-times text-[9px]"></i>
+                                    </button>
+                                </span>
+                            </template>
+                        </div>
+
+                        <div class="flex gap-3">
+                            <input type="text" x-model="newTag" @keydown.enter.prevent="addTag()"
+                                placeholder="Add system tag..."
+                                class="flex-1 px-5 py-3 bg-gray-50 border border-transparent rounded-xl text-xs font-bold focus:ring-4 focus:ring-blue-50 focus:bg-white focus:border-blue-100 transition-all outline-none">
+                            <button @click.prevent="addTag()"
+                                class="w-12 h-12 bg-gray-900 text-white rounded-xl flex items-center justify-center hover:bg-black active:scale-95 transition-all shadow-lg shadow-gray-200">
+                                <i class="fas fa-plus text-[10px]"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Internal Chronicles -->
+                <div class="bg-white border border-gray-100 rounded-[40px] p-8 shadow-sm">
+                    <div class="flex items-center gap-3 mb-8">
+                        <div class="w-10 h-10 bg-amber-50 rounded-xl flex items-center justify-center text-amber-600">
+                            <i class="fas fa-sticky-note text-xs"></i>
+                        </div>
+                        <h3 class="text-xl font-black text-gray-900 tracking-tight">Internal Notes</h3>
+                    </div>
+                    <textarea x-model="formData.notes" rows="8"
+                        placeholder="Enter private operational notes / history..."
+                        class="w-full px-6 py-5 bg-gray-50 border border-transparent rounded-[32px] text-gray-900 font-bold focus:ring-4 focus:ring-amber-50 focus:bg-white focus:border-amber-100 outline-none transition-all resize-none text-sm"></textarea>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="/js/pages/products-edit.js"></script>

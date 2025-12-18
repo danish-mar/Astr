@@ -14,8 +14,11 @@
             },
             viewMode: 'list',
             showModal: false,
+            showViewModal: false,
             editMode: false,
             saving: false,
+            selectedContact: null,
+            contactTickets: [],
             formData: {
                 name: '',
                 phone: '',
@@ -129,6 +132,25 @@
 
             closeModal() {
                 this.showModal = false;
+            },
+
+            async viewContact(contact) {
+                this.selectedContact = contact;
+                this.contactTickets = [];
+                this.showViewModal = true;
+
+                try {
+                    const response = await window.api.get(`/service-tickets/customer/${contact._id}`);
+                    this.contactTickets = response.data;
+                } catch (error) {
+                    console.error('Error loading contact tickets:', error);
+                }
+            },
+
+            closeViewModal() {
+                this.showViewModal = false;
+                this.selectedContact = null;
+                this.contactTickets = [];
             }
         }));
     };

@@ -58,8 +58,12 @@ app.get("/products", (req: Request, res: Response) => {
   res.render("products", { title: "Astr - Products" });
 });
 
-app.get("/products/add", (req: Request, res: Response) => {
-  res.render("products", { title: "Astr - Add Product" });
+app.get("/products/add", (req, res) => {
+  res.render("products-add", { title: "Astr - Add Product" });
+});
+
+app.get("/products/edit/:id", (req, res) => {
+  res.render("products-edit", { title: "Astr - Edit Product" });
 });
 
 // Service Tickets
@@ -69,6 +73,10 @@ app.get("/service-tickets", (req: Request, res: Response) => {
 
 app.get("/service-tickets/add", (req: Request, res: Response) => {
   res.render("service-tickets-add", { title: "Astr - Add Service Ticket" });
+});
+
+app.get("/service-tickets/:id", (req: Request, res: Response) => {
+  res.render("service-ticket-view", { title: "Astr - View Ticket" });
 });
 
 // Contacts
@@ -86,7 +94,11 @@ app.get("/categories", (req: Request, res: Response) => {
 });
 
 app.get("/categories/add", (req: Request, res: Response) => {
-  res.render("categories", { title: "Astr - Add Category" });
+  res.render("categories-add", { title: "Astr - Add Category" });
+});
+
+app.get("/categories/edit/:id", (req: Request, res: Response) => {
+  res.render("categories-edit", { title: "Astr - Edit Category" });
 });
 
 // Statistics

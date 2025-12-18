@@ -156,6 +156,13 @@ export const createServiceTicket = async (req: Request, res: Response) => {
       assignedTechnician,
       serviceCharge: serviceCharge || 0,
       notes,
+      logs: [
+        {
+          status: status || "Pending",
+          label: `Ticket initiated with status: ${status || "Pending"}`,
+          timestamp: new Date(),
+        },
+      ],
     });
 
     await ticket.save();
@@ -173,8 +180,14 @@ export const createServiceTicket = async (req: Request, res: Response) => {
 export const updateServiceTicket = async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
-    const { deviceDetails, status, assignedTechnician, serviceCharge, notes } =
-      req.body;
+    const {
+      deviceDetails,
+      status,
+      assignedTechnician,
+      serviceCharge,
+      notes,
+      logEntry,
+    } = req.body;
 
     if (!isValidObjectId(id)) {
       return sendError(res, "Invalid service ticket ID", 400);
@@ -188,7 +201,14 @@ export const updateServiceTicket = async (req: Request, res: Response) => {
 
     // Update fields
     if (deviceDetails) ticket.deviceDetails = deviceDetails;
-    if (status) ticket.status = status;
+    if (status && ticket.status !== status) {
+      ticket.status = status;
+      ticket.logs.push({
+        status,
+        label: `Status updated to: ${status}`,
+        timestamp: new Date(),
+      });
+    }
     if (assignedTechnician !== undefined)
       ticket.assignedTechnician = assignedTechnician;
     if (serviceCharge !== undefined) ticket.serviceCharge = serviceCharge;
@@ -223,6 +243,7 @@ export const updateTicketStatus = async (req: Request, res: Response) => {
       "Completed",
       "Delivered",
       "Cancelled",
+      "Reopened",
     ];
     if (!validStatuses.includes(status)) {
       return sendError(res, "Invalid status", 400);
@@ -234,7 +255,14 @@ export const updateTicketStatus = async (req: Request, res: Response) => {
       return sendError(res, "Service ticket not found", 404);
     }
 
-    ticket.status = status;
+    if (ticket.status !== status) {
+      ticket.status = status;
+      ticket.logs.push({
+        status,
+        label: `Status transitioned to: ${status}`,
+        timestamp: new Date(),
+      });
+    }
     await ticket.save();
     await ticket.populate("customer");
 

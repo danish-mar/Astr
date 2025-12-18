@@ -23,6 +23,7 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css" />
 
   <!-- Alpine.js -->
+  <script defer src="https://cdn.jsdelivr.net/npm/@alpinejs/collapse@3.13.3/dist/cdn.min.js"></script>
   <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.13.3/dist/cdn.min.js"></script>
 
   <!-- Chart.js -->
@@ -108,10 +109,21 @@
   </script>
 
   <style>
-    /* Custom scrollbar - thinner and more subtle */
+    /* Hide scrollbar globally */
+    * {
+      scrollbar-width: none;
+      /* Firefox */
+      -ms-overflow-style: none;
+      /* IE and Edge */
+    }
+
+    /* Hide scrollbar for Chrome, Safari and Opera */
+    *::-webkit-scrollbar {
+      display: none;
+    }
+
     ::-webkit-scrollbar {
-      width: 6px;
-      height: 6px;
+      display: none;
     }
 
     ::-webkit-scrollbar-track {
@@ -163,53 +175,59 @@
   <div class="flex h-screen overflow-hidden">
 
     <!-- Sidebar (Desktop) -->
-    <aside class="hidden md:flex flex-col w-72 m-4 mr-0 rounded-3xl glass shadow-ios z-20 relative overflow-hidden">
+    <aside
+      class="hidden md:flex flex-col w-72 m-6 mr-0 rounded-[32px] bg-white border border-gray-100 shadow-sm z-20 relative overflow-hidden">
       <!-- Sidebar Header -->
-      <div class="p-6 pb-2 flex items-center space-x-3">
-        <div
-          class="w-10 h-10 rounded-xl bg-gradient-to-br from-primary-500 to-blue-600 flex items-center justify-center text-white shadow-lg shadow-primary-500/30">
-          <i class="fas fa-star text-lg"></i>
+      <div class="p-8 pb-4">
+        <div class="flex items-center space-x-3 group cursor-pointer">
+          <div
+            class="w-11 h-11 rounded-2xl bg-gray-900 flex items-center justify-center text-white shadow-lg transition-transform group-hover:scale-105 active:scale-95">
+            <i class="fas fa-star text-lg"></i>
+          </div>
+          <div class="flex flex-col">
+            <span class="text-xl font-bold tracking-tight text-gray-900 leading-none">Astr</span>
+            <span class="text-[9px] font-bold text-gray-400 uppercase tracking-widest mt-1">Management</span>
+          </div>
         </div>
-        <span class="text-xl font-bold tracking-tight text-gray-900">Astr</span>
       </div>
 
-      <!-- Sidebar Navigation -->
-      <nav class="flex-1 px-4 py-6 space-y-1 overflow-y-auto">
+      <!-- Navigation Matrix -->
+      <nav class="flex-1 px-4 py-8 space-y-1.5 overflow-y-auto">
         <template x-for="item in navItems" :key="item.href">
           <a :href="item.href"
-            class="flex items-center space-x-3 px-4 py-3 rounded-2xl transition-all duration-200 group relative overflow-hidden"
-            :class="isActive(item.href) ? 'bg-primary-50 text-primary-600 font-semibold shadow-sm' : 'text-gray-500 hover:bg-gray-100/80 hover:text-gray-900'">
+            class="flex items-center space-x-3 px-5 py-4 rounded-2xl transition-all duration-300 group relative"
+            :class="isActive(item.href) ? 'bg-gray-50 text-gray-900' : 'text-gray-400 hover:text-gray-900 hover:bg-gray-50/50'">
 
-            <div class="w-8 flex justify-center transition-transform duration-200 group-hover:scale-110"
-              :class="isActive(item.href) ? 'text-primary-500' : 'text-gray-400 group-hover:text-gray-600'">
+            <div class="w-8 flex justify-center transition-all duration-300"
+              :class="isActive(item.href) ? 'text-gray-900 scale-110' : 'text-gray-300 group-hover:text-gray-600 group-hover:scale-110'">
               <i :class="item.icon" class="text-lg"></i>
             </div>
-            <span x-text="item.label"></span>
+            <span class="text-sm font-semibold tracking-tight" x-text="item.label"></span>
 
-            <!-- Active Indicator -->
-            <div x-show="isActive(item.href)"
-              class="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-8 bg-primary-500 rounded-r-full"></div>
+            <!-- Subtle Pulse Indicator for active -->
+            <div x-show="isActive(item.href)" class="absolute right-4 w-1.5 h-1.5 rounded-full bg-gray-900 shadow-sm">
+            </div>
           </a>
         </template>
       </nav>
 
-      <!-- User Info -->
-      <div class="p-4 mt-auto">
+      <!-- User Node -->
+      <div class="p-6">
         <div
-          class="p-3 rounded-2xl bg-gray-50/80 border border-gray-100 flex items-center justify-between group hover:bg-white hover:shadow-ios transition-all cursor-pointer">
+          class="p-4 rounded-[24px] bg-gray-50/50 border border-gray-100 flex items-center justify-between group hover:bg-white hover:shadow-xl hover:shadow-gray-100 transition-all cursor-pointer">
           <div class="flex items-center space-x-3 overflow-hidden">
             <div
-              class="w-10 h-10 rounded-full bg-gradient-to-br from-gray-200 to-gray-300 flex-shrink-0 flex items-center justify-center text-gray-600 font-bold shadow-inner">
+              class="w-10 h-10 rounded-full bg-white border border-gray-100 flex-shrink-0 flex items-center justify-center text-gray-900 font-bold shadow-sm group-hover:bg-gray-900 group-hover:text-white transition-all">
               <span x-text="user?.name?.charAt(0) || 'U'"></span>
             </div>
             <div class="flex-1 min-w-0">
-              <p class="text-sm font-semibold text-gray-900 truncate" x-text="user?.name || 'User'"></p>
-              <p class="text-xs text-gray-500 truncate" x-text="user?.email || ''"></p>
+              <p class="text-xs font-bold text-gray-900 truncate" x-text="user?.name || 'User'"></p>
+              <p class="text-[10px] font-bold text-gray-400 truncate mt-0.5" x-text="user?.email || 'Unauthorized'"></p>
             </div>
           </div>
           <button @click.stop="logout()"
-            class="w-8 h-8 rounded-full flex items-center justify-center text-gray-400 hover:text-red-500 hover:bg-red-50 transition-colors">
-            <i class="fas fa-sign-out-alt"></i>
+            class="w-8 h-8 rounded-full flex items-center justify-center text-gray-300 hover:text-red-500 hover:bg-red-50 transition-all">
+            <i class="fas fa-power-off text-sm"></i>
           </button>
         </div>
       </div>
@@ -220,18 +238,26 @@
 
       <!-- Mobile Header -->
       <header
-        class="md:hidden bg-white/80 backdrop-blur-md border-b border-gray-200 sticky top-0 z-30 px-4 py-3 flex items-center justify-between">
+        class="md:hidden bg-white/70 backdrop-blur-xl border-b border-gray-100 sticky top-0 z-30 px-6 py-4 flex items-center justify-between">
         <button @click="sidebarOpen = true"
-          class="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center text-gray-600 active:scale-95 transition-transform">
-          <i class="fas fa-bars"></i>
+          class="w-11 h-11 rounded-[14px] bg-gray-50 border border-gray-100 flex items-center justify-center text-gray-900 active:scale-90 transition-all">
+          <i class="fas fa-bars-staggered text-sm"></i>
         </button>
-        <div class="flex items-center space-x-2">
-          <div class="w-8 h-8 rounded-lg bg-primary-500 flex items-center justify-center text-white">
-            <i class="fas fa-star text-sm"></i>
+        <div class="flex items-center gap-2.5">
+          <div
+            class="w-9 h-9 rounded-[12px] bg-gray-900 flex items-center justify-center text-white shadow-lg shadow-gray-200">
+            <i class="fas fa-star text-xs"></i>
           </div>
-          <span class="text-lg font-bold text-gray-900">Astr</span>
+          <div>
+            <span class="text-xl font-bold text-gray-900 tracking-tight block leading-none">Astr</span>
+            <span class="text-[9px] font-bold text-gray-400 uppercase tracking-widest mt-1">Management</span>
+          </div>
         </div>
-        <div class="w-10"></div> <!-- Spacer for balance -->
+        <div class="w-11 flex justify-end">
+          <div
+            class="w-9 h-9 rounded-full bg-blue-50 border border-blue-100 flex items-center justify-center text-blue-600 font-bold text-[10px]"
+            x-text="user?.name?.charAt(0) || 'U'"></div>
+        </div>
       </header>
 
       <!-- Content Scroll Area -->
@@ -241,6 +267,26 @@
         </div>
       </main>
 
+      <!-- Bottom Navigation (Mobile Only) -->
+      <nav
+        class="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-white/80 backdrop-blur-xl border-t border-gray-100 px-6 py-3 flex items-center justify-between safe-area-bottom">
+        <template x-for="item in navItems.slice(0, 4)" :key="item.href">
+          <a :href="item.href" class="flex flex-col items-center gap-1 transition-all"
+            :class="isActive(item.href) ? 'text-gray-900' : 'text-gray-400'">
+            <div class="w-10 h-10 rounded-xl flex items-center justify-center transition-all"
+              :class="isActive(item.href) ? 'bg-gray-900 text-white shadow-lg shadow-gray-200 scale-110' : 'bg-transparent'">
+              <i :class="item.icon" class="text-xs"></i>
+            </div>
+            <span class="text-[9px] font-bold uppercase tracking-widest" x-text="item.label"></span>
+          </a>
+        </template>
+        <button @click="sidebarOpen = true" class="flex flex-col items-center gap-1 text-gray-400">
+          <div class="w-10 h-10 rounded-xl flex items-center justify-center bg-gray-50 text-gray-400">
+            <i class="fas fa-ellipsis-h text-xs"></i>
+          </div>
+          <span class="text-[9px] font-bold uppercase tracking-widest">More</span>
+        </button>
+      </nav>
     </div>
   </div>
 
@@ -257,49 +303,71 @@
       x-transition:enter-start="-translate-x-full" x-transition:enter-end="translate-x-0"
       x-transition:leave="transition ease-in duration-200 transform" x-transition:leave-start="translate-x-0"
       x-transition:leave-end="-translate-x-full"
-      class="absolute left-0 top-0 bottom-0 w-80 bg-white shadow-2xl flex flex-col">
+      class="absolute left-0 top-0 bottom-0 w-[85%] max-w-[340px] bg-white shadow-2xl flex flex-col rounded-r-[40px] overflow-hidden">
 
-      <div class="p-6 border-b border-gray-100 flex items-center justify-between">
-        <div class="flex items-center space-x-3">
-          <div
-            class="w-10 h-10 rounded-xl bg-primary-500 flex items-center justify-center text-white shadow-lg shadow-primary-500/30">
-            <i class="fas fa-star text-lg"></i>
+      <div class="p-8 border-b border-gray-50">
+        <div class="flex items-center justify-between">
+          <div class="px-8 flex items-center gap-3">
+            <div
+              class="w-12 h-12 rounded-[18px] bg-gray-900 flex items-center justify-center text-white shadow-xl shadow-gray-200">
+              <i class="fas fa-star text-lg"></i>
+            </div>
+            <div>
+              <span class="text-2xl font-bold text-gray-900 tracking-tight block">Astr</span>
+              <span class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Management v2.0</span>
+            </div>
           </div>
-          <span class="text-xl font-bold text-gray-900">Astr</span>
+          <button @click="sidebarOpen = false"
+            class="w-10 h-10 rounded-full bg-gray-50 flex items-center justify-center text-gray-400 active:scale-90 transition-all">
+            <i class="fas fa-times"></i>
+          </button>
         </div>
-        <button @click="sidebarOpen = false"
-          class="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center text-gray-500">
-          <i class="fas fa-times"></i>
-        </button>
       </div>
 
-      <nav class="flex-1 px-4 py-6 space-y-1 overflow-y-auto">
+      <nav class="flex-1 px-4 py-8 space-y-2 overflow-y-auto">
         <template x-for="item in navItems" :key="item.href">
-          <a :href="item.href" class="flex items-center space-x-4 px-4 py-3.5 rounded-2xl transition-all duration-200"
-            :class="isActive(item.href) ? 'bg-primary-50 text-primary-600 font-semibold' : 'text-gray-600 hover:bg-gray-50'">
-            <i :class="item.icon" class="text-xl w-6 text-center"></i>
-            <span x-text="item.label" class="text-base"></span>
+          <a :href="item.href"
+            class="flex items-center gap-4 px-6 py-4 rounded-[22px] transition-all duration-300 group"
+            :class="isActive(item.href) ? 'bg-gray-900 text-white shadow-xl shadow-gray-200' : 'text-gray-400 hover:bg-gray-50 hover:text-gray-900'">
+            <div class="w-10 h-10 rounded-xl flex items-center justify-center transition-colors"
+              :class="isActive(item.href) ? 'bg-white/10 text-white' : 'bg-gray-100 text-gray-400 group-hover:bg-white'">
+              <i :class="item.icon" class="text-xs"></i>
+            </div>
+            <span x-text="item.label" class="text-[11px] font-bold uppercase tracking-widest"></span>
           </a>
         </template>
       </nav>
 
-      <div class="p-4 border-t border-gray-100">
-        <div class="flex items-center justify-between p-4 rounded-2xl bg-gray-50">
-          <div class="flex items-center space-x-3">
-            <div class="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center text-gray-600 font-bold">
+      <div class="p-6">
+        <div
+          class="p-4 rounded-[24px] bg-gray-50/50 border border-gray-100 flex items-center justify-between active:bg-white active:shadow-xl transition-all"
+          @click="window.location.href='/settings'; sidebarOpen = false">
+          <div class="flex items-center space-x-3 overflow-hidden">
+            <div
+              class="w-11 h-11 rounded-full bg-white border border-gray-100 flex-shrink-0 flex items-center justify-center text-gray-900 font-bold shadow-sm">
               <span x-text="user?.name?.charAt(0) || 'U'"></span>
             </div>
-            <div>
-              <p class="font-semibold text-gray-900" x-text="user?.name || 'User'"></p>
-              <p class="text-xs text-gray-500" x-text="user?.email || ''"></p>
+            <div class="flex-1 min-w-0">
+              <p class="text-xs font-bold text-gray-900 truncate" x-text="user?.name || 'User'"></p>
+              <p class="text-[10px] font-bold text-gray-400 truncate mt-0.5" x-text="user?.email || 'Unauthorized'"></p>
             </div>
           </div>
-          <button @click="logout()" class="text-gray-400 hover:text-red-500">
-            <i class="fas fa-sign-out-alt text-xl"></i>
+          <button @click.stop="logout()"
+            class="w-9 h-9 rounded-full flex items-center justify-center text-gray-300 hover:text-red-500 hover:bg-red-50 transition-all">
+            <i class="fas fa-power-off text-sm"></i>
           </button>
         </div>
       </div>
     </aside>
+    <p class="text-xs text-gray-500" x-text="user?.email || ''"></p>
+  </div>
+  </div>
+  <button @click="logout()" class="text-gray-400 hover:text-red-500">
+    <i class="fas fa-sign-out-alt text-xl"></i>
+  </button>
+  </div>
+  </div>
+  </aside>
   </div>
 
   <!-- Bottom Navigation (Mobile Only) -->

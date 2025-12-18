@@ -4,7 +4,7 @@ import { Schema, model, Document, Types } from "mongoose";
 export interface ISpecificationField {
   fieldName: string;
   fieldType: "text" | "number" | "select" | "textarea";
-  options?: string[]; // For select type fields
+  options?: (string | ISpecificationOption)[]; // For select type fields
   required?: boolean;
 }
 
@@ -16,6 +16,12 @@ export interface ICategory extends Document {
   specificationsTemplate: ISpecificationField[];
   createdAt: Date;
   updatedAt: Date;
+}
+
+export interface ISpecificationOption {
+  value: string;
+  subOptions?: string[]; // Legacy
+  linkedFields?: ISpecificationField[]; // New recursive structure
 }
 
 // 3. Create the Mongoose schema
@@ -49,8 +55,8 @@ const categorySchema = new Schema<ICategory>(
           default: "text",
         },
         options: {
-          type: [String],
-          default: undefined, // Only used for 'select' type
+          type: [Schema.Types.Mixed], // Allows strings or objects with subOptions & linkedFields
+          default: undefined,
         },
         required: {
           type: Boolean,

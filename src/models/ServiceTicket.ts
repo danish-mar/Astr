@@ -1,17 +1,32 @@
 import { Schema, model, Document, Types } from "mongoose";
 import { IContact } from "./Contact";
 
+export interface ITicketLog {
+  status: string;
+  label: string;
+  note?: string;
+  timestamp: Date;
+}
+
 // 1. Define TypeScript interface for Service Ticket document
 export interface IServiceTicket extends Document {
   _id: Types.ObjectId;
   ticketNumber: string;
   customer: Types.ObjectId | IContact;
   deviceDetails: string;
-  status: "Pending" | "In Progress" | "Completed" | "Delivered" | "Cancelled";
+  status:
+  | "Pending"
+  | "In Progress"
+  | "Completed"
+  | "Delivered"
+  | "Cancelled"
+  | "Reopened";
   assignedTechnician?: string;
   serviceCharge?: number;
   notes?: string;
+  dueDate?: Date;
   completedAt?: Date;
+  logs: ITicketLog[];
   createdAt: Date;
   updatedAt: Date;
 }
@@ -58,6 +73,7 @@ const serviceTicketSchema = new Schema<IServiceTicket>(
           "Completed",
           "Delivered",
           "Cancelled",
+          "Reopened",
         ],
         message: "{VALUE} is not a valid status",
       },
@@ -76,9 +92,20 @@ const serviceTicketSchema = new Schema<IServiceTicket>(
       type: String,
       trim: true,
     },
+    dueDate: {
+      type: Date,
+    },
     completedAt: {
       type: Date,
     },
+    logs: [
+      {
+        status: { type: String, required: true },
+        label: { type: String, required: true },
+        note: { type: String },
+        timestamp: { type: Date, default: Date.now },
+      },
+    ],
   },
   {
     timestamps: true,
@@ -153,6 +180,7 @@ serviceTicketSchema.methods.updateStatus = async function (newStatus: string) {
     "Completed",
     "Delivered",
     "Cancelled",
+    "Reopened",
   ];
 
   if (!validStatuses.includes(newStatus)) {

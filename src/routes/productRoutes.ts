@@ -9,12 +9,46 @@ import {
   assignProductIDToProduct,
   markProductAsSold,
   getProductStats,
+  getFilters,
+  exportProducts,
+  previewImport,
+  importProducts
 } from "../controllers/productController";
+
+import multer from "multer";
+
 import { authenticate, authorize, validateObjectId } from "../middleware";
 
 const router = Router();
+const upload = multer({ dest: 'uploads/' });
+
+// CSV Import/Export
+router.get("/export", authenticate, authorize("Admin", "Manager", "CEO"), exportProducts);
+router.post("/import/preview", authenticate, authorize("Admin", "Manager", "CEO"), (req, res, next) => {
+  console.log('DEBUG: Route /import/preview hit');
+  upload.single('file')(req, res, (err) => {
+    if (err) {
+      console.error('DEBUG: Multer error:', err);
+      return res.status(400).json({ message: "Upload error", error: err.message });
+    }
+    console.log('DEBUG: Multer success, moving to preview controller');
+    next();
+  });
+}, previewImport);
+router.post("/import", authenticate, authorize("Admin", "Manager", "CEO"), (req, res, next) => {
+  console.log('DEBUG: Route /import hit');
+  upload.single('file')(req, res, (err) => {
+    if (err) {
+      console.error('DEBUG: Multer error:', err);
+      return res.status(400).json({ message: "Upload error", error: err.message });
+    }
+    console.log('DEBUG: Multer success, moving to controller');
+    next();
+  });
+}, importProducts);
 
 // Public/authenticated routes
+router.get("/filters", authenticate, getFilters);
 router.get("/", authenticate, getAllProducts);
 router.get("/stats", authenticate, getProductStats);
 router.get("/product-id/:productId", authenticate, getProductByProductID);
