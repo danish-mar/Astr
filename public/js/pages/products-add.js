@@ -6,6 +6,8 @@
             contacts: [],
             selectedCategoryTemplate: [],
             newTag: '',
+            imagePreviews: [],
+            imageFiles: [],
             showQuickAddContact: false,
             quickContact: {
                 name: '',
@@ -77,6 +79,28 @@
                 return option && typeof option === 'object' ? option.linkedFields : [];
             },
 
+            handleImageUpload(event) {
+                const files = Array.from(event.target.files);
+                if (this.imageFiles.length + files.length > 5) {
+                    window.showNotification('Maximum 5 images allowed', 'error');
+                    return;
+                }
+
+                files.forEach(file => {
+                    this.imageFiles.push(file);
+                    const reader = new FileReader();
+                    reader.onload = (e) => {
+                        this.imagePreviews.push(e.target.result);
+                    };
+                    reader.readAsDataURL(file);
+                });
+            },
+
+            removeImage(index) {
+                this.imageFiles.splice(index, 1);
+                this.imagePreviews.splice(index, 1);
+            },
+
             onSpecChange(fieldName) {
                 // Clear sub-option if main option changes
                 if (this.formData.specifications[fieldName + '_sub']) {
@@ -144,7 +168,32 @@
 
                 this.saving = true;
                 try {
-                    await window.api.post('/products', this.formData);
+                    const formData = new FormData();
+
+                    // Simple fields
+                    formData.append('name', this.formData.name);
+                    formData.append('price', this.formData.price);
+                    formData.append('category', this.formData.category);
+                    formData.append('source', this.formData.source);
+                    formData.append('notes', this.formData.notes || '');
+                    formData.append('assignProductID', this.formData.assignProductID);
+
+                    // Complex fields
+                    formData.append('specifications', JSON.stringify(this.formData.specifications));
+                    formData.append('tags', JSON.stringify(this.formData.tags));
+
+                    // Images
+                    this.imageFiles.forEach(file => {
+                        formData.append('images', file);
+                    });
+
+                    await axios.post('/api/v1/products', formData, {
+                        headers: {
+                            'Content-Type': 'multipart/form-data',
+                            'Authorization': `Bearer ${this.token}`
+                        }
+                    });
+
                     window.showNotification('Product added successfully!');
                     setTimeout(() => {
                         window.location.href = '/products';

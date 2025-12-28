@@ -8,6 +8,9 @@
             contacts: [],
             selectedCategoryTemplate: [],
             newTag: '',
+            imagePreviews: [],
+            imageFiles: [],
+            existingImages: [],
             showQuickAddContact: false,
             quickContact: {
                 name: '',
@@ -66,6 +69,15 @@
                         notes: product.notes || '',
                         productID: product.productID
                     };
+
+                    this.existingImages = product.images || [];
+                    // Pre-fill previews with existing images if they are URLs (our virtuals usually provide URLs)
+                    // But in the model we store keys. The controller could pass full URLs or we construct them.
+                    // For now, let's assume we can use the getImageUrl logic if we expose it or just use the keys if the proxy handles it.
+                    // Actually, let's use the full URLs if available from the backend virtuals.
+                    if (product.images) {
+                        this.imagePreviews = product.images.map(img => img.startsWith('http') ? img : `/api/v1/products/image/${img}`);
+                    }
 
                     // Trigger category template load
                     this.onCategoryChange();
@@ -133,6 +145,37 @@
                 return option && typeof option === 'object' ? option.subOptions : [];
             },
 
+            handleImageUpload(event) {
+                const files = Array.from(event.target.files);
+                if ((this.imageFiles.length + this.existingImages.length + files.length) > 5) {
+                    window.showNotification('Maximum 5 images allowed', 'error');
+                    return;
+                }
+
+                files.forEach(file => {
+                    this.imageFiles.push(file);
+                    const reader = new FileReader();
+                    reader.onload = (e) => {
+                        this.imagePreviews.push(e.target.result);
+                    };
+                    reader.readAsDataURL(file);
+                });
+            },
+
+            removeImage(index) {
+                // If it's an existing image, we need to track it for deletion if we want, 
+                // but for now let's just remove from local state and update the array on save.
+                this.imagePreviews.splice(index, 1);
+
+                // If index is within existingImages range
+                if (index < this.existingImages.length) {
+                    this.existingImages.splice(index, 1);
+                } else {
+                    // It's a new file
+                    this.imageFiles.splice(index - this.existingImages.length, 1);
+                }
+            },
+
             onSpecChange(fieldName) {
                 // Clear sub-option if main option changes
                 if (this.formData.specifications[fieldName + '_sub']) {
@@ -187,7 +230,34 @@
 
                 this.saving = true;
                 try {
-                    await window.api.put(`/products/${this.productId}`, this.formData);
+                    const formData = new FormData();
+
+                    // Simple fields
+                    formData.append('name', this.formData.name);
+                    formData.append('price', this.formData.price);
+                    formData.append('category', this.formData.category);
+                    formData.append('source', this.formData.source);
+                    formData.append('notes', this.formData.notes || '');
+
+                    // Complex fields
+                    formData.append('specifications', JSON.stringify(this.formData.specifications));
+                    formData.append('tags', JSON.stringify(this.formData.tags));
+
+                    // New Images
+                    this.imageFiles.forEach(file => {
+                        formData.append('images', file);
+                    });
+
+                    // Track kept existing images (keys ONLY)
+                    formData.append('existingImages', JSON.stringify(this.existingImages));
+
+                    await axios.put(`/api/v1/products/${this.productId}`, formData, {
+                        headers: {
+                            'Content-Type': 'multipart/form-data',
+                            'Authorization': `Bearer ${this.token}`
+                        }
+                    });
+
                     window.showNotification('Product updated successfully!');
                     setTimeout(() => {
                         window.location.href = '/products';

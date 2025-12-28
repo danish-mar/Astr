@@ -35,11 +35,11 @@ const shopSettingsSchema = new Schema<IShopSettings>(
       trim: true,
       validate: {
         validator: function (v: string) {
-          // Optional field, but if provided must be valid
           if (!v) return true;
-          return /^[0-9]{10}$/.test(v);
+          // More relaxed validation for international/local formats
+          return /^[+]?[( ]?[0-9]{1,4}[) ]?[-. ]?[0-9]{1,4}[-. ]?[0-9]{1,9}$/.test(v);
         },
-        message: "Please enter a valid 10-digit phone number",
+        message: "Please enter a valid phone number",
       },
     },
     email: {

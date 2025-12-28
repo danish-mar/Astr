@@ -15,9 +15,11 @@ export interface IProduct extends Document {
   isSold: boolean;
   soldDate?: Date;
   notes?: string;
+  images: string[];
   createdAt: Date;
   updatedAt: Date;
 }
+
 
 // 2. Function to generate random 6-character alphanumeric ID
 function generateProductID(): string {
@@ -81,11 +83,18 @@ const productSchema = new Schema<IProduct>(
       type: String,
       trim: true,
     },
+    images: {
+      type: [String],
+      default: [],
+    },
   },
   {
     timestamps: true,
+    toJSON: { virtuals: true, flattenMaps: true },
+    toObject: { virtuals: true, flattenMaps: true }
   }
 );
+
 
 // 4. Add indexes for better query performance
 // productID is already indexed by unique: true

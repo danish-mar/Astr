@@ -4,83 +4,21 @@ import { sendSuccess, sendError, sendPaginated, handleError } from "../utils";
 import fs from 'fs';
 import csv from 'csv-parser';
 // import { Parser } from 'json2csv'; // Removed to use manual generation
-import { validateRequiredFields, isValidObjectId } from "../utils";
+import { validateRequiredFields, isValidObjectId, buildProductFilter } from "../utils";
 import { generateUniqueProductID } from "../utils";
+import { getImageUrl } from "../utils/s3Service";
+import QRCode from "qrcode";
 
 
 // Get all products with filtering and pagination
 export const getAllProducts = async (req: Request, res: Response) => {
   try {
-    const {
-      category,
-      source,
-      isSold,
-      search,
-      page = 1,
-      limit = 10,
-      tags,
-      specs,
-      minPrice,
-      maxPrice,
-      specOps,
-    } = req.query;
-
-    const filter: any = {};
-
-    // Filter by price range
-    if (minPrice || maxPrice) {
-      filter.price = {};
-      if (minPrice) filter.price.$gte = parseFloat(minPrice as string);
-      if (maxPrice) filter.price.$lte = parseFloat(maxPrice as string);
-    }
-
-    // Filter by category
-    if (category && isValidObjectId(category as string)) {
-      filter.category = category;
-    }
-
-    // Filter by source
-    if (source && isValidObjectId(source as string)) {
-      filter.source = source;
-    }
-
-    // Filter by sold status
-    if (isSold !== undefined) {
-      filter.isSold = isSold === "true";
-    }
-
-    // Filter by tags
-    if (tags) {
-      filter.tags = { $in: (tags as string).split(",") };
-    }
-
-    // Filter by specifications
-    if (specs) {
-      const specifications = typeof specs === "string" ? JSON.parse(specs) : specs;
-      for (const [key, value] of Object.entries(specifications)) {
-        if (value) {
-          if (Array.isArray(value)) {
-            filter[`specifications.${key}`] = { $in: value };
-          } else {
-            filter[`specifications.${key}`] = value;
-          }
-        }
-      }
-    }
-
-    // Search by name, productID, or specifications
-    if (search) {
-      const searchRegex = { $regex: search, $options: "i" };
-      filter.$or = [
-        { name: searchRegex },
-        { productID: searchRegex },
-      ];
-    }
+    const filter = buildProductFilter(req.query);
 
 
 
-    const pageNum = parseInt(page as string);
-    const limitNum = parseInt(limit as string);
+    const pageNum = parseInt((req.query.page as string) || "1");
+    const limitNum = parseInt((req.query.limit as string) || "10");
     const skip = (pageNum - 1) * limitNum;
 
     const products = await Product.find(filter)
@@ -122,7 +60,16 @@ export const getProductById = async (req: Request, res: Response) => {
       return sendError(res, "Product not found", 404);
     }
 
-    return sendSuccess(res, product, "Product retrieved successfully");
+    // Generate shelf data
+    const serverUrl = process.env.SERVER_URL || `${req.protocol}://${req.get("host")}`;
+    const shelfUrl = `${serverUrl}/product/${product.productID}`;
+    const qrCode = await QRCode.toDataURL(shelfUrl);
+
+    const productObj = product.toObject();
+    (productObj as any).shelfUrl = shelfUrl;
+    (productObj as any).qrCode = qrCode;
+
+    return sendSuccess(res, productObj, "Product retrieved successfully");
   } catch (error) {
     return handleError(error, res);
   }
@@ -186,20 +133,24 @@ export const createProduct = async (req: Request, res: Response) => {
       return sendError(res, "Invalid source ID", 400);
     }
 
+    // Parse stringified JSON from FormData
+    const finalSpecs = typeof specifications === 'string' ? JSON.parse(specifications) : specifications;
+    const finalTags = typeof tags === 'string' ? JSON.parse(tags) : tags;
+
     // Create product
     const product = new Product({
       name,
       category,
       source,
-      specifications: specifications || {},
-      tags: tags || [],
+      specifications: finalSpecs || {},
+      tags: finalTags || [],
       notes,
       price: price || 0,
     });
 
-    // Assign product ID if requested
-    if (assignProductID === true || assignProductID === "true") {
-      product.productID = await generateUniqueProductID();
+    // Handle Images
+    if (req.files && Array.isArray(req.files)) {
+      product.images = (req.files as any[]).map(file => file.key);
     }
 
     await product.save();
@@ -230,17 +181,39 @@ export const updateProduct = async (req: Request, res: Response) => {
       return sendError(res, "Product not found", 404);
     }
 
+    // Parse stringified JSON from FormData
+    const finalSpecs = typeof specifications === 'string' ? JSON.parse(specifications) : specifications;
+    const finalTags = typeof tags === 'string' ? JSON.parse(tags) : tags;
+
     // Update fields
     if (name) product.name = name;
     if (category && isValidObjectId(category)) product.category = category;
     if (source && isValidObjectId(source)) product.source = source;
-    if (specifications) product.specifications = specifications;
-    if (tags) product.tags = tags;
+    if (finalSpecs) product.specifications = finalSpecs;
+    if (finalTags) product.tags = finalTags;
     if (notes !== undefined) product.notes = notes;
     if (isSold !== undefined) product.isSold = isSold;
     if (price !== undefined) product.price = price;
 
+    // Handle Images
+    if (req.body.existingImages) {
+      try {
+        product.images = JSON.parse(req.body.existingImages);
+      } catch (e) {
+        console.error("Error parsing existingImages", e);
+      }
+    }
+
+    if (req.files && Array.isArray(req.files)) {
+      const newImages = (req.files as any[]).map(file => file.key);
+      if (newImages.length > 0) {
+        product.images = [...(product.images || []), ...newImages];
+      }
+    }
+
+
     await product.save();
+
     await product.populate("category source");
 
     return sendSuccess(res, product, "Product updated successfully");
@@ -734,4 +707,137 @@ export const importProducts = async (req: Request, res: Response): Promise<void>
       if (fs.existsSync(file.path)) fs.unlinkSync(file.path);
       res.status(500).json({ message: "Error reading file", error });
     });
+};
+
+// Export Products to Excel with Theming and Categorization
+export const exportProductsToExcel = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const ExcelJS = require('exceljs');
+    const workbook = new ExcelJS.Workbook();
+    workbook.creator = 'Astr System';
+    workbook.lastModifiedBy = 'Astr System';
+    workbook.created = new Date();
+
+    // Apply current filters to the export
+    const filter = buildProductFilter(req.query);
+    const categories = await Category.find();
+    const products = await Product.find(filter).populate('category');
+
+    for (const cat of categories) {
+      const catProducts = products.filter(p =>
+        p.category && (p.category as any)._id.toString() === cat._id.toString()
+      );
+
+      if (catProducts.length === 0) continue;
+
+      const sheet = workbook.addWorksheet(cat.name);
+
+      // Define columns: Product, then all specs
+      const specKeys = new Set<string>();
+      catProducts.forEach(p => {
+        const specs = p.specifications || {};
+        if (specs instanceof Map) {
+          specs.forEach((_, key) => specKeys.add(key));
+        } else {
+          Object.keys(specs).forEach(key => specKeys.add(key));
+        }
+      });
+
+      const columns = [
+        { header: 'Product', key: 'name', width: 30 },
+        { header: 'Price (₹)', key: 'price', width: 15 },
+        ...Array.from(specKeys).map(key => ({
+          header: key.charAt(0).toUpperCase() + key.slice(1),
+          key: `spec_${key}`,
+          width: 20
+        }))
+      ];
+
+      sheet.columns = columns;
+
+      // Header Styling (Navy Blue, White Bold Text)
+      const headerRow = sheet.getRow(1);
+      headerRow.eachCell((cell: any) => {
+        cell.fill = {
+          type: 'pattern',
+          pattern: 'solid',
+          fgColor: { argb: 'FF1E3A8A' } // Navy Blue
+        };
+        cell.font = {
+          bold: true,
+          color: { argb: 'FFFFFFFF' },
+          size: 11
+        };
+        cell.alignment = { vertical: 'middle', horizontal: 'left' };
+        cell.border = {}; // No borders
+      });
+      headerRow.height = 25;
+
+      // Add Data and Style Rows
+      catProducts.forEach((p: any, index: number) => {
+        const rowData: any = {
+          name: p.name,
+          price: p.price
+        };
+
+        const specs = p.specifications || {};
+        specKeys.forEach(key => {
+          let val = '';
+          if (specs instanceof Map) {
+            val = specs.get(key) || '';
+          } else {
+            val = specs[key] || '';
+          }
+          rowData[`spec_${key}`] = val;
+        });
+
+        const row = sheet.addRow(rowData);
+
+        // Alternating Row Colors (Light Blue / White)
+        const isAlternate = index % 2 === 1;
+        row.eachCell((cell: any) => {
+          if (isAlternate) {
+            cell.fill = {
+              type: 'pattern',
+              pattern: 'solid',
+              fgColor: { argb: 'FFF0F7FF' } // Very Light Blue
+            };
+          }
+          cell.font = {
+            color: { argb: 'FF374151' }, // Dark Gray
+            size: 10
+          };
+          cell.border = {}; // No borders
+          cell.alignment = { vertical: 'middle', horizontal: 'left' };
+        });
+        row.height = 20;
+      });
+
+      // Auto-adjust column widths based on content
+      sheet.columns.forEach((column: any) => {
+        let maxLen = 0;
+        column.eachCell?.({ includeEmpty: true }, (cell: any) => {
+          const len = cell.value ? cell.value.toString().length : 0;
+          if (len > maxLen) maxLen = len;
+        });
+        column.width = Math.min(Math.max(maxLen + 5, (column.width || 10)), 50);
+      });
+    }
+
+    res.setHeader(
+      'Content-Type',
+      'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+    );
+    res.setHeader(
+      'Content-Disposition',
+      'attachment; filename=' + `Inventory_Export_${new Date().toISOString().split('T')[0]}.xlsx`
+    );
+
+    await workbook.xlsx.write(res);
+    res.end();
+
+  } catch (error) {
+    console.error('Excel Export error:', error);
+    res.status(500).json({ message: "Error exporting to Excel", error });
+  }
 };

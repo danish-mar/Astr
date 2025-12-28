@@ -281,7 +281,8 @@
         <div x-show="showModal" x-transition:enter="transition ease-out duration-500 transform"
             x-transition:enter-start="opacity-0 translate-y-12 scale-95"
             x-transition:enter-end="opacity-100 translate-y-0 scale-100"
-            class="relative bg-white rounded-[40px] shadow-2xl w-full max-w-2xl overflow-hidden flex flex-col transform transition-all">
+            class="relative bg-white rounded-[40px] shadow-2xl w-full max-w-5xl overflow-hidden flex flex-col transform transition-all">
+
             <!-- Modal Header -->
             <div class="px-8 py-6 border-b border-gray-100 flex items-center justify-between">
                 <div>
@@ -296,140 +297,154 @@
                 </button>
             </div>
 
-            <div class="p-8 overflow-y-auto max-h-[70vh] flex-1">
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
-                    <!-- Client Identity (Live Search) -->
-                    <div class="md:col-span-2">
-                        <label
-                            class="block text-[11px] font-bold text-gray-400 uppercase tracking-widest mb-3 ml-1">Client
-                            Identity</label>
-                        <div class="relative" x-data="{ searchQuery: '', showResults: false }">
-                            <!-- Selected Customer Display -->
-                            <div x-show="selectedCustomer"
-                                class="flex items-center justify-between p-4 bg-blue-50/50 border border-blue-100 rounded-2xl group transition-all">
-                                <div class="flex items-center gap-3">
-                                    <div
-                                        class="w-10 h-10 rounded-full bg-blue-500 flex items-center justify-center text-white font-bold">
-                                        <span x-text="selectedCustomer?.name?.charAt(0)"></span>
-                                    </div>
-                                    <div>
-                                        <p class="text-sm font-bold text-gray-900" x-text="selectedCustomer?.name"></p>
-                                        <p class="text-xs text-gray-500" x-text="selectedCustomer?.phone"></p>
-                                    </div>
-                                </div>
-                                <button @click="clearCustomerSelection()"
-                                    class="p-2 text-gray-400 hover:text-red-500 transition-colors opacity-0 group-hover:opacity-100">
-                                    <i class="fas fa-times-circle"></i>
-                                </button>
-                            </div>
-
-                            <!-- Search Input -->
-                            <div x-show="!selectedCustomer" class="relative group">
-                                <i
-                                    class="fas fa-search absolute left-4 top-1/2 -translate-y-1/2 text-gray-300 group-focus-within:text-blue-500 transition-colors"></i>
-                                <input type="text" x-model="searchQuery" @input="searchContactsInModal(searchQuery)"
-                                    @focus="showResults = true" placeholder="Search client by name or phone..."
-                                    class="w-full pl-11 pr-4 py-4 bg-gray-50 border border-gray-100 rounded-2xl focus:ring-4 focus:ring-blue-100 focus:border-blue-400 outline-none transition-all text-sm">
-                            </div>
-
-                            <!-- Search Results Dropdown (Block style to avoid clipping in scrollable modal) -->
-                            <div x-show="showResults && searchResults.length > 0 && !selectedCustomer"
-                                @click.away="showResults = false"
-                                class="mt-2 bg-white rounded-2xl shadow-xl border border-gray-100 z-50 overflow-hidden py-1 animate__animated animate__fadeIn">
-                                <template x-for="contact in searchResults" :key="contact._id">
-                                    <div @click="selectCustomerInModal(contact); showResults = false"
-                                        class="px-4 py-3 hover:bg-gray-50 cursor-pointer flex items-center justify-between group transition-colors">
-                                        <div class="flex items-center gap-3">
-                                            <div
-                                                class="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center text-gray-400 text-xs font-bold group-hover:bg-blue-100 group-hover:text-blue-600">
-                                                <span x-text="contact.name.charAt(0)"></span>
-                                            </div>
-                                            <div>
-                                                <p class="text-sm font-bold text-gray-900" x-text="contact.name"></p>
-                                                <p class="text-[10px] text-gray-400" x-text="contact.phone"></p>
-                                            </div>
+            <div class="p-8 overflow-y-auto max-h-[75vh] flex-1">
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-x-12 gap-y-8">
+                    <!-- Left Section: Primary Info -->
+                    <div class="space-y-8">
+                        <!-- Client Identity (Live Search) -->
+                        <div>
+                            <label
+                                class="block text-[11px] font-bold text-gray-400 uppercase tracking-widest mb-3 ml-1">Client
+                                Identity</label>
+                            <div class="relative" x-data="{ searchQuery: '', showResults: false }">
+                                <!-- Selected Customer Display -->
+                                <div x-show="selectedCustomer"
+                                    class="flex items-center justify-between p-4 bg-blue-50/50 border border-blue-100 rounded-2xl group transition-all">
+                                    <div class="flex items-center gap-3">
+                                        <div
+                                            class="w-10 h-10 rounded-full bg-blue-500 flex items-center justify-center text-white font-bold">
+                                            <span x-text="selectedCustomer?.name?.charAt(0)"></span>
                                         </div>
-                                        <i class="fas fa-plus text-[10px] text-gray-300 group-hover:text-blue-500"></i>
+                                        <div>
+                                            <p class="text-sm font-bold text-gray-900" x-text="selectedCustomer?.name">
+                                            </p>
+                                            <p class="text-xs text-gray-500" x-text="selectedCustomer?.phone"></p>
+                                        </div>
                                     </div>
-                                </template>
+                                    <button @click="clearCustomerSelection()"
+                                        class="p-2 text-gray-400 hover:text-red-500 transition-colors opacity-0 group-hover:opacity-100">
+                                        <i class="fas fa-times-circle"></i>
+                                    </button>
+                                </div>
+
+                                <!-- Search Input -->
+                                <div x-show="!selectedCustomer" class="relative group">
+                                    <i
+                                        class="fas fa-search absolute left-4 top-1/2 -translate-y-1/2 text-gray-300 group-focus-within:text-blue-500 transition-colors"></i>
+                                    <input type="text" x-model="searchQuery" @input="searchContactsInModal(searchQuery)"
+                                        @focus="showResults = true" placeholder="Search client by name or phone..."
+                                        class="w-full pl-11 pr-4 py-4 bg-gray-50 border border-gray-100 rounded-2xl focus:ring-4 focus:ring-blue-100 focus:border-blue-400 outline-none transition-all text-sm">
+                                </div>
+
+                                <!-- Search Results Dropdown -->
+                                <div x-show="showResults && searchResults.length > 0 && !selectedCustomer"
+                                    @click.away="showResults = false"
+                                    class="mt-2 bg-white rounded-2xl shadow-xl border border-gray-100 z-50 overflow-hidden py-1 animate__animated animate__fadeIn">
+                                    <template x-for="contact in searchResults" :key="contact._id">
+                                        <div @click="selectCustomerInModal(contact); showResults = false"
+                                            class="px-4 py-3 hover:bg-gray-50 cursor-pointer flex items-center justify-between group transition-colors">
+                                            <div class="flex items-center gap-3">
+                                                <div
+                                                    class="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center text-gray-400 text-xs font-bold group-hover:bg-blue-100 group-hover:text-blue-600">
+                                                    <span x-text="contact.name.charAt(0)"></span>
+                                                </div>
+                                                <div>
+                                                    <p class="text-sm font-bold text-gray-900" x-text="contact.name">
+                                                    </p>
+                                                    <p class="text-[10px] text-gray-400" x-text="contact.phone"></p>
+                                                </div>
+                                            </div>
+                                            <i
+                                                class="fas fa-plus text-[10px] text-gray-300 group-hover:text-blue-500"></i>
+                                        </div>
+                                    </template>
+                                </div>
                             </div>
                         </div>
-                    </div>
 
-                    <!-- Device Details -->
-                    <div class="md:col-span-2">
-                        <label
-                            class="block text-[11px] font-bold text-gray-400 uppercase tracking-widest mb-3 ml-1">Device
-                            Details</label>
-                        <textarea x-model="formData.deviceDetails"
-                            placeholder="Specify hardware model, serial number and diagnostic findings..."
-                            class="w-full px-5 py-4 bg-gray-50 border border-gray-100 rounded-2xl focus:ring-4 focus:ring-blue-100 focus:border-blue-400 outline-none transition-all text-sm min-h-[120px] resize-none"></textarea>
-                    </div>
-
-                    <!-- Date Received -->
-                    <div class="md:col-span-1">
-                        <label
-                            class="block text-[11px] font-bold text-gray-400 uppercase tracking-widest mb-3 ml-1">Date
-                            Received</label>
-                        <div class="relative group">
-                            <i
-                                class="fas fa-calendar absolute left-4 top-1/2 -translate-y-1/2 text-gray-300 group-focus-within:text-blue-500 transition-colors"></i>
-                            <input type="date" x-model="formData.receivedDate"
-                                class="w-full pl-11 pr-4 py-4 bg-gray-50 border border-gray-100 rounded-2xl focus:ring-4 focus:ring-blue-100 focus:border-blue-400 outline-none transition-all text-sm">
+                        <!-- Device Details -->
+                        <div>
+                            <label
+                                class="block text-[11px] font-bold text-gray-400 uppercase tracking-widest mb-3 ml-1">Device
+                                Details</label>
+                            <textarea x-model="formData.deviceDetails"
+                                placeholder="Specify hardware model, serial number and diagnostic findings..."
+                                class="w-full px-5 py-4 bg-gray-50 border border-gray-100 rounded-2xl focus:ring-4 focus:ring-blue-100 focus:border-blue-400 outline-none transition-all text-sm min-h-[200px] resize-none"></textarea>
                         </div>
                     </div>
 
-                    <!-- Ticket Status -->
-                    <div class="md:col-span-1">
-                        <label
-                            class="block text-[11px] font-bold text-gray-400 uppercase tracking-widest mb-3 ml-1">Ticket
-                            Status</label>
-                        <select x-model="formData.status"
-                            class="w-full px-5 py-4 bg-gray-50 border border-gray-100 rounded-2xl focus:ring-4 focus:ring-blue-100 focus:border-blue-400 outline-none transition-all text-sm appearance-none cursor-pointer">
-                            <option value="Pending">Pending</option>
-                            <option value="In Progress">In Progress</option>
-                            <option value="Completed">Completed</option>
-                            <option value="Delivered">Delivered</option>
-                            <option value="Cancelled">Cancelled</option>
-                            <option value="Reopened">Reopened</option>
-                        </select>
-                    </div>
+                    <!-- Right Section: Metadata & Status -->
+                    <div class="space-y-8">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <!-- Date Received -->
+                            <div class="md:col-span-1">
+                                <label
+                                    class="block text-[11px] font-bold text-gray-400 uppercase tracking-widest mb-3 ml-1">Date
+                                    Received</label>
+                                <div class="relative group">
+                                    <i
+                                        class="fas fa-calendar absolute left-4 top-1/2 -translate-y-1/2 text-gray-300 group-focus-within:text-blue-500 transition-colors"></i>
+                                    <input type="date" x-model="formData.receivedDate"
+                                        class="w-full pl-11 pr-4 py-4 bg-gray-50 border border-gray-100 rounded-2xl focus:ring-4 focus:ring-blue-100 focus:border-blue-400 outline-none transition-all text-sm">
+                                </div>
+                            </div>
 
-                    <!-- Technician -->
-                    <div class="md:col-span-1">
-                        <label
-                            class="block text-[11px] font-bold text-gray-400 uppercase tracking-widest mb-3 ml-1">Assigned
-                            Technician</label>
-                        <select x-model="formData.assignedTechnician"
-                            class="w-full px-5 py-4 bg-gray-50 border border-gray-100 rounded-2xl focus:ring-4 focus:ring-blue-100 focus:border-blue-400 outline-none transition-all text-sm appearance-none cursor-pointer">
-                            <option value="">Allocation Queue...</option>
-                            <template x-for="tech in technicians" :key="tech._id">
-                                <option :value="tech._id || tech" x-text="tech.name || tech"></option>
-                            </template>
-                        </select>
-                    </div>
+                            <!-- Ticket Status -->
+                            <div class="md:col-span-1">
+                                <label
+                                    class="block text-[11px] font-bold text-gray-400 uppercase tracking-widest mb-3 ml-1">Ticket
+                                    Status</label>
+                                <select x-model="formData.status"
+                                    class="w-full px-5 py-4 bg-gray-50 border border-gray-100 rounded-2xl focus:ring-4 focus:ring-blue-100 focus:border-blue-400 outline-none transition-all text-sm appearance-none cursor-pointer">
+                                    <option value="Pending">Pending</option>
+                                    <option value="In Progress">In Progress</option>
+                                    <option value="Completed">Completed</option>
+                                    <option value="Delivered">Delivered</option>
+                                    <option value="Cancelled">Cancelled</option>
+                                    <option value="Reopened">Reopened</option>
+                                </select>
+                            </div>
 
-                    <div class="md:col-span-1">
-                        <label
-                            class="block text-[11px] font-bold text-gray-400 uppercase tracking-widest mb-3 ml-1">Service
-                            Charge</label>
-                        <div class="relative group">
-                            <span
-                                class="absolute left-5 top-1/2 -translate-y-1/2 text-gray-400 text-sm font-bold">₹</span>
-                            <input type="number" x-model="formData.serviceCharge"
-                                class="w-full pl-10 pr-5 py-4 bg-gray-50 border border-gray-100 rounded-2xl focus:ring-4 focus:ring-blue-100 focus:border-blue-400 outline-none transition-all text-sm font-bold">
+                            <!-- Technician -->
+                            <div class="md:col-span-1">
+                                <label
+                                    class="block text-[11px] font-bold text-gray-400 uppercase tracking-widest mb-3 ml-1">Assigned
+                                    Technician</label>
+                                <select x-model="formData.assignedTechnician"
+                                    class="w-full px-5 py-4 bg-gray-50 border border-gray-100 rounded-2xl focus:ring-4 focus:ring-blue-100 focus:border-blue-400 outline-none transition-all text-sm appearance-none cursor-pointer">
+                                    <option value="">Allocation Queue...</option>
+                                    <template x-for="tech in technicians" :key="tech._id">
+                                        <option :value="tech._id || tech" x-text="tech.name || tech"></option>
+                                    </template>
+                                </select>
+                            </div>
+
+                            <!-- Service Charge -->
+                            <div class="md:col-span-1">
+                                <label
+                                    class="block text-[11px] font-bold text-gray-400 uppercase tracking-widest mb-3 ml-1">Service
+                                    Charge</label>
+                                <div class="relative group">
+                                    <span
+                                        class="absolute left-5 top-1/2 -translate-y-1/2 text-gray-400 text-sm font-bold">₹</span>
+                                    <input type="number" x-model="formData.serviceCharge"
+                                        class="w-full pl-10 pr-5 py-4 bg-gray-50 border border-gray-100 rounded-2xl focus:ring-4 focus:ring-blue-100 focus:border-blue-400 outline-none transition-all text-sm font-bold">
+                                </div>
+                            </div>
                         </div>
-                    </div>
 
-                    <div class="md:col-span-1">
-                        <label
-                            class="block text-[11px] font-bold text-gray-400 uppercase tracking-widest mb-3 ml-1">Internal
-                            Notes</label>
-                        <input type="text" x-model="formData.notes" placeholder="Private notes..."
-                            class="w-full px-5 py-4 bg-gray-50 border border-gray-100 rounded-2xl focus:ring-4 focus:ring-blue-100 focus:border-blue-400 outline-none transition-all text-sm">
+                        <!-- Internal Notes -->
+                        <div>
+                            <label
+                                class="block text-[11px] font-bold text-gray-400 uppercase tracking-widest mb-3 ml-1">Internal
+                                Notes</label>
+                            <textarea x-model="formData.notes" placeholder="Private notes..."
+                                class="w-full px-5 py-4 bg-gray-50 border border-gray-100 rounded-2xl focus:ring-4 focus:ring-blue-100 focus:border-blue-400 outline-none transition-all text-sm min-h-[100px] resize-none"></textarea>
+                        </div>
                     </div>
                 </div>
             </div>
+
 
             <!-- Sticky Actions -->
             <div class="p-8 bg-gray-50/50 border-t border-gray-100 flex items-center justify-between gap-4">

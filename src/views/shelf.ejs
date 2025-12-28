@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>
+        <%= product.name %> | <%= shopSettings.shopName %>
+    </title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css" />
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    <style>
+        [x-cloak] {
+            display: none !important;
+        }
+
+        body {
+            font-family: 'Outfit', sans-serif;
+            background-color: #fcfcfc;
+            color: #1d1d1f;
+        }
+
+        .apple-gradient {
+            background: radial-gradient(circle at 2% 2%, rgba(59, 130, 246, 0.03) 0%, transparent 15%),
+                radial-gradient(circle at 98% 98%, rgba(59, 130, 246, 0.02) 0%, transparent 15%);
+        }
+
+        .glass-card {
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(0, 0, 0, 0.05);
+        }
+
+        .premium-shadow {
+            box-shadow: 0 20px 80px rgba(0, 0, 0, 0.04);
+        }
+
+        .image-container {
+            aspect-ratio: 4/3;
+            background: #ffffff;
+            border-radius: 40px;
+        }
+
+        .buy-box {
+            position: sticky;
+            top: 2rem;
+        }
+
+        .reveal {
+            opacity: 0;
+            transform: translateY(20px);
+            transition: all 0.6s cubic-bezier(0.23, 1, 0.32, 1);
+        }
+
+        .reveal.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .studio-highlight {
+            background: linear-gradient(135deg, #000000 0%, #434343 100%);
+            background-clip: text;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+    </style>
+</head>
+
+<body class="apple-gradient min-h-screen" x-data="{ 
+    activeImg: 0, 
+    images: <%= JSON.stringify(imageUrls || []) %>,
+    init() {
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) entry.target.classList.add('visible');
+            });
+        }, { threshold: 0.1 });
+        document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+    }
+}">
+
+    <!-- Navigation Branding -->
+    <nav class="w-full px-6 py-8 md:px-12 flex items-center justify-between z-50">
+        <div class="flex items-center gap-3">
+            <div class="w-10 h-10 bg-black text-white rounded-xl flex items-center justify-center shadow-lg">
+                <i class="fas fa-microchip text-xs"></i>
+            </div>
+            <span class="text-sm font-black tracking-tighter uppercase">
+                <%= shopSettings.shopName %>
+            </span>
+        </div>
+        <div class="hidden md:flex items-center gap-8">
+            <span
+                class="px-4 py-1.5 bg-blue-50 text-blue-600 text-[10px] font-black uppercase tracking-widest rounded-full border border-blue-100/50">
+                <%= product.category?.name || 'Authorized Unit' %>
+            </span>
+        </div>
+    </nav>
+
+    <!-- Main Content Stage -->
+    <main class="max-w-7xl mx-auto px-6 md:px-12 py-12">
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-24">
+
+            <!-- Left Side: Cinematic Gallery -->
+            <div class="lg:col-span-7 space-y-8 animate__animated animate__fadeIn">
+                <div class="image-container relative overflow-hidden premium-shadow group">
+                    <template x-for="(img, idx) in images" :key="idx">
+                        <div class="absolute inset-0 flex items-center justify-center p-12 transition-all duration-700 ease-out"
+                            x-show="activeImg === idx" x-transition:enter="opacity-0 scale-95"
+                            x-transition:enter-end="opacity-100 scale-100" x-transition:leave="opacity-100 scale-100"
+                            x-transition:leave-end="opacity-0 scale-95">
+                            <img :src="img"
+                                class="w-full h-full object-contain filter drop-shadow-[0_20px_50px_rgba(0,0,0,0.08)]">
+                        </div>
+                    </template>
+
+                    <% if (!imageUrls || imageUrls.length===0) { %>
+                        <div class="h-full flex flex-col items-center justify-center text-gray-200 gap-6">
+                            <i class="fas fa-image text-8xl"></i>
+                            <span class="text-xs font-black uppercase tracking-[0.4em]">Master Asset Pending</span>
+                        </div>
+                        <% } %>
+
+                            <!-- Gallery Navigation Dots -->
+                            <div class="absolute bottom-8 left-1/2 -translate-x-1/2 flex gap-2.5 z-20"
+                                x-show="images.length > 1">
+                                <template x-for="(img, idx) in images" :key="idx">
+                                    <button @click="activeImg = idx"
+                                        class="w-2.5 h-2.5 rounded-full transition-all duration-500"
+                                        :class="activeImg === idx ? 'w-8 bg-black shadow-lg shadow-black/20' : 'bg-gray-200 hover:bg-gray-400'"></button>
+                                </template>
+                            </div>
+                </div>
+
+                <!-- Descriptive Notes -->
+                <% if (product.notes) { %>
+                    <div class="reveal p-12 glass-card rounded-[40px] premium-shadow border-none">
+                        <h3 class="text-[10px] font-black text-gray-400 uppercase tracking-[0.4em] mb-8">Product
+                            Narrative</h3>
+                        <p class="text-2xl md:text-3xl font-medium leading-relaxed studio-highlight italic">
+                            "<%= product.notes %>"
+                        </p>
+                    </div>
+                    <% } %>
+            </div>
+
+            <!-- Right Side: Product Buy Box / Info -->
+            <div class="lg:col-span-5">
+                <div class="buy-box space-y-12 animate__animated animate__fadeInRight">
+
+                    <!-- Header Info -->
+                    <div class="space-y-4">
+                        <div class="flex items-center gap-3">
+                            <span class="text-[9px] font-black text-blue-500 uppercase tracking-[0.5em]">
+                                <%= product.source?.name ? 'Verified Source' : 'Authorized Inventory' %>
+                            </span>
+                            <div class="h-px flex-1 bg-gray-100"></div>
+                        </div>
+                        <h1 class="text-5xl md:text-6xl font-black tracking-tighter leading-tight studio-highlight">
+                            <%= product.name %>
+                        </h1>
+                        <p class="text-xs font-mono font-bold text-gray-400 tracking-widest">UNIT ID: <%=
+                                product.productID %>
+                        </p>
+                    </div>
+
+                    <!-- Price & Action Hub -->
+                    <div class="p-10 bg-white rounded-[40px] premium-shadow space-y-10 border border-gray-50">
+                        <div class="space-y-1">
+                            <span class="text-[10px] font-black text-gray-400 uppercase tracking-[0.4em]">Current
+                                Value</span>
+                            <div class="flex items-baseline gap-2">
+                                <span class="text-3xl font-light text-gray-400">₹</span>
+                                <span class="text-6xl font-black tracking-tighter text-black">
+                                    <%= Number(product.price).toLocaleString('en-IN') %>
+                                </span>
+                            </div>
+                        </div>
+
+                        <% if (shopSettings.phone) { %>
+                            <div class="space-y-6">
+                                <a href="https://wa.me/<%= shopSettings.phone.replace(/\D/g, '') %>?text=Inquiry for <%= product.name %> (ID: <%= product.productID %>)"
+                                    class="w-full flex items-center justify-center gap-4 py-8 bg-blue-600 text-white rounded-[24px] text-xs font-black uppercase tracking-[0.3em] hover:bg-blue-700 transition-all hover:scale-[1.02] active:scale-95 shadow-2xl shadow-blue-200">
+                                    <i class="fab fa-whatsapp text-lg"></i>
+                                    Initialize Order
+                                </a>
+                                <p class="text-center text-[10px] font-bold text-gray-400 uppercase tracking-widest">
+                                    Verified Payment Channels Available</p>
+                            </div>
+                            <% } %>
+                    </div>
+
+                    <!-- Compact Specs Overview -->
+                    <div class="space-y-8">
+                        <div class="flex items-center justify-between">
+                            <h3 class="text-[10px] font-black text-gray-400 uppercase tracking-[0.4em]">Asset Parameters
+                            </h3>
+                            <button class="text-[10px] font-black text-blue-600 uppercase tracking-widest">Official
+                                Specs</button>
+                        </div>
+                        <div class="grid grid-cols-2 gap-4">
+                            <% let specsArray=[]; if (product.specifications) { try { if (product.specifications
+                                instanceof Map) { specsArray=Array.from(product.specifications.entries()); } else if
+                                (typeof product.specifications==='object' ) {
+                                specsArray=Object.entries(product.specifications); } } catch (e) {} } %>
+                                <% specsArray.slice(0, 4).forEach(([key, value])=> { %>
+                                    <div class="p-6 glass-card rounded-3xl border-none">
+                                        <span
+                                            class="text-[9px] font-black text-gray-400 uppercase tracking-widest block mb-2">
+                                            <%= key %>
+                                        </span>
+                                        <span class="text-sm font-bold text-black">
+                                            <%= value %>
+                                        </span>
+                                    </div>
+                                    <% }) %>
+                        </div>
+                    </div>
+
+                    <!-- Store Trust Badge -->
+                    <div class="p-8 border-2 border-dashed border-gray-100 rounded-[32px] flex items-center gap-6">
+                        <div class="w-14 h-14 bg-gray-50 rounded-2xl flex items-center justify-center text-gray-300">
+                            <i class="fas fa-store text-xl"></i>
+                        </div>
+                        <div class="space-y-1">
+                            <p class="text-sm font-black tracking-tight text-gray-950 uppercase">
+                                <%= shopSettings.shopName %>
+                            </p>
+                            <p class="text-[10px] font-bold text-gray-400 tracking-wide">
+                                <%= shopSettings.address || 'Authorized Master Store' %>
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Full Specifications Section -->
+        <section class="mt-32 pt-24 border-t border-gray-100 reveal">
+            <h2 class="text-4xl font-black tracking-tighter studio-highlight mb-16 text-center">Technical Hub.</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                <% specsArray.forEach(([key, value], idx)=> { %>
+                    <div
+                        class="flex items-start justify-between p-8 glass-card rounded-[32px] border-none group hover:bg-white transition-all duration-500">
+                        <div class="space-y-1.5">
+                            <span class="text-[9px] font-black text-blue-400 uppercase tracking-[0.4em]">
+                                <%= key %>
+                            </span>
+                            <p class="text-lg font-bold text-black group-hover:text-blue-600 transition-colors">
+                                <%= value %>
+                            </p>
+                        </div>
+                        <i class="fas fa-check-circle text-gray-100 text-xs"></i>
+                    </div>
+                    <% }) %>
+            </div>
+        </section>
+
+        <!-- Digital Provenance -->
+        <section class="mt-32 mb-24 reveal">
+            <div class="p-12 md:p-24 bg-black rounded-[60px] text-center space-y-12 relative overflow-hidden group">
+                <div
+                    class="absolute inset-0 bg-[radial-gradient(circle_at_center,_rgba(59,130,246,0.1)_0%,_transparent_70%)] opacity-0 group-hover:opacity-100 transition-opacity duration-1000">
+                </div>
+                <div class="relative z-10 space-y-8">
+                    <span
+                        class="px-6 py-2 bg-white/10 text-white/60 text-[10px] font-black uppercase tracking-[0.5em] rounded-full border border-white/5">Digital
+                        Certificate</span>
+                    <h2 class="text-4xl md:text-7xl font-black tracking-tighter text-white">Provenance Verified.</h2>
+                    <p class="text-gray-400 max-w-xl mx-auto text-sm leading-relaxed px-4">
+                        This unit is logged within the <%= shopSettings.shopName %> Master Registry under Serial ID
+                            <span class="text-white font-bold tracking-widest">
+                                <%= product.productID %>
+                            </span>.
+                            Its technical specifications and ownership history are cryptographically locked for
+                            authenticity.
+                    </p>
+
+                    <div class="flex flex-col items-center gap-6 pt-12">
+                        <div class="p-6 bg-white rounded-[40px] shadow-2xl">
+                            <img src="<%= qrDataUrl %>" class="w-48 h-48 md:w-64 md:h-64 object-contain">
+                        </div>
+                        <span class="text-[9px] font-black text-gray-500 uppercase tracking-[0.8em]">SCAN TO
+                            VERIFY</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Simple Footer -->
+    <footer class="py-24 text-center border-t border-gray-100/50">
+        <div class="max-w-7xl mx-auto px-6 space-y-8">
+            <div
+                class="flex items-center justify-center gap-8 text-[10px] font-black text-gray-300 uppercase tracking-[0.5em]">
+                <span>Warranty</span>
+                <span class="w-1 h-1 bg-gray-200 rounded-full"></span>
+                <span>Authenticity</span>
+                <span class="w-1 h-1 bg-gray-200 rounded-full"></span>
+                <span>Support</span>
+            </div>
+            <p class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">
+                © <%= new Date().getFullYear() %>
+                    <%= shopSettings.shopName %> MASTER INVENTORIES. ALL RIGHTS RESERVED.
+            </p>
+        </div>
+    </footer>
+
+    <!-- Fixed Floating Action Button (Mobile Only) -->
+    <div class="fixed bottom-8 left-1/2 -translate-x-1/2 z-[100] w-[90%] md:hidden animate__animated animate__fadeInUp">
+        <a href="https://wa.me/<%= (shopSettings.phone || '').replace(/\D/g, '') %>?text=Inquiry for <%= product.name %>"
+            class="flex items-center justify-center gap-vw-4 px-10 py-6 bg-emerald-500 text-white rounded-full shadow-2xl active:scale-95 transition-all">
+            <i class="fab fa-whatsapp text-lg"></i>
+            <span class="text-[11px] font-black uppercase tracking-[0.2em] ml-3">Contact Partner</span>
+        </a>
+    </div>
+
+</body>
+
+</html>

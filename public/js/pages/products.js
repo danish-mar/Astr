@@ -17,6 +17,8 @@
             },
             availableFilters: {},
             showViewModal: false,
+            showQRModal: false,
+            activeImageIndex: 0,
             viewData: {},
             showFilters: true,
 
@@ -231,6 +233,7 @@
                     // Fetch fresh product data with populated fields
                     const response = await window.api.get(`/products/${product._id}`);
                     this.viewData = response.data;
+                    this.activeImageIndex = 0;
 
                     // We need the category template to format specifications smartly
                     // The backend populate might have populated 'category' field.
@@ -247,7 +250,6 @@
 
                     // Pre-process specifications for display
                     this.viewData.formattedSpecs = this.formatSpecifications(this.viewData.specifications || {}, categoryTemplate);
-
                     this.showViewModal = true;
                 } catch (error) {
                     console.error('Error loading product details:', error);
@@ -260,71 +262,71 @@
                 this.viewData = {};
             },
 
+            downloadQR(dataUrl, productID) {
+                if (!dataUrl) return;
+                const link = document.createElement('a');
+                link.href = dataUrl;
+                link.download = `QR_${productID || 'Asset'}.png`;
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                window.showNotification('Artifact QR Downloaded', 'success');
+            },
+
             formatSpecifications(specs, template) {
-                if (!template || !template.length) return Object.entries(specs).map(([key, value]) => ({ label: key, value }));
+                if (!specs) return [];
+
+                // If template is empty, map all entries
+                if (!template || !template.length) {
+                    return Object.entries(specs)
+                        .filter(([key, value]) => value && !key.startsWith('_'))
+                        .map(([key, value]) => ({ label: key, value }));
+                }
 
                 const formatted = [];
                 const processedKeys = new Set();
 
+                // 1. Process template fields
                 template.forEach(field => {
-                    if (processedKeys.has(field.fieldName)) return;
+                    const value = specs[field.fieldName];
+                    if (value === undefined || value === null || value === '') return;
 
-                    const mainValue = specs[field.fieldName];
-                    if (!mainValue) return;
-
-                    let displayValue = mainValue;
+                    let displayValue = String(value);
                     processedKeys.add(field.fieldName);
 
-                    // If it's a select field, check for chain (linked fields) or sub-options
+                    // Select logic for linked fields
                     if (field.fieldType === 'select' && field.options) {
-                        const selectedOption = field.options.find(opt => {
-                            const val = typeof opt === 'string' ? opt : opt.value;
-                            return val === mainValue;
-                        });
-
+                        const selectedOption = field.options.find(opt => (typeof opt === 'string' ? opt : opt.value) === value);
                         if (selectedOption && typeof selectedOption === 'object') {
-                            // 1. Check Legacy Sub Options
+                            // Sub-options support
                             const subKey = field.fieldName + '_sub';
                             if (specs[subKey]) {
                                 displayValue += ` ${specs[subKey]}`;
                                 processedKeys.add(subKey);
                             }
-
-                            // 2. Check Linked Fields (Recursive-ish flattening)
-                            if (selectedOption.linkedFields && selectedOption.linkedFields.length) {
+                            // Linked fields recursion
+                            if (selectedOption.linkedFields) {
                                 selectedOption.linkedFields.forEach(lf => {
-                                    const lfValue = specs[lf.fieldName];
-                                    if (lfValue) {
-                                        displayValue += ` ${lfValue}`;
+                                    const lfVal = specs[lf.fieldName];
+                                    if (lfVal) {
+                                        displayValue += ` ${lfVal}`;
                                         processedKeys.add(lf.fieldName);
-
-                                        // TODO: Crucially, if the linked field ITSELF has linked fields, we need to handle that too.
-                                        // But our current data structure in template is recursive, so we'd need a recursive formatted.
-                                        // For now, let's handle one level deep as shown in "Intel -> 2nd Gen". 
-                                        // Attempting full recursion:
-                                        displayValue += this.getLinkedValueRecursive(lf, lfValue, specs, processedKeys);
+                                        displayValue += this.getLinkedValueRecursive(lf, lfVal, specs, processedKeys);
                                     }
                                 });
                             }
                         }
                     }
 
-                    formatted.push({
-                        label: field.fieldName,
-                        value: displayValue
-                    });
+                    formatted.push({ label: field.fieldName, value: displayValue });
                 });
 
-                // Add any remaining specs that weren't in the template or part of a chain
-                // (e.g. ad-hoc fields or if template changed)
-                // Object.entries(specs).forEach(([key, value]) => {
-                //     if (!processedKeys.has(key) && !key.endsWith('_sub')) {
-                //         formatted.push({ label: key, value });
-                //     }
-                // });
-                // Actually, let's stick to template fields for cleaner view, or append others at bottom.
-                // Appending others might be messy if they were just child fields we missed. 
-                // Let's assume template covers it for now.
+                // 2. Add remaining non-metadata fields
+                Object.entries(specs).forEach(([key, value]) => {
+                    if (!processedKeys.has(key) && !key.endsWith('_sub') && value && !key.startsWith('_') && key !== 'id') {
+                        formatted.push({ label: key, value: String(value) });
+                    }
+                });
 
                 return formatted;
             },
@@ -387,6 +389,49 @@
                     window.showNotification(isTemplate ? 'Error exporting template' : 'Error exporting products', 'error');
                 }
             },
+
+            async exportToExcel(applyFilters = false) {
+                try {
+                    window.showNotification('Preparing Excel Export...', 'info');
+
+                    let url = '/products/export-excel';
+                    if (applyFilters) {
+                        const params = new URLSearchParams();
+                        if (this.filters.category) params.append('category', this.filters.category);
+                        if (this.filters.search) params.append('search', this.filters.search);
+                        if (this.filters.isSold !== '') params.append('isSold', this.filters.isSold);
+                        if (this.filters.minPrice) params.append('minPrice', this.filters.minPrice);
+                        if (this.filters.maxPrice) params.append('maxPrice', this.filters.maxPrice);
+
+                        // Handle specs if present
+                        if (this.filters.specs && Object.keys(this.filters.specs).length > 0) {
+                            params.append('specs', JSON.stringify(this.filters.specs));
+                        }
+
+                        const queryString = params.toString();
+                        if (queryString) url += '?' + queryString;
+                    }
+
+                    const response = await window.api.get(url, { responseType: 'blob' });
+                    const blob = response;
+                    const urlBlob = window.URL.createObjectURL(blob instanceof Blob ? blob : new Blob([blob]));
+                    const link = document.createElement('a');
+                    link.href = urlBlob;
+
+                    const timestamp = new Date().toISOString().split('T')[0];
+                    const fileName = applyFilters ? `Filtered_Inventory_${timestamp}.xlsx` : `Full_Inventory_${timestamp}.xlsx`;
+
+                    link.setAttribute('download', fileName);
+                    document.body.appendChild(link);
+                    link.click();
+                    link.remove();
+                    window.showNotification('Excel Export Complete!', 'success');
+                } catch (error) {
+                    console.error('Excel Export error:', error);
+                    window.showNotification('Error exporting to Excel', 'error');
+                }
+            },
+
 
             triggerImport() {
                 this.$refs.importFile.click();

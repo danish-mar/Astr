@@ -25,8 +25,20 @@
               <button @click="exportProducts(false); open = false"
                 class="w-full text-left px-4 py-3 text-sm text-gray-700 hover:bg-blue-50/50 flex items-center transition-colors">
                 <i class="fas fa-file-csv mr-3 text-gray-300"></i>
-                Full Database
+                Full Database (CSV)
               </button>
+              <button @click="exportToExcel(); open = false"
+                class="w-full text-left px-4 py-3 text-sm text-gray-700 hover:bg-blue-50/50 flex items-center transition-colors">
+                <i class="fas fa-file-excel mr-3 text-green-500"></i>
+                Themed Excel (Categorized)
+              </button>
+              <button @click="exportToExcel(true); open = false"
+                class="w-full text-left px-4 py-3 text-sm text-blue-600 hover:bg-blue-50/50 flex items-center transition-colors border-t border-gray-50">
+                <i class="fas fa-filter mr-3 text-blue-500"></i>
+                Filter Applied (Excel)
+              </button>
+
+
               <template x-if="filters.category">
                 <button @click="exportProducts(true); open = false"
                   class="w-full text-left px-4 py-3 text-sm text-blue-600 hover:bg-blue-50/50 flex items-center transition-colors border-t border-gray-50 font-medium">
@@ -284,6 +296,11 @@
                   title="Edit">
                   <i class="fas fa-pencil-alt text-sm"></i>
                 </a>
+                <a :href="`/product/${product.productID}`" target="_blank"
+                  class="p-3 bg-gray-50 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-2xl transition-all"
+                  title="Universal QR Shelf">
+                  <i class="fas fa-qrcode text-sm"></i>
+                </a>
                 <button x-show="!product.isSold" @click="markAsSold(product._id)"
                   class="p-3 bg-gray-50 text-gray-400 hover:text-green-600 hover:bg-green-50 rounded-2xl transition-all"
                   title="Mark as Sold">
@@ -441,12 +458,12 @@
       </div>
     </div>
 
-    <!-- View Product Modal -->
+    <!-- Centered Product View Modal -->
     <div x-show="showViewModal" x-transition:enter="transition ease-out duration-300"
       x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100"
       x-transition:leave="transition ease-in duration-200" x-transition:leave-start="opacity-100"
       x-transition:leave-end="opacity-0"
-      class="fixed inset-0 bg-gray-900/40 backdrop-blur-xl z-50 flex items-center justify-center p-4"
+      class="fixed inset-0 bg-gray-900/40 backdrop-blur-md z-50 flex items-center justify-center p-4"
       @click.self="closeViewModal()" style="display: none;">
 
       <div x-show="showViewModal" x-transition:enter="transition ease-out duration-500 transform"
@@ -454,124 +471,174 @@
         x-transition:enter-end="opacity-100 translate-y-0 scale-100"
         x-transition:leave="transition ease-in duration-300 transform" x-transition:leave-start="opacity-100 scale-100"
         x-transition:leave-end="opacity-0 scale-95"
-        class="bg-white rounded-[40px] shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-hidden flex flex-col">
+        class="bg-white rounded-[40px] shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-hidden flex flex-col relative">
 
         <!-- Modal Body -->
-        <div class="overflow-y-auto flex-1">
-          <div class="p-8 md:p-12">
-            <div class="flex items-start justify-between mb-12">
-              <div class="flex-1">
-                <div class="flex items-center gap-3 mb-4">
-                  <span
-                    class="px-3 py-1 bg-gray-100 text-gray-500 text-[10px] font-bold rounded-full tracking-wider uppercase"
-                    x-text="viewData.category?.name || 'Item'"></span>
-                  <span x-show="viewData.productID" class="text-[10px] font-mono text-gray-300"
-                    x-text="viewData.productID"></span>
-                </div>
-                <h2 class="text-4xl md:text-5xl font-bold text-gray-900 tracking-tight leading-tight"
-                  x-text="viewData.name"></h2>
 
-                <div class="mt-6 flex items-baseline gap-2">
-                  <span class="text-xl font-medium text-gray-400">₹</span>
-                  <span class="text-5xl font-bold text-gray-900 tracking-tighter"
+        <!-- Modal Body -->
+        <div class="overflow-y-auto flex-1 no-scrollbar p-12 md:p-16 relative z-10">
+          <div class="flex flex-col md:flex-row gap-16">
+            <!-- Left Side: Main Info & Specs -->
+            <div class="flex-1 space-y-12">
+              <div>
+                <span
+                  class="px-3 py-1 bg-gray-100 text-gray-500 text-[10px] font-bold rounded-lg uppercase tracking-widest mb-4 inline-block"
+                  x-text="viewData.category?.name || 'Asset'"></span>
+                <h2 class="text-5xl font-bold text-gray-900 tracking-tight mb-4" x-text="viewData.name"></h2>
+                <div class="flex items-baseline gap-2">
+                  <span class="text-2xl font-light text-gray-400">₹</span>
+                  <span class="text-5xl font-bold text-gray-900 tracking-tight"
                     x-text="Number(viewData.price).toLocaleString('en-IN')"></span>
                 </div>
               </div>
 
-              <button @click="closeViewModal()"
-                class="p-3 bg-gray-50 text-gray-400 hover:text-gray-900 rounded-full transition-colors group">
-                <i class="fas fa-times text-xl group-hover:rotate-90 transition-transform duration-300"></i>
-              </button>
-            </div>
-
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-12">
-              <!-- Left Column: Details -->
-              <div class="space-y-10">
-                <!-- Status & Dates -->
-                <div class="flex flex-wrap gap-8">
-                  <div>
-                    <label
-                      class="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2">Availability</label>
-                    <div class="flex items-center gap-2">
-                      <div class="w-2 h-2 rounded-full" :class="viewData.isSold ? 'bg-gray-300' : 'bg-green-500'"></div>
-                      <span class="text-sm font-semibold text-gray-800 uppercase tracking-wide"
-                        x-text="viewData.isSold ? 'Sold' : 'Available Now'"></span>
-                    </div>
-                  </div>
-                  <div x-show="viewData.isSold && viewData.soldDate">
-                    <label class="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2">Completion
-                      Date</label>
-                    <span class="text-sm font-semibold text-gray-800"
-                      x-text="new Date(viewData.soldDate).toLocaleDateString('en-IN', { month: 'long', day: 'numeric', year: 'numeric' })"></span>
-                  </div>
-                  <div>
-                    <label
-                      class="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2">Provenance</label>
-                    <span class="text-sm font-semibold text-gray-800"
-                      x-text="viewData.source?.name || 'In-House'"></span>
+              <!-- Status & Provenance -->
+              <div class="grid grid-cols-2 gap-8 pt-4">
+                <div class="space-y-2">
+                  <p class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Availability</p>
+                  <div class="flex items-center gap-2">
+                    <div class="w-2 h-2 rounded-full" :class="viewData.isSold ? 'bg-gray-300' : 'bg-green-500'"></div>
+                    <span class="text-sm font-bold text-gray-700 uppercase"
+                      x-text="viewData.isSold ? 'Sold' : 'Available Now'"></span>
                   </div>
                 </div>
-
-                <!-- Specifications -->
-                <div x-show="viewData.specifications && Object.keys(viewData.specifications).length > 0">
-                  <label class="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-6">Technical
-                    Specifications</label>
-                  <div class="grid grid-cols-2 gap-y-6 gap-x-8">
-                    <template x-for="[key, value] in Object.entries(viewData.specifications || {})" :key="key">
-                      <div class="border-l-2 border-gray-50 pl-4 py-1">
-                        <p class="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1" x-text="key"></p>
-                        <p class="text-sm font-semibold text-gray-900" x-text="value || '—'"></p>
-                      </div>
-                    </template>
-                  </div>
+                <div class="space-y-2">
+                  <p class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Provenance</p>
+                  <span class="text-sm font-bold text-gray-700" x-text="viewData.source?.name || 'Unknown'"></span>
                 </div>
               </div>
 
-              <!-- Right Column: Description & Tags -->
-              <div class="space-y-10">
-                <!-- Notes -->
-                <div x-show="viewData.notes">
-                  <label class="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-4">Curator's
-                    Notes</label>
-                  <p class="text-base text-gray-600 leading-relaxed font-light" x-text="viewData.notes"></p>
+              <!-- Technical Specifications Grid -->
+              <div class="space-y-6 pt-8 border-t border-gray-100">
+                <h3 class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Technical Specifications</h3>
+                <div class="grid grid-cols-2 gap-x-12 gap-y-8">
+                  <template x-for="spec in (viewData.formattedSpecs || [])" :key="spec.label">
+                    <div class="space-y-1">
+                      <p class="text-[10px] font-medium text-gray-400 uppercase tracking-widest" x-text="spec.label">
+                      </p>
+                      <p class="text-base font-bold text-gray-800" x-text="spec.value || '—'"></p>
+                    </div>
+                  </template>
+
+                  <template x-if="!viewData.formattedSpecs || viewData.formattedSpecs.length === 0">
+                    <p class="text-sm text-gray-300 italic col-span-2">No specifications defined for this item.</p>
+                  </template>
+                </div>
+              </div>
+
+              <!-- Narrative / Notes -->
+              <div class="space-y-4 pt-8 border-t border-gray-100" x-show="viewData.notes">
+                <h3 class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Product Details</h3>
+                <p class="text-base text-gray-600 leading-relaxed" x-text="viewData.notes"></p>
+              </div>
+            </div>
+
+            <!-- Right Side: Visual Stage -->
+            <div class="md:w-1/3 space-y-8">
+              <div
+                class="relative bg-gray-50 rounded-[32px] overflow-hidden aspect-square flex items-center justify-center p-6 border border-gray-100 shadow-inner">
+                <template x-for="(img, idx) in (viewData.images || [])" :key="idx">
+                  <div class="absolute inset-0 flex items-center justify-center p-8 transition-opacity duration-500"
+                    x-show="activeImageIndex === idx" x-cloak>
+                    <img :src="img.startsWith('http') ? img : `/api/v1/products/image/${img}`"
+                      class="max-w-full max-h-full object-contain filter drop-shadow-lg">
+                  </div>
+                </template>
+
+                <!-- Slider Controls (Small Dots) -->
+                <div class="absolute bottom-4 left-0 right-0 flex justify-center gap-1.5"
+                  x-show="viewData.images?.length > 1">
+                  <template x-for="(img, idx) in viewData.images" :key="idx">
+                    <div class="w-1.5 h-1.5 rounded-full transition-all"
+                      :class="activeImageIndex === idx ? 'bg-gray-900 scale-125' : 'bg-gray-300 cursor-pointer'"
+                      @click="activeImageIndex = idx"></div>
+                  </template>
                 </div>
 
-                <!-- Tags -->
-                <div x-show="viewData.tags && viewData.tags.length > 0">
-                  <label class="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-4">Metadata
-                    Tags</label>
-                  <div class="flex flex-wrap gap-2">
-                    <template x-for="tag in viewData.tags" :key="tag">
-                      <span
-                        class="px-3 py-1.5 bg-gray-50 text-gray-600 text-[11px] font-semibold rounded-xl border border-gray-100"
-                        x-text="tag"></span>
-                    </template>
-                  </div>
-                </div>
+                <template x-if="!viewData.images || viewData.images.length === 0">
+                  <i class="fas fa-box-open text-6xl text-gray-200"></i>
+                </template>
+              </div>
+
+              <div class="text-center">
+                <span class="text-[10px] font-mono font-bold text-gray-300 tracking-wider"
+                  x-text="'ID: ' + viewData.productID"></span>
               </div>
             </div>
           </div>
         </div>
 
         <!-- Sticky Footer Actions -->
-        <div class="p-8 border-t border-gray-50 bg-gray-50/30 backdrop-blur-md">
-          <div class="flex flex-col sm:flex-row items-center justify-between gap-4">
-            <button @click="generateAd(viewData._id)" :disabled="generatingAd"
-              class="w-full sm:w-auto px-8 py-4 bg-gray-900 text-white text-sm font-bold rounded-2xl hover:bg-black transition-all flex items-center justify-center disabled:opacity-50">
-              <i :class="generatingAd ? 'fas fa-spinner fa-spin' : 'fas fa-magic'" class="mr-3"></i>
-              <span x-text="generatingAd ? 'Crafting Advertisement...' : 'Generate Marketing Copy'"></span>
-            </button>
-            <div class="flex items-center gap-3 w-full sm:w-auto">
+        <div class="p-8 border-t border-gray-50 bg-gray-50/10 backdrop-blur-sm">
+          <div class="flex items-center justify-between gap-4">
+            <div class="flex items-center gap-3">
+              <button @click="generateAd(viewData._id)" :disabled="generatingAd"
+                class="px-8 py-4 bg-[#0F172A] text-white text-sm font-bold rounded-2xl hover:bg-black transition-all flex items-center disabled:opacity-50">
+                <i :class="generatingAd ? 'fas fa-spinner fa-spin' : 'fas fa-pencil-alt'" class="mr-3"></i>
+                <span x-text="generatingAd ? 'Generating...' : 'Generate Marketing Copy'"></span>
+              </button>
+
+              <button @click="showQRModal = true"
+                class="p-4 bg-gray-100 text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded-2xl transition-all"
+                title="Share Assets">
+                <i class="fas fa-qrcode"></i>
+              </button>
+            </div>
+
+            <div class="flex items-center gap-3">
               <button @click="editProductFromView()"
-                class="flex-1 sm:flex-none px-8 py-4 bg-white border border-gray-200 text-gray-900 text-sm font-bold rounded-2xl hover:bg-gray-50 transition-all">
+                class="px-8 py-4 bg-white border border-gray-200 text-gray-900 text-sm font-bold rounded-2xl hover:bg-gray-50 transition-all">
                 Edit
               </button>
               <button @click="closeViewModal()"
-                class="flex-1 sm:flex-none px-8 py-4 bg-gray-100 text-gray-500 text-sm font-bold rounded-2xl hover:bg-gray-200 transition-all">
+                class="px-10 py-4 bg-gray-100/50 text-gray-400 text-sm font-bold rounded-2xl hover:bg-gray-200 transition-all">
                 Dismiss
               </button>
             </div>
           </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- QR Action Overlay Modal -->
+    <div x-show="showQRModal" x-transition:enter="transition ease-out duration-300" x-transition:enter-start="opacity-0"
+      x-transition:enter-end="opacity-100" x-transition:leave="transition ease-in duration-200"
+      x-transition:leave-start="opacity-100" x-transition:leave-end="opacity-0"
+      class="fixed inset-0 bg-gray-900/60 backdrop-blur-md z-[100] flex items-center justify-center p-4"
+      @click.self="showQRModal = false" style="display: none;">
+
+      <div x-show="showQRModal" x-transition:enter="transition ease-out duration-500 transform"
+        x-transition:enter-start="opacity-0 scale-95 translate-y-10"
+        x-transition:enter-end="opacity-100 scale-100 translate-y-0"
+        x-transition:leave="transition ease-in duration-300 transform"
+        x-transition:leave-start="opacity-100 scale-100 translate-y-0"
+        x-transition:leave-end="opacity-0 scale-95 translate-y-10"
+        class="bg-white rounded-[40px] shadow-2xl max-w-md w-full p-12 text-center space-y-10 relative overflow-hidden">
+
+        <button @click="showQRModal = false"
+          class="absolute top-6 right-6 text-gray-400 hover:text-gray-900 transition-colors">
+          <i class="fas fa-times text-xl"></i>
+        </button>
+
+        <div class="space-y-2">
+          <h3 class="text-2xl font-bold text-gray-900">Digital Identity</h3>
+          <p class="text-sm text-gray-500 font-medium">Verified product asset on Universal Shelf</p>
+        </div>
+
+        <div
+          class="bg-gray-50 p-8 rounded-[40px] border border-gray-100/50 shadow-inner flex items-center justify-center">
+          <img :src="viewData.qrCode" class="w-48 h-48 select-none pointer-events-none filter brightness-[1.02]">
+        </div>
+
+        <div class="flex flex-col gap-3">
+          <button @click="downloadQR(viewData.qrCode, viewData.productID)"
+            class="w-full py-5 bg-blue-600 text-white text-xs font-black uppercase tracking-widest rounded-3xl hover:bg-blue-700 shadow-xl shadow-blue-100 transition-all flex items-center justify-center gap-3">
+            <i class="fas fa-download"></i> Download QR
+          </button>
+          <a :href="viewData.shelfUrl" target="_blank"
+            class="w-full py-5 bg-gray-900 text-white text-xs font-black uppercase tracking-widest rounded-3xl hover:bg-black transition-all flex items-center justify-center gap-3">
+            <i class="fas fa-external-link-alt"></i> Open Shelf
+          </a>
         </div>
       </div>
     </div>

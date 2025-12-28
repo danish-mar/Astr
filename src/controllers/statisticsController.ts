@@ -1,7 +1,9 @@
 import { Request, Response } from "express";
 import Product from "../models/Product";
 import ServiceTicket from "../models/ServiceTicket";
+import Lead from "../models/Lead";
 import { handleError, sendSuccess } from "../utils";
+
 
 export const getDashboardStats = async (req: Request, res: Response) => {
     try {
@@ -97,6 +99,11 @@ export const getDashboardStats = async (req: Request, res: Response) => {
             { $sort: { _id: 1 } },
         ]);
 
+        // 7. Lead Stats
+        const totalLeads = await Lead.countDocuments();
+        const wonLeads = await Lead.countDocuments({ status: "Closed Won" });
+        const leadConversionRatio = totalLeads > 0 ? (wonLeads / totalLeads) * 100 : 0;
+
         return sendSuccess(res, {
             stats: {
                 products: {
@@ -109,6 +116,11 @@ export const getDashboardStats = async (req: Request, res: Response) => {
                     pending: pendingTickets,
                     completed: completedTickets,
                 },
+                leads: {
+                    total: totalLeads,
+                    won: wonLeads,
+                    conversionRatio: leadConversionRatio.toFixed(2),
+                },
                 revenue,
                 productRevenue,
                 serviceRevenue,
@@ -120,6 +132,7 @@ export const getDashboardStats = async (req: Request, res: Response) => {
                 revenueTrend: revenueOverTime,
             },
         }, "Dashboard stats fetched successfully");
+
     } catch (error) {
         return handleError(error, res);
     }

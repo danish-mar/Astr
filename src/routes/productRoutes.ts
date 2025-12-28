@@ -11,6 +11,7 @@ import {
   getProductStats,
   getFilters,
   exportProducts,
+  exportProductsToExcel,
   previewImport,
   importProducts
 } from "../controllers/productController";
@@ -18,12 +19,16 @@ import {
 import multer from "multer";
 
 import { authenticate, authorize, validateObjectId } from "../middleware";
+import { productUpload } from "../utils/s3Service";
+
 
 const router = Router();
 const upload = multer({ dest: 'uploads/' });
 
 // CSV Import/Export
 router.get("/export", authenticate, authorize("Admin", "Manager", "CEO"), exportProducts);
+router.get("/export-excel", authenticate, authorize("Admin", "Manager", "CEO"), exportProductsToExcel);
+
 router.post("/import/preview", authenticate, authorize("Admin", "Manager", "CEO"), (req, res, next) => {
   console.log('DEBUG: Route /import/preview hit');
   upload.single('file')(req, res, (err) => {
@@ -59,6 +64,7 @@ router.post(
   "/",
   authenticate,
   authorize("Admin", "Manager", "Sales", "CEO"),
+  productUpload.array('images', 5),
   createProduct
 );
 router.put(
@@ -66,6 +72,7 @@ router.put(
   authenticate,
   authorize("Admin", "Manager", "Sales", "CEO"),
   validateObjectId("id"),
+  productUpload.array('images', 5),
   updateProduct
 );
 router.patch(
