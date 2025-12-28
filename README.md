@@ -35,21 +35,21 @@ Perfect for mobile repair shops, electronics stores, computer service centers, o
 <td width="50%">
 
 ### 🎨 **Frontend Magic**
-- 🪟 **Glassmorphic UI** — iOS-inspired design language
-- ⚡ **Alpine.js Reactivity** — No build step, pure speed
-- 🎭 **Smooth Animations** — 60fps transitions
-- 📱 **Mobile-First** — Responsive on every device
-- 🎯 **Quick Actions** — One-click workflows
+- 🪟 **Glassmorphic UI** — Premium iOS-inspired design language
+- ⚡ **Alpine.js Reactivity** — Zero-latency interaction
+- 🎭 **Cinematic UX** — Smooth animations & micro-interactions
+- 📱 **Mobile-First** — Apple-style experience on every device
+- 🎯 **One-Tap Workflow** — Low-friction management logic
 
 </td>
 <td width="50%">
 
-### 🔧 **Backend Power**
-- 🛡️ **Type-Safe API** — Full TypeScript coverage
-- 🔐 **JWT Authentication** — Role-based access control
-- 📊 **Real-Time Stats** — Live dashboard updates
-- 🗄️ **MongoDB Atlas** — Scalable cloud database
-- ⚙️ **RESTful Design** — Clean, documented endpoints
+### 🔧 **Operational Power**
+- 🛡️ **Enterprise Security** — JWT-protected data & roles
+- 💸 **Expense Tracking** — Real-time operational cost logging
+- 🎯 **Lead Management** — Track & convert potential customers
+- ☁️ **Cloud Storage** — AWS S3 powered product media
+- 📈 **Master Stats** — Predictive insights & live charts
 
 </td>
 </tr>
@@ -65,12 +65,14 @@ Perfect for mobile repair shops, electronics stores, computer service centers, o
 
 | Module | Description | Key Features |
 |--------|-------------|--------------|
-| 🎫 **Service Tickets** | Complete repair lifecycle management | Status tracking, technician assignment, cost estimation |
-| 📦 **Inventory** | Real-time product tracking | Stock alerts, category templates, sold/available status |
-| 👥 **Contacts** | Unified customer/vendor database | Quick search, autocomplete, purchase history |
-| 📊 **Analytics** | Revenue & performance insights | Charts, trends, top products |
-| 🔐 **Auth System** | Secure access control | Admin/Staff/Tech roles, JWT tokens |
-| ⚙️ **Categories** | Dynamic product templates | Custom specifications per category |
+| 🎫 **Service Tickets** | End-to-end repair lifecycle | Status tracking, technician control, digital receipts |
+| 💸 **Expenditures** | Operational cost tracking | Category-wise spend, today's total, insights |
+| 📦 **Inventory** | Premium product catalog | S3 Cloud images, rich specs, stock status |
+| 🎯 **Lead Tracker** | Sales pipeline management | Targeted follow-ups, product interest, status alerts |
+| 👥 **Contacts** | Smart customer/vendor hub | Quick search, history tracking, CRM-lite |
+| 📊 **Analytics** | Revenue & spend insights | Trend analysis, spend-vs-earn, category charts |
+| 🔐 **Auth System** | Role-based secure access | Admin/Staff/Tech specialized views |
+| ⚙️ **Settings** | Global shop configuration | Logo, currency, themes, and S3 control |
 
 <br/>
 
