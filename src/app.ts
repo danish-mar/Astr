@@ -7,6 +7,7 @@ import v1Routes from "./routes/v1";
 import serviceTicketRoutes from "./routes/serviceTicketRoutes";
 import shopSettingsRoutes from "./routes/shopSettingsRoutes";
 import statisticsRoutes from "./routes/statisticsRoutes";
+import { getPublicShelf } from "./controllers/shelfController";
 
 dotenv.config();
 
@@ -22,7 +23,9 @@ app.use(requestLogger);
 
 // View engine setup
 app.set("view engine", "ejs");
-app.set("views", path.join(__dirname, "views"));
+// Use absolute path for views to work in both dev and prod
+app.set("views", path.join(process.cwd(), "src", "views"));
+
 
 // Use express-ejs-layouts
 app.use(expressLayouts);
@@ -105,6 +108,19 @@ app.get("/categories/edit/:id", (req: Request, res: Response) => {
 app.get("/statistics", (req: Request, res: Response) => {
   res.render("statistics", { title: "Astr - Statistics" });
 });
+
+// Leads
+app.get("/leads", (req: Request, res: Response) => {
+  res.render("leads", { title: "Astr - Leads" });
+});
+
+// Expenditures
+app.get("/expenditures", (req: Request, res: Response) => {
+  res.render("expenditures", { title: "Astr - Expenditures" });
+});
+
+app.get("/product/:productId", getPublicShelf);
+
 
 // Settings
 app.get("/settings", (req: Request, res: Response) => {

@@ -7,6 +7,9 @@ import shopSettingsRoutes from "../shopSettingsRoutes";
 import employeeRoutes from "../employeeRoutes";
 import statisticsRoutes from "../statisticsRoutes";
 import aiRoutes from "../aiRoutes";
+import leadRoutes from "../leadRoutes";
+import expenditureRoutes from "../expenditureRoutes";
+
 
 const router = Router();
 
@@ -19,5 +22,8 @@ router.use("/settings", shopSettingsRoutes);
 router.use("/employees", employeeRoutes);
 router.use("/statistics", statisticsRoutes);
 router.use("/ai", aiRoutes);
+router.use("/leads", leadRoutes);
+router.use("/expenditures", expenditureRoutes);
+
 
 export default router;

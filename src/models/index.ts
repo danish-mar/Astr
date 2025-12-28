@@ -12,3 +12,5 @@ export {
 } from "./ServiceTicket";
 export { default as ShopSettings, IShopSettings } from "./ShopSettings";
 export { default as Employee, IEmployee } from "./Employee";
+export { default as Lead, ILead } from "./Lead";
+export { default as Expenditure, IExpenditure } from "./Expenditure";
