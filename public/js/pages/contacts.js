@@ -19,6 +19,7 @@
             saving: false,
             selectedContact: null,
             contactTickets: [],
+            contactLedgers: [],
             formData: {
                 name: '',
                 phone: '',
@@ -36,6 +37,24 @@
                     return;
                 }
                 await this.loadContacts();
+
+                // Handle deep linking for ?id=
+                const urlParams = new URLSearchParams(window.location.search);
+                const contactId = urlParams.get('id');
+                if (contactId) {
+                    const contact = this.contacts.find(c => c._id === contactId);
+                    if (contact) {
+                        this.viewContact(contact);
+                    } else {
+                        // If not in first page, fetch it specifically
+                        try {
+                            const res = await window.api.get(`/contacts/${contactId}`);
+                            if (res.data) this.viewContact(res.data);
+                        } catch (e) {
+                            console.error('Deep link contact not found', e);
+                        }
+                    }
+                }
 
                 // Check if we should open the add modal
                 if (window.location.pathname === '/contacts/add') {
@@ -145,12 +164,35 @@
                 } catch (error) {
                     console.error('Error loading contact tickets:', error);
                 }
+
+                try {
+                    const response = await window.api.get(`/accounting/contact/${contact._id}`);
+                    this.contactLedgers = response.data;
+                } catch (error) {
+                    console.error('Error loading contact ledgers:', error);
+                }
             },
 
             closeViewModal() {
                 this.showViewModal = false;
                 this.selectedContact = null;
                 this.contactTickets = [];
+                this.contactLedgers = [];
+            },
+
+            formatLedgerNumber(num) {
+                return new Intl.NumberFormat('en-IN', {
+                    minimumFractionDigits: 0,
+                    maximumFractionDigits: 0
+                }).format(num || 0);
+            },
+
+            formatLedgerDate(dateStr) {
+                return new Date(dateStr).toLocaleDateString('en-IN', {
+                    day: '2-digit',
+                    month: 'short',
+                    year: 'numeric'
+                });
             }
         }));
     };

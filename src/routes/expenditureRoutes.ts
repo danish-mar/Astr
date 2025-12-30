@@ -8,6 +8,7 @@ const router = Router();
 router.use(authenticate);
 
 router.get("/stats", expenditureController.getExpenditureStats);
+router.get("/tags", expenditureController.getAllTags);
 
 router
     .route("/")

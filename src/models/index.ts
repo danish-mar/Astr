@@ -14,3 +14,6 @@ export { default as ShopSettings, IShopSettings } from "./ShopSettings";
 export { default as Employee, IEmployee } from "./Employee";
 export { default as Lead, ILead } from "./Lead";
 export { default as Expenditure, IExpenditure } from "./Expenditure";
+export { default as Tag, ITag } from "./Tag";
+export { default as Account, IAccount } from "./Account";
+export { default as Transaction, ITransaction } from "./Transaction";

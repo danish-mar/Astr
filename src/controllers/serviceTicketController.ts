@@ -1,8 +1,76 @@
 import { Request, Response } from "express";
 import ServiceTicket from "../models/ServiceTicket";
 import Contact from "../models/Contact";
+import { Account, Transaction } from "../models";
 import { sendSuccess, sendError, sendPaginated, handleError } from "../utils";
 import { validateRequiredFields, isValidObjectId } from "../utils";
+
+/**
+ * Helper to sync ticket financial data to Financial Gateway
+ */
+const syncTicketToAccounting = async (ticket: any, amount: number, isSettlement: boolean = false, logLabel?: string) => {
+  if (amount <= 0) return;
+
+  try {
+    // 1. Get or Create Account
+    let account = await Account.findOne({ contact: ticket.customer, accountType: 'Receivable' });
+    if (!account) {
+      const customer = await Contact.findById(ticket.customer);
+      account = new Account({
+        contact: ticket.customer,
+        accountType: 'Receivable',
+        accountName: `${customer?.name || 'Customer'}'s Service Ledger`,
+        totalBalance: 0
+      });
+      await account.save();
+    }
+
+    // 2. Check if transaction already exists for this ticket and type
+    const txType = isSettlement ? 'Debit' : 'Credit';
+    const existingTx = await Transaction.findOne({ serviceTicket: ticket._id, transactionType: txType });
+
+    if (!existingTx) {
+      const tx = new Transaction({
+        account: account._id,
+        amount: amount,
+        transactionType: txType,
+        serviceTicket: ticket._id,
+        description: isSettlement
+          ? `Settlement for Ticket #${ticket.ticketNumber} (Delivered)`
+          : `Service Charge for Ticket #${ticket.ticketNumber}`,
+        reference: `TKT-${ticket.ticketNumber}`,
+        date: new Date()
+      });
+      await tx.save();
+
+      // 3. Update Balance
+      account.totalBalance += (txType === 'Credit' ? amount : -amount);
+      await account.save();
+    } else if (!isSettlement && existingTx.amount !== amount) {
+      // Adjust billing if amount changed (Manual edit)
+      const diff = amount - existingTx.amount;
+      existingTx.amount = amount;
+      existingTx.description = `Service Charge for Ticket #${ticket.ticketNumber} (Adjusted)`;
+      await existingTx.save();
+
+      account.totalBalance += diff;
+      await account.save();
+    }
+
+    // 4. Add log to ticket if sync was successful
+    if (logLabel) {
+      ticket.logs.push({
+        status: ticket.status,
+        label: logLabel,
+        timestamp: new Date()
+      });
+      await ticket.save();
+    }
+  } catch (error) {
+    console.error('Accounting Sync Error:', error);
+    // We don't throw here to avoid blocking ticket operations, but it's logged
+  }
+};
 
 // Get all service tickets with filtering and pagination
 export const getAllServiceTickets = async (req: Request, res: Response) => {
@@ -167,6 +235,12 @@ export const createServiceTicket = async (req: Request, res: Response) => {
 
     await ticket.save();
 
+    // Sync to Accounting if service charge exists (Automated Billing)
+    const charge = ticket.serviceCharge || 0;
+    if (charge > 0) {
+      await syncTicketToAccounting(ticket, charge, false, `Bill generated for Service Charge: ₹${charge}`);
+    }
+
     // Populate before sending response
     await ticket.populate("customer");
 
@@ -215,6 +289,13 @@ export const updateServiceTicket = async (req: Request, res: Response) => {
     if (notes !== undefined) ticket.notes = notes;
 
     await ticket.save();
+
+    // Sync to Accounting on edit (Billing Adjustment)
+    const charge = ticket.serviceCharge || 0;
+    if (charge > 0) {
+      await syncTicketToAccounting(ticket, charge, false, `Service Charge updated to: ₹${charge}`);
+    }
+
     await ticket.populate("customer");
 
     return sendSuccess(res, ticket, "Service ticket updated successfully");
@@ -264,6 +345,9 @@ export const updateTicketStatus = async (req: Request, res: Response) => {
       });
     }
     await ticket.save();
+
+    // Note: Automated settlement on 'Delivered' removed per user request for manual confirmation.
+
     await ticket.populate("customer");
 
     return sendSuccess(res, ticket, "Ticket status updated successfully");
@@ -352,6 +436,43 @@ export const getTicketsByCustomer = async (req: Request, res: Response) => {
       .sort({ createdAt: -1 });
 
     return sendSuccess(res, tickets, "Customer tickets retrieved successfully");
+  } catch (error) {
+    return handleError(error, res);
+  }
+};
+
+/**
+ * Manually confirm payment for a service ticket
+ */
+export const settleTicketPayment = async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+
+    if (!isValidObjectId(id)) {
+      return sendError(res, "Invalid service ticket ID", 400);
+    }
+
+    const ticket = await ServiceTicket.findById(id);
+    if (!ticket) {
+      return sendError(res, "Service ticket not found", 404);
+    }
+
+    const charge = ticket.serviceCharge || 0;
+    if (charge <= 0) {
+      return sendError(res, "No service charge to settle for this ticket", 400);
+    }
+
+    // Check if already settled
+    const existingPayment = await Transaction.findOne({ serviceTicket: ticket._id, transactionType: 'Debit' });
+    if (existingPayment) {
+      return sendError(res, "Payment for this ticket has already been recorded", 400);
+    }
+
+    // Perform settlement
+    await syncTicketToAccounting(ticket, charge, true, `Payment confirmed and settled in Ledger: ₹${charge}`);
+
+    await ticket.populate("customer");
+    return sendSuccess(res, ticket, "Payment confirmed and settled successfully");
   } catch (error) {
     return handleError(error, res);
   }

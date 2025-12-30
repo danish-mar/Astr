@@ -114,9 +114,9 @@ app.get("/leads", (req: Request, res: Response) => {
   res.render("leads", { title: "Astr - Leads" });
 });
 
-// Expenditures
-app.get("/expenditures", (req: Request, res: Response) => {
-  res.render("expenditures", { title: "Astr - Expenditures" });
+// Accounting (Formerly Expenditures)
+app.get("/accounting", (req: Request, res: Response) => {
+  res.render("accounting", { title: "Astr - Accounting" });
 });
 
 app.get("/product/:productId", getPublicShelf);

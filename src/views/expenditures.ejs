@@ -1,13 +1,28 @@
 <script src="/js/pages/expenditure.js"></script>
 
+<script src="/js/pages/expenditure.js"></script>
+
 <div x-data="expenditureData()" x-init="init()" class="space-y-8 animate__animated animate__fadeIn">
     <!-- Header Section -->
     <div class="flex flex-col md:flex-row md:items-center justify-between gap-6">
         <div>
             <h1 class="text-3xl font-bold text-gray-900 tracking-tight">Expenditure</h1>
-            <p class="text-gray-500 mt-1 font-medium">Track operational costs and miscellaneous spends.</p>
+            <p class="text-gray-500 mt-1 font-medium">Track operational costs with flexible tagging.</p>
         </div>
         <div class="flex items-center gap-3">
+            <!-- Period Selector -->
+            <div class="flex items-center bg-white border border-gray-100 p-1 rounded-2xl shadow-sm">
+                <button @click="setPeriod('day')"
+                    :class="filter.period === 'day' ? 'bg-gray-900 text-white' : 'text-gray-400 hover:text-gray-600'"
+                    class="px-4 py-2 rounded-xl text-[10px] font-bold uppercase tracking-wider transition-all">Day</button>
+                <button @click="setPeriod('month')"
+                    :class="filter.period === 'month' ? 'bg-gray-900 text-white' : 'text-gray-400 hover:text-gray-600'"
+                    class="px-4 py-2 rounded-xl text-[10px] font-bold uppercase tracking-wider transition-all">Month</button>
+                <button @click="setPeriod('year')"
+                    :class="filter.period === 'year' ? 'bg-gray-900 text-white' : 'text-gray-400 hover:text-gray-600'"
+                    class="px-4 py-2 rounded-xl text-[10px] font-bold uppercase tracking-wider transition-all">Year</button>
+            </div>
+
             <button @click="showStats = !showStats"
                 class="px-6 py-3 rounded-2xl bg-white border border-gray-100 text-gray-600 font-semibold text-sm hover:shadow-ios transition-all flex items-center gap-2">
                 <i class="fas" :class="showStats ? 'fa-list' : 'fa-chart-pie'"></i>
@@ -24,7 +39,8 @@
     <!-- Stats Overview (Quick Insights) -->
     <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
         <div class="p-8 rounded-[32px] bg-white border border-gray-100 shadow-sm space-y-2">
-            <span class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Today's Spend</span>
+            <span class="text-[10px] font-bold text-gray-400 uppercase tracking-widest"
+                x-text="getPeriodLabel()"></span>
             <div class="flex items-baseline gap-1">
                 <span class="text-2xl font-bold text-gray-900">₹</span>
                 <span class="text-4xl font-black tracking-tight text-gray-900"
@@ -33,22 +49,25 @@
         </div>
         <div class="p-8 rounded-[32px] bg-gray-900 shadow-2xl space-y-2 relative overflow-hidden group">
             <div class="absolute inset-0 bg-gradient-to-br from-blue-500/10 to-transparent"></div>
-            <span class="text-[10px] font-bold text-gray-400 uppercase tracking-widest relative z-10">Total Monthly
-                Forecast</span>
+            <span class="text-[10px] font-bold text-gray-400 uppercase tracking-widest relative z-10">Annual
+                Projection</span>
             <div class="flex items-baseline gap-1 relative z-10">
                 <span class="text-2xl font-bold text-white">₹</span>
                 <span class="text-4xl font-black tracking-tight text-white"
-                    x-text="formatNumber(calculateMonthTotal())">0</span>
+                    x-text="formatNumber(calculateYearlyForecast())">0</span>
             </div>
         </div>
         <div class="p-8 rounded-[32px] bg-white border border-gray-100 shadow-sm space-y-4">
-            <span class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Quick Filters</span>
-            <div class="flex flex-wrap gap-2">
-                <template x-for="cat in categories" :key="cat">
-                    <button @click="toggleFilter(cat)"
-                        :class="filter.category === cat ? 'bg-gray-900 text-white' : 'bg-gray-50 text-gray-500 hover:bg-gray-100'"
+            <span class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Filter by Tag</span>
+            <div class="flex flex-wrap gap-2 overflow-y-auto max-h-[100px] custom-scrollbar">
+                <button @click="toggleTagFilter(null)"
+                    :class="!filter.tagId ? 'bg-gray-900 text-white' : 'bg-gray-50 text-gray-500 hover:bg-gray-100'"
+                    class="px-4 py-2 rounded-xl text-[10px] font-bold uppercase tracking-wider transition-all">All</button>
+                <template x-for="tag in tags" :key="tag._id">
+                    <button @click="toggleTagFilter(tag._id)"
+                        :class="filter.tagId === tag._id ? 'bg-gray-900 text-white' : 'bg-gray-50 text-gray-500 hover:bg-gray-100'"
                         class="px-4 py-2 rounded-xl text-[10px] font-bold uppercase tracking-wider transition-all"
-                        x-text="cat"></button>
+                        x-text="tag.name"></button>
                 </template>
             </div>
         </div>
@@ -62,7 +81,7 @@
                     <tr class="border-b border-gray-50">
                         <th class="px-8 py-6 text-[10px] font-bold text-gray-400 uppercase tracking-[0.2em]">Expense &
                             Date</th>
-                        <th class="px-8 py-6 text-[10px] font-bold text-gray-400 uppercase tracking-[0.2em]">Category
+                        <th class="px-8 py-6 text-[10px] font-bold text-gray-400 uppercase tracking-[0.2em]">Tag
                         </th>
                         <th class="px-8 py-6 text-[10px] font-bold text-gray-400 uppercase tracking-[0.2em]">Logged By
                         </th>
@@ -84,13 +103,9 @@
                                 </div>
                             </td>
                             <td class="px-8 py-6">
-                                <span :class="{
-                                    'bg-blue-50 text-blue-600': item.category === 'Tea' || item.category === 'Snacks',
-                                    'bg-purple-50 text-purple-600': item.category === 'Tools',
-                                    'bg-orange-50 text-orange-600': item.category === 'Transport',
-                                    'bg-gray-100 text-gray-600': item.category === 'Miscellaneous' || item.category === 'Ad-hoc'
-                                }" class="px-4 py-1.5 rounded-full text-[10px] font-bold uppercase tracking-widest"
-                                    x-text="item.category"></span>
+                                <span :style="`background-color: ${item.tag?.color}20; color: ${item.tag?.color}`"
+                                    class="px-4 py-1.5 rounded-full text-[10px] font-bold uppercase tracking-widest"
+                                    x-text="item.tag?.name || 'Unsorted'"></span>
                             </td>
                             <td class="px-8 py-6">
                                 <div class="flex items-center gap-2">
@@ -122,29 +137,33 @@
             <div class="w-20 h-20 bg-gray-50 rounded-[24px] flex items-center justify-center mx-auto text-gray-200">
                 <i class="fas fa-wallet text-3xl"></i>
             </div>
-            <p class="text-gray-400 font-medium">No expenditures logged yet.</p>
+            <p class="text-gray-400 font-medium">No expenditures found for this period.</p>
         </div>
     </div>
 
     <!-- Insights View -->
     <div x-show="showStats" class="grid grid-cols-1 md:grid-cols-2 gap-8">
         <div class="bg-white p-8 rounded-[40px] border border-gray-100 shadow-sm">
-            <h3 class="text-lg font-bold text-gray-900 mb-8">Spend by Category</h3>
+            <h3 class="text-lg font-bold text-gray-900 mb-8" x-text="`Spend by Tag (${getPeriodLabel('Long')})`"></h3>
             <div class="space-y-6">
-                <template x-for="s in stats.byCategory" :key="s._id">
+                <template x-for="s in stats.byTag" :key="s._id">
                     <div class="space-y-2">
                         <div class="flex justify-between items-end">
                             <span class="text-[10px] font-bold text-gray-400 uppercase tracking-widest"
-                                x-text="s._id"></span>
+                                x-text="s.tagInfo?.name || 'Unsorted'"></span>
                             <span class="font-bold text-gray-900">₹ <span
                                     x-text="formatNumber(s.totalAmount)"></span></span>
                         </div>
                         <div class="h-2 bg-gray-50 rounded-full overflow-hidden">
-                            <div class="h-full bg-gray-900"
-                                :style="`width: ${(s.totalAmount / calculateTotal() * 100)}%`"></div>
+                            <div class="h-full"
+                                :style="`width: ${(s.totalAmount / calculateTotal() * 100)}%; background-color: ${s.tagInfo?.color || '#111827'}`">
+                            </div>
                         </div>
                     </div>
                 </template>
+            </div>
+            <div x-show="!stats.byTag?.length" class="text-center py-12 text-gray-400 text-sm">
+                No data available for this range.
             </div>
         </div>
     </div>
@@ -176,14 +195,24 @@
                             class="w-full px-6 py-4 bg-gray-50 border border-gray-100 rounded-2xl focus:ring-4 focus:ring-gray-900/5 focus:border-gray-900 transition-all outline-none font-bold text-lg">
                     </div>
                     <div class="space-y-2">
-                        <label
-                            class="text-[10px] font-bold text-gray-400 uppercase tracking-[0.2em] ml-1">Category</label>
-                        <select x-model="formData.category" required
-                            class="w-full px-6 py-4 bg-gray-50 border border-gray-100 rounded-2xl focus:ring-4 focus:ring-gray-900/5 focus:border-gray-900 transition-all outline-none font-semibold appearance-none">
-                            <template x-for="cat in categories" :key="cat">
-                                <option :value="cat" x-text="cat"></option>
-                            </template>
-                        </select>
+                        <label class="text-[10px] font-bold text-gray-400 uppercase tracking-[0.2em] ml-1">Tag</label>
+                        <div class="relative">
+                            <select x-model="formData.tagId" x-show="!showNewTagField"
+                                class="w-full px-6 py-4 bg-gray-50 border border-gray-100 rounded-2xl focus:ring-4 focus:ring-gray-900/5 focus:border-gray-900 transition-all outline-none font-semibold appearance-none">
+                                <option value="">Select Tag</option>
+                                <template x-for="tag in tags" :key="tag._id">
+                                    <option :value="tag._id" x-text="tag.name"></option>
+                                </template>
+                            </select>
+                            <input type="text" x-model="formData.newTagName" x-show="showNewTagField"
+                                placeholder="New tag name..."
+                                class="w-full px-6 py-4 bg-gray-50 border border-gray-100 rounded-2xl focus:ring-4 focus:ring-gray-900/5 focus:border-gray-900 transition-all outline-none font-semibold">
+
+                            <button type="button" @click="showNewTagField = !showNewTagField"
+                                class="absolute right-4 top-1/2 -translate-y-1/2 text-[10px] font-bold text-indigo-600 uppercase tracking-widest hover:text-indigo-700">
+                                <span x-text="showNewTagField ? 'Back' : '+ New'"></span>
+                            </button>
+                        </div>
                     </div>
                 </div>
 
@@ -194,9 +223,9 @@
                         class="w-full px-6 py-4 bg-gray-50 border border-gray-100 rounded-2xl focus:ring-4 focus:ring-gray-900/5 focus:border-gray-900 transition-all outline-none font-medium h-24 resize-none"></textarea>
                 </div>
 
-                <button type="submit"
-                    class="w-full py-5 bg-gray-900 text-white rounded-2xl font-bold uppercase tracking-[0.2em] text-[10px] hover:bg-gray-800 transition-all active:scale-95 shadow-xl shadow-gray-200">
-                    Confirm Logs
+                <button type="submit" :disabled="loading"
+                    class="w-full py-5 bg-gray-900 text-white rounded-2xl font-bold uppercase tracking-[0.2em] text-[10px] hover:bg-gray-800 transition-all active:scale-95 shadow-xl shadow-gray-200 disabled:opacity-50">
+                    <span x-text="loading ? 'Logging...' : 'Confirm Logs'"></span>
                 </button>
             </form>
         </div>

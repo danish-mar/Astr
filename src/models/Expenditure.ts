@@ -3,7 +3,8 @@ import { Schema, model, Document, Types } from "mongoose";
 export interface IExpenditure extends Document {
     title: string;
     amount: number;
-    category: "Snacks" | "Tea" | "Tools" | "Transport" | "Miscellaneous" | "Ad-hoc";
+    category?: string; // Kept as optional legacy/fallback
+    tag?: Types.ObjectId; // Reference to Tag model
     date: Date;
     description?: string;
     addedBy: Types.ObjectId; // Reference to Employee
@@ -25,9 +26,11 @@ const expenditureSchema = new Schema<IExpenditure>(
         },
         category: {
             type: String,
-            required: [true, "Category is required"],
-            enum: ["Snacks", "Tea", "Tools", "Transport", "Miscellaneous", "Ad-hoc"],
             default: "Miscellaneous",
+        },
+        tag: {
+            type: Schema.Types.ObjectId,
+            ref: "Tag",
         },
         date: {
             type: Date,
@@ -50,6 +53,7 @@ const expenditureSchema = new Schema<IExpenditure>(
 
 // Index for faster reporting by date
 expenditureSchema.index({ date: -1 });
+expenditureSchema.index({ tag: 1 });
 expenditureSchema.index({ category: 1 });
 
 const Expenditure = model<IExpenditure>("Expenditure", expenditureSchema);

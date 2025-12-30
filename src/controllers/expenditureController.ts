@@ -1,7 +1,8 @@
 import { Request, Response } from "express";
-import { Expenditure } from "../models";
+import { Expenditure, Tag } from "../models";
 import { sendSuccess, sendError, handleError } from "../utils";
 import { AuthRequest } from "../middleware/auth";
+import mongoose from "mongoose";
 
 /**
  * @desc Get all expenditures with filtering
@@ -10,12 +11,23 @@ import { AuthRequest } from "../middleware/auth";
  */
 export const getAllExpenditures = async (req: Request, res: Response) => {
     try {
-        const { category, startDate, endDate, search } = req.query;
+        const { tagId, period, startDate, endDate, search } = req.query;
         const filter: any = {};
 
-        if (category) filter.category = category;
+        if (tagId) filter.tag = tagId;
 
-        if (startDate || endDate) {
+        // Advanced Time Filtering
+        const now = new Date();
+        if (period === 'day') {
+            const startOfDay = new Date(now.setHours(0, 0, 0, 0));
+            filter.date = { $gte: startOfDay };
+        } else if (period === 'month') {
+            const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+            filter.date = { $gte: startOfMonth };
+        } else if (period === 'year') {
+            const startOfYear = new Date(now.getFullYear(), 0, 1);
+            filter.date = { $gte: startOfYear };
+        } else if (startDate || endDate) {
             filter.date = {};
             if (startDate) filter.date.$gte = new Date(startDate as string);
             if (endDate) filter.date.$lte = new Date(endDate as string);
@@ -27,6 +39,7 @@ export const getAllExpenditures = async (req: Request, res: Response) => {
 
         const expenditures = await Expenditure.find(filter)
             .populate("addedBy", "name email")
+            .populate("tag")
             .sort({ date: -1, createdAt: -1 });
 
         return sendSuccess(res, expenditures, "Expenditures retrieved successfully");
@@ -42,12 +55,23 @@ export const getAllExpenditures = async (req: Request, res: Response) => {
  */
 export const createExpenditure = async (req: AuthRequest, res: Response) => {
     try {
-        const { title, amount, category, date, description } = req.body;
+        const { title, amount, tagId, date, description, newTagName } = req.body;
+
+        let finalTagId = tagId;
+
+        // Support for creating a new tag on the fly
+        if (newTagName) {
+            let tag = await Tag.findOne({ name: newTagName });
+            if (!tag) {
+                tag = await Tag.create({ name: newTagName });
+            }
+            finalTagId = tag._id;
+        }
 
         const expenditure = await Expenditure.create({
             title,
             amount,
-            category,
+            tag: finalTagId,
             date: date || new Date(),
             description,
             addedBy: req.employee?._id,
@@ -66,10 +90,13 @@ export const createExpenditure = async (req: AuthRequest, res: Response) => {
  */
 export const updateExpenditure = async (req: Request, res: Response) => {
     try {
-        const expenditure = await Expenditure.findByIdAndUpdate(req.params.id, req.body, {
+        const { tagId, ...updateData } = req.body;
+        if (tagId) updateData.tag = tagId;
+
+        const expenditure = await Expenditure.findByIdAndUpdate(req.params.id, updateData, {
             new: true,
             runValidators: true,
-        });
+        }).populate("tag");
 
         if (!expenditure) {
             return sendError(res, "No expenditure found with that ID", 404);
@@ -107,14 +134,36 @@ export const deleteExpenditure = async (req: Request, res: Response) => {
  */
 export const getExpenditureStats = async (req: Request, res: Response) => {
     try {
-        const stats = await Expenditure.aggregate([
+        const { period } = req.query;
+        const match: any = {};
+
+        const now = new Date();
+        if (period === 'day') {
+            match.date = { $gte: new Date(now.setHours(0, 0, 0, 0)) };
+        } else if (period === 'month') {
+            match.date = { $gte: new Date(now.getFullYear(), now.getMonth(), 1) };
+        } else if (period === 'year') {
+            match.date = { $gte: new Date(now.getFullYear(), 0, 1) };
+        }
+
+        const statsByTag = await Expenditure.aggregate([
+            { $match: match },
             {
                 $group: {
-                    _id: "$category",
+                    _id: "$tag",
                     totalAmount: { $sum: "$amount" },
                     count: { $sum: 1 },
                 },
             },
+            {
+                $lookup: {
+                    from: "tags",
+                    localField: "_id",
+                    foreignField: "_id",
+                    as: "tagInfo"
+                }
+            },
+            { $unwind: { path: "$tagInfo", preserveNullAndEmptyArrays: true } },
             { $sort: { totalAmount: -1 } },
         ]);
 
@@ -127,9 +176,23 @@ export const getExpenditureStats = async (req: Request, res: Response) => {
         ]);
 
         return sendSuccess(res, {
-            byCategory: stats,
+            byTag: statsByTag,
             todayTotal: dailyTotal[0]?.total || 0,
         }, "Expenditure statistics retrieved successfully");
+    } catch (error) {
+        return handleError(error, res);
+    }
+};
+
+/**
+ * @desc Get all expenditure tags
+ * @route GET /api/v1/expenditures/tags
+ * @access Private
+ */
+export const getAllTags = async (req: Request, res: Response) => {
+    try {
+        const tags = await Tag.find().sort({ name: 1 });
+        return sendSuccess(res, tags, "Tags retrieved successfully");
     } catch (error) {
         return handleError(error, res);
     }

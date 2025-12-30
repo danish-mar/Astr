@@ -468,8 +468,7 @@
                                                     x-text="`₹${Number(ticket.serviceCharge).toLocaleString('en-IN')}`">
                                                 </p>
                                                 <p class="text-[9px] font-bold text-gray-300 uppercase"
-                                                    x-text="new Date(ticket.createdAt).toLocaleDateString('en-IN', {day: '2-digit', month: 'short', year: 'numeric'})">
-                                                </p>
+                                                    x-text="formatLedgerDate(ticket.createdAt)"></p>
                                             </div>
                                             <a :href="`/service-tickets/${ticket._id}`"
                                                 class="w-10 h-10 rounded-xl bg-gray-50 flex items-center justify-center text-gray-300 hover:text-blue-600 hover:bg-blue-50 transition-all">
@@ -478,17 +477,94 @@
                                         </div>
                                     </div>
                                 </template>
+                            </div>
 
-                                <!-- Empty State for History -->
-                                <div x-show="contactTickets.length === 0"
-                                    class="py-12 flex flex-col items-center justify-center bg-gray-50/50 rounded-[32px] border border-dashed border-gray-200">
-                                    <div
-                                        class="w-16 h-16 bg-white rounded-2xl border border-gray-100 flex items-center justify-center mb-4 text-gray-200">
-                                        <i class="fas fa-history text-2xl"></i>
+                            <!-- Financial Footprint Integration -->
+                            <div class="mt-12 space-y-6">
+                                <div class="flex items-center justify-between">
+                                    <h3 class="text-[10px] font-bold text-gray-400 uppercase tracking-[0.2em]">Financial
+                                        Footprint</h3>
+                                    <div class="flex items-center gap-2">
+                                        <span class="text-[10px] font-bold text-gray-400 uppercase">Live Gateway</span>
                                     </div>
-                                    <p class="text-xs font-bold text-gray-400 uppercase tracking-widest">No service
-                                        history</p>
                                 </div>
+
+                                <div class="space-y-4">
+                                    <template x-for="acc in contactLedgers" :key="acc._id">
+                                        <div
+                                            class="bg-gray-900 rounded-[32px] p-8 text-white relative overflow-hidden group">
+                                            <div
+                                                class="absolute top-0 right-0 p-8 opacity-10 group-hover:scale-110 transition-transform duration-700">
+                                                <i class="fas fa-account-balance-wallet text-6xl"></i>
+                                            </div>
+                                            <div
+                                                class="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
+                                                <div>
+                                                    <p class="text-[10px] font-bold text-gray-400 uppercase tracking-[0.2em] mb-2"
+                                                        x-text="acc.accountName"></p>
+                                                    <div class="flex items-baseline gap-2">
+                                                        <span class="text-2xl font-black">₹<span
+                                                                x-text="formatLedgerNumber(acc.totalBalance)"></span></span>
+                                                        <span
+                                                            class="text-[10px] font-bold opacity-40 uppercase tracking-widest"
+                                                            x-text="acc.accountType === 'Receivable' ? 'Net Receivable' : 'Net Payable'"></span>
+                                                    </div>
+                                                </div>
+                                                <div class="flex gap-2">
+                                                    <a href="/accounting"
+                                                        class="px-6 py-3 bg-white/10 hover:bg-white/20 rounded-2xl text-[10px] font-bold uppercase tracking-widest transition-all">Go
+                                                        to Gateway</a>
+                                                </div>
+                                            </div>
+
+                                            <!-- Mini Transaction Log -->
+                                            <div class="mt-8 pt-6 border-t border-white/5 space-y-3">
+                                                <template x-for="tx in acc.recentTransactions" :key="tx._id">
+                                                    <div class="flex items-center justify-between text-[11px]">
+                                                        <div class="flex items-center gap-3">
+                                                            <div class="w-1.5 h-1.5 rounded-full"
+                                                                :class="tx.transactionType === 'Credit' ? 'bg-rose-500' : 'bg-emerald-500'">
+                                                            </div>
+                                                            <span class="opacity-60"
+                                                                x-text="formatLedgerDate(tx.date)"></span>
+                                                            <span class="font-bold truncate max-w-[150px]"
+                                                                x-text="tx.description"></span>
+                                                        </div>
+                                                        <span
+                                                            :class="tx.transactionType === 'Credit' ? 'text-rose-400' : 'text-emerald-400'"
+                                                            class="font-black"
+                                                            x-text="`${tx.transactionType === 'Credit' ? '+' : '-'} ₹${formatLedgerNumber(tx.amount)}`"></span>
+                                                    </div>
+                                                </template>
+                                                <template x-if="acc.recentTransactions.length === 0">
+                                                    <p class="text-[10px] italic opacity-40">No recent transactions
+                                                        recorded.</p>
+                                                </template>
+                                            </div>
+                                        </div>
+                                    </template>
+                                    <template x-if="contactLedgers.length === 0">
+                                        <div
+                                            class="py-12 flex flex-col items-center justify-center bg-gray-50/50 rounded-[32px] border border-dashed border-gray-200">
+                                            <p class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">No
+                                                ledger account linked</p>
+                                            <a href="/accounting"
+                                                class="mt-4 text-[9px] font-black text-indigo-600 uppercase hover:underline">Setup
+                                                Ledger account</a>
+                                        </div>
+                                    </template>
+                                </div>
+                            </div>
+
+                            <!-- Empty State for History -->
+                            <div x-show="contactTickets.length === 0"
+                                class="py-12 flex flex-col items-center justify-center bg-gray-50/50 rounded-[32px] border border-dashed border-gray-200">
+                                <div
+                                    class="w-16 h-16 bg-white rounded-2xl border border-gray-100 flex items-center justify-center mb-4 text-gray-200">
+                                    <i class="fas fa-history text-2xl"></i>
+                                </div>
+                                <p class="text-xs font-bold text-gray-400 uppercase tracking-widest">No service
+                                    history</p>
                             </div>
                         </div>
                     </div>
@@ -496,6 +572,7 @@
             </div>
         </div>
     </div>
+</div>
 </div>
 
 <script src="/js/pages/contacts.js"></script>

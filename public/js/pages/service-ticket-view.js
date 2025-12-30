@@ -73,6 +73,21 @@
                 // Redirect to edit (or open modal if we wanted to stay on same page)
                 // For now, let's redirect to tickets list with the ID to trigger the edit modal logic
                 window.location.href = `/service-tickets?edit=${this.ticketId}`;
+            },
+
+            async settlePayment() {
+                if (!confirm('Confirm payment for this ticket? This will record a payment in the customer\'s ledger.')) return;
+
+                try {
+                    const response = await window.api.post(`/service-tickets/${this.ticketId}/settle-payment`);
+                    if (response.success) {
+                        window.showNotification('Payment settled successfully');
+                        await this.loadTicket(); // Refresh ticket to show new logs/zero balance if needed
+                    }
+                } catch (error) {
+                    console.error('Error settling payment:', error);
+                    window.showNotification(error.response?.data?.message || 'Error settling payment', 'error');
+                }
             }
         }));
     };

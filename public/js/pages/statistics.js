@@ -3,6 +3,9 @@ document.addEventListener('alpine:init', () => {
         range: '30d',
         stats: {
             totalRevenue: 0,
+            productRevenue: 0,
+            serviceRevenue: 0,
+            totalExpenditure: 0,
             revenueGrowth: 0,
             ticketsClosed: 0,
             productsSold: 0,
@@ -12,31 +15,27 @@ document.addEventListener('alpine:init', () => {
         topEmployees: [],
         charts: {
             revenueTrend: [],
-            categorySales: []
+            expenditureTrend: [],
+            categorySales: [],
+            expenditureByTag: []
         },
         loading: true,
         revenueChartInstance: null,
+        expenditureChartInstance: null,
         categoryChartInstance: null,
+        tagChartInstance: null,
 
         async init() {
-            console.log('📊 Statistics page initializing...');
             await this.loadStats();
-            console.log('📊 Data loaded, waiting for next tick...');
-            // Use $nextTick to ensure DOM elements are ready before rendering charts
             this.$nextTick(() => {
-                console.log('📊 Next tick - attempting to render charts...');
-                console.log('📊 Charts data:', this.charts);
                 this.updateCharts();
             });
         },
 
         async setRange(newRange) {
-            console.log('📊 Changing range to:', newRange);
             this.range = newRange;
             await this.loadStats();
-            // Use $nextTick after data reload as well
             this.$nextTick(() => {
-                console.log('📊 Range changed - re-rendering charts...');
                 this.updateCharts();
             });
         },
@@ -44,29 +43,16 @@ document.addEventListener('alpine:init', () => {
         async loadStats() {
             this.loading = true;
             try {
-                console.log('📊 Fetching statistics data...');
                 const response = await window.api.get(`/statistics/detailed?range=${this.range}`);
-                console.log('📊 API Response:', response);
                 const data = response.data;
 
                 this.stats = data.stats;
                 this.topProducts = data.topProducts;
                 this.topEmployees = data.topEmployees;
                 this.charts = data.charts;
-
-                console.log('📊 Stats loaded:', {
-                    stats: this.stats,
-                    topProducts: this.topProducts.length,
-                    topEmployees: this.topEmployees.length,
-                    revenueTrend: this.charts.revenueTrend?.length,
-                    categorySales: this.charts.categorySales?.length
-                });
-
-                // Chart rendering moved to $nextTick in init() and setRange()
             } catch (error) {
-                console.error('❌ Error loading statistics:', error);
-                console.error('❌ Error details:', error.response?.data || error.message);
-                window.showNotification('Error loading statistics. Please try again.', 'error');
+                console.error('Error loading statistics:', error);
+                window.showNotification('Error loading statistics', 'error');
             } finally {
                 this.loading = false;
             }
@@ -77,26 +63,17 @@ document.addEventListener('alpine:init', () => {
         },
 
         updateCharts() {
-            console.log('📊 updateCharts() called');
-            console.log('📊 Revenue chart element exists:', !!document.getElementById('detailedRevenueChart'));
-            console.log('📊 Category chart element exists:', !!document.getElementById('categoryChart'));
             this.renderRevenueChart();
+            this.renderExpenditureTrendChart();
             this.renderCategoryChart();
+            this.renderExpenditureTagChart();
         },
 
         renderRevenueChart() {
-            console.log('📊 renderRevenueChart() called');
             const ctx = document.getElementById('detailedRevenueChart');
-            console.log('📊 Revenue chart canvas element:', ctx);
-            if (!ctx) {
-                console.warn('⚠️ Revenue chart canvas element not found');
-                return;
-            }
+            if (!ctx) return;
 
-            if (this.revenueChartInstance) {
-                console.log('📊 Destroying existing revenue chart');
-                this.revenueChartInstance.destroy();
-            }
+            if (this.revenueChartInstance) this.revenueChartInstance.destroy();
 
             const labels = this.charts.revenueTrend.map(item => {
                 const date = new Date(item._id);
@@ -104,80 +81,82 @@ document.addEventListener('alpine:init', () => {
             });
             const data = this.charts.revenueTrend.map(item => item.total);
 
-            console.log('📊 Revenue chart data:', { labels, data });
-            console.log('📊 Creating revenue chart...');
-
             this.revenueChartInstance = new Chart(ctx, {
                 type: 'bar',
                 data: {
                     labels: labels,
                     datasets: [{
-                        label: 'Revenue (₹)',
+                        label: 'Service Revenue (₹)',
                         data: data,
                         backgroundColor: '#10b981',
-                        borderRadius: 4,
+                        borderRadius: 8,
                         barThickness: 'flex',
-                        maxBarThickness: 40
+                        maxBarThickness: 30
                     }]
                 },
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
-                    plugins: {
-                        legend: { display: false },
-                        tooltip: {
-                            callbacks: {
-                                label: function (context) {
-                                    let label = context.dataset.label || '';
-                                    if (label) {
-                                        label += ': ';
-                                    }
-                                    if (context.parsed.y !== null) {
-                                        label += new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(context.parsed.y);
-                                    }
-                                    return label;
-                                }
-                            }
-                        }
-                    },
+                    plugins: { legend: { display: false } },
                     scales: {
-                        y: {
-                            beginAtZero: true,
-                            grid: { borderDash: [2, 2] }
-                        },
-                        x: {
-                            grid: { display: false }
-                        }
+                        y: { beginAtZero: true, grid: { borderDash: [2, 2] } },
+                        x: { grid: { display: false } }
                     }
                 }
             });
-            console.log('✅ Revenue chart created successfully');
+        },
+
+        renderExpenditureTrendChart() {
+            const ctx = document.getElementById('expenditureTrendChart');
+            if (!ctx) return;
+
+            if (this.expenditureChartInstance) this.expenditureChartInstance.destroy();
+
+            const labels = this.charts.expenditureTrend.map(item => {
+                const date = new Date(item._id);
+                return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+            });
+            const data = this.charts.expenditureTrend.map(item => item.total);
+
+            this.expenditureChartInstance = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Expenditure (₹)',
+                        data: data,
+                        borderColor: '#f43f5e',
+                        backgroundColor: '#f43f5e20',
+                        fill: true,
+                        tension: 0.4,
+                        borderWidth: 3,
+                        pointRadius: 4,
+                        pointBackgroundColor: '#fff',
+                        pointBorderWidth: 2
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        y: { beginAtZero: true, grid: { borderDash: [2, 2] } },
+                        x: { grid: { display: false } }
+                    }
+                }
+            });
         },
 
         renderCategoryChart() {
-            console.log('📊 renderCategoryChart() called');
             const ctx = document.getElementById('categoryChart');
-            console.log('📊 Category chart canvas element:', ctx);
-            if (!ctx) {
-                console.warn('⚠️ Category chart canvas element not found');
-                return;
-            }
+            if (!ctx) return;
 
-            if (this.categoryChartInstance) {
-                console.log('📊 Destroying existing category chart');
-                this.categoryChartInstance.destroy();
-            }
+            if (this.categoryChartInstance) this.categoryChartInstance.destroy();
 
             const labels = this.charts.categorySales.map(item => item.name);
             const data = this.charts.categorySales.map(item => item.count);
 
-            console.log('📊 Category chart data:', { labels, data });
-
-            // Generate colors
-            const colors = [
-                '#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6',
-                '#ec4899', '#06b6d4', '#14b8a6', '#6366f1', '#d946ef'
-            ];
+            const colors = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6'];
 
             this.categoryChartInstance = new Chart(ctx, {
                 type: 'doughnut',
@@ -186,26 +165,45 @@ document.addEventListener('alpine:init', () => {
                     datasets: [{
                         data: data,
                         backgroundColor: colors.slice(0, labels.length),
-                        borderWidth: 0,
-                        hoverOffset: 4
+                        borderWidth: 0
                     }]
                 },
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
-                    plugins: {
-                        legend: {
-                            position: 'right',
-                            labels: {
-                                usePointStyle: true,
-                                padding: 20
-                            }
-                        }
-                    },
+                    plugins: { legend: { position: 'right' } },
                     cutout: '65%'
                 }
             });
-            console.log('✅ Category chart created successfully');
+        },
+
+        renderExpenditureTagChart() {
+            const ctx = document.getElementById('expenditureTagChart');
+            if (!ctx) return;
+
+            if (this.tagChartInstance) this.tagChartInstance.destroy();
+
+            const labels = this.charts.expenditureByTag.map(item => item.name);
+            const data = this.charts.expenditureByTag.map(item => item.total);
+
+            const colors = ['#f43f5e', '#8b5cf6', '#ec4899', '#f97316', '#6366f1'];
+
+            this.tagChartInstance = new Chart(ctx, {
+                type: 'pie',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        data: data,
+                        backgroundColor: colors.slice(0, labels.length),
+                        borderWidth: 0
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { position: 'right' } }
+                }
+            });
         }
     }));
 });

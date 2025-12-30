@@ -9,6 +9,7 @@ import {
   deleteServiceTicket,
   getServiceTicketStats,
   getTicketsByCustomer,
+  settleTicketPayment,
 } from "../controllers/serviceTicketController";
 import { authenticate, authorize, validateObjectId } from "../middleware";
 
@@ -34,6 +35,12 @@ router.patch(
   authenticate,
   validateObjectId("id"),
   updateTicketStatus
+);
+router.post(
+  "/:id/settle-payment",
+  authenticate,
+  validateObjectId("id"),
+  settleTicketPayment
 );
 
 // Delete (Admin, Manager, CEO only)

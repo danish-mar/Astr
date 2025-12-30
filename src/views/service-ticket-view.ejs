@@ -232,6 +232,13 @@
                                 Pricing indicated reflects current diagnostic assessment.</p>
                         </div>
                     </div>
+
+                    <!-- Payment Action -->
+                    <button @click="settlePayment()"
+                        class="mt-6 w-full py-5 bg-green-500 hover:bg-green-600 text-white rounded-[28px] text-[11px] font-black uppercase tracking-[0.2em] shadow-xl shadow-green-100 transition-all active:scale-95 flex items-center justify-center gap-3 group">
+                        <i class="fas fa-check-circle group-hover:scale-125 transition-transform"></i>
+                        <span>Confirm Local Payment</span>
+                    </button>
                 </div>
             </div>
         </div>

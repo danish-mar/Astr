@@ -1,21 +1,24 @@
 function expenditureData() {
     return {
         expenditures: [],
-        categories: ["Snacks", "Tea", "Tools", "Transport", "Miscellaneous", "Ad-hoc"],
+        tags: [],
         stats: {
-            byCategory: [],
+            byTag: [],
             todayTotal: 0
         },
         loading: false,
         showStats: false,
         showAddModal: false,
+        showNewTagField: false,
         filter: {
-            category: ''
+            tagId: '',
+            period: 'month' // Default to month
         },
         formData: {
             title: '',
             amount: '',
-            category: 'Tea',
+            tagId: '',
+            newTagName: '',
             description: ''
         },
 
@@ -23,6 +26,7 @@ function expenditureData() {
             this.loading = true;
             try {
                 await Promise.all([
+                    this.loadTags(),
                     this.loadExpenditures(),
                     this.loadStats()
                 ]);
@@ -37,11 +41,20 @@ function expenditureData() {
             return this.$store.app.api(endpoint, method, data);
         },
 
+        async loadTags() {
+            try {
+                const response = await this.api('/expenditures/tags');
+                this.tags = response.data;
+            } catch (err) {
+                console.error('Failed to load tags:', err);
+            }
+        },
+
         async loadExpenditures() {
             try {
-                let url = '/expenditures';
-                if (this.filter.category) {
-                    url += `?category=${this.filter.category}`;
+                let url = `/expenditures?period=${this.filter.period}`;
+                if (this.filter.tagId) {
+                    url += `&tagId=${this.filter.tagId}`;
                 }
                 const response = await this.api(url);
                 this.expenditures = response.data;
@@ -53,28 +66,41 @@ function expenditureData() {
 
         async loadStats() {
             try {
-                const response = await this.api('/expenditures/stats');
+                const response = await this.api(`/expenditures/stats?period=${this.filter.period}`);
                 this.stats = response.data;
             } catch (err) {
                 console.error('Failed to load stats:', err);
             }
         },
 
-        toggleFilter(category) {
-            if (this.filter.category === category) {
-                this.filter.category = '';
-            } else {
-                this.filter.category = category;
-            }
+        setPeriod(period) {
+            this.filter.period = period;
+            this.loadExpenditures();
+            this.loadStats();
+        },
+
+        getPeriodLabel(format = 'Short') {
+            const labels = {
+                day: format === 'Short' ? 'Today' : 'Today\'s Spend',
+                month: format === 'Short' ? 'This Month' : 'Monthly Spend',
+                year: format === 'Short' ? 'This Year' : 'Annual Spend'
+            };
+            return labels[this.filter.period];
+        },
+
+        toggleTagFilter(tagId) {
+            this.filter.tagId = this.filter.tagId === tagId ? '' : tagId;
             this.loadExpenditures();
         },
 
         openAddModal() {
             this.showAddModal = true;
+            this.showNewTagField = false;
             this.formData = {
                 title: '',
                 amount: '',
-                category: 'Tea',
+                tagId: '',
+                newTagName: '',
                 description: ''
             };
         },
@@ -84,15 +110,21 @@ function expenditureData() {
         },
 
         async saveExpense() {
+            this.loading = true;
             try {
                 await this.api('/expenditures', 'POST', this.formData);
                 window.showNotification('Expense logged successfully');
                 this.closeModal();
-                await this.loadExpenditures();
-                await this.loadStats();
+                await Promise.all([
+                    this.loadTags(),
+                    this.loadExpenditures(),
+                    this.loadStats()
+                ]);
             } catch (err) {
                 console.error('Failed to save expense:', err);
                 window.showNotification(err.response?.data?.message || 'Failed to log expense', 'error');
+            } finally {
+                this.loading = false;
             }
         },
 
@@ -126,11 +158,15 @@ function expenditureData() {
         },
 
         calculateTotal() {
-            return this.stats.byCategory.reduce((acc, curr) => acc + curr.totalAmount, 0) || 1;
+            return this.stats.byTag.reduce((acc, curr) => acc + curr.totalAmount, 0) || 1;
         },
 
-        calculateMonthTotal() {
-            return this.stats.byCategory.reduce((acc, curr) => acc + curr.totalAmount, 0);
+        calculateYearlyForecast() {
+            // Very simple projection: if month, multiply by 12. If day, multiply by 365.
+            const total = this.stats.todayTotal || 0;
+            if (this.filter.period === 'day') return total * 365;
+            if (this.filter.period === 'month') return total * 12; // This is a bit rough if todayTotal is just current period total
+            return total;
         }
     };
 }

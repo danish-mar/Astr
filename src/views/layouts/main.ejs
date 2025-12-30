@@ -187,6 +187,22 @@
       border: 1px solid rgba(255, 255, 255, 0.1);
     }
 
+    /* Tooltip styles */
+    .group\/tooltip:hover .group-hover\/tooltip\:opacity-100 {
+      opacity: 1;
+      transform: translateX(0);
+    }
+
+    .group\/tooltip .group-hover\/tooltip\:opacity-100 {
+      transform: translateX(-10px);
+      transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    /* Sidebar Transition */
+    .sidebar-transition {
+      transition: all 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
     body {
       -webkit-font-smoothing: antialiased;
       -moz-osx-font-smoothing: grayscale;
@@ -195,14 +211,14 @@
 </head>
 
 <body class="bg-gray-50 min-h-screen text-gray-900 font-sans selection:bg-primary-100 selection:text-primary-700"
-  x-data="appData()">
+  x-data="appData" x-cloak>
 
   <!-- Desktop Layout -->
   <div class="flex h-screen overflow-hidden">
 
     <!-- Sidebar (Desktop) -->
     <aside
-      class="hidden md:flex flex-col m-6 mr-0 rounded-[32px] bg-white border border-gray-100 shadow-sm z-20 relative overflow-hidden transition-all duration-500 ease-in-out"
+      class="hidden md:flex flex-col m-6 mr-0 rounded-[32px] bg-white border border-gray-100 shadow-sm relative overflow-hidden sidebar-transition"
       :class="isSidebarCollapsed ? 'w-20' : 'w-72'">
 
       <!-- Sidebar Header -->
@@ -225,43 +241,63 @@
         <template x-for="group in menuGroups" :key="group.title">
           <div class="space-y-1">
             <!-- Category Header / Toggle -->
-            <button @click="toggleGroup(group.title)"
-              class="w-full flex items-center justify-between px-5 py-2 group/header hover:bg-gray-50/50 rounded-xl transition-all overflow-hidden"
-              :class="isSidebarCollapsed ? 'justify-center' : ''">
-              <span
-                class="text-[10px] font-bold text-gray-400 uppercase tracking-[0.2em] group-hover/header:text-gray-600 transition-all duration-500 whitespace-nowrap"
-                x-text="group.title"
-                :class="isSidebarCollapsed ? 'w-0 opacity-0 pointer-events-none' : 'w-auto opacity-100'"></span>
-              <i class="fas fa-chevron-right text-[10px] text-gray-300 transition-all duration-500" :class="[
-                  expandedGroups.includes(group.title) ? 'rotate-90 text-gray-400' : '',
-                  isSidebarCollapsed ? 'w-0 opacity-0' : 'w-auto opacity-100'
-                ]"></i>
-            </button>
+            <div class="relative group/tooltip">
+              <button @click="toggleGroup(group.title)"
+                class="w-full flex items-center justify-between px-5 py-2 group/header hover:bg-gray-50/50 rounded-xl transition-all overflow-hidden"
+                :class="isSidebarCollapsed ? 'justify-center' : ''">
+                <!-- Collapsed Icon -->
+                <i x-show="isSidebarCollapsed" :class="group.icon"
+                  class="text-xs text-gray-300 group-hover/header:text-gray-600 transition-all"></i>
+
+                <span
+                  class="text-[10px] font-bold text-gray-400 uppercase tracking-[0.2em] group-hover/header:text-gray-600 transition-all duration-500 whitespace-nowrap"
+                  x-text="group.title"
+                  :class="isSidebarCollapsed ? 'w-0 opacity-0 pointer-events-none' : 'w-auto opacity-100'"></span>
+                <i class="fas fa-chevron-right text-[10px] text-gray-300 transition-all duration-500" :class="[
+                    expandedGroups.includes(group.title) ? 'rotate-90 text-gray-400' : '',
+                    isSidebarCollapsed ? 'w-0 opacity-0' : 'w-auto opacity-100'
+                  ]"></i>
+              </button>
+
+              <!-- Tooltip for Collapsed Category -->
+              <div x-show="isSidebarCollapsed"
+                class="absolute left-full ml-4 px-3 py-1 bg-gray-900 text-white text-[10px] font-bold uppercase tracking-widest rounded-md opacity-0 group-hover/tooltip:opacity-100 pointer-events-none transition-all z-50 whitespace-nowrap">
+                <span x-text="group.title"></span>
+              </div>
+            </div>
 
             <!-- Group Items -->
             <div x-show="expandedGroups.includes(group.title) || isSidebarCollapsed" x-collapse class="space-y-1 pt-1">
               <template x-for="item in group.items" :key="item.href">
-                <a :href="item.href"
-                  class="flex items-center px-5 py-3 rounded-2xl transition-all duration-300 group relative overflow-hidden"
-                  :class="[
-                    isActive(item.href) ? 'bg-gray-50 text-gray-900 shadow-sm' : 'text-gray-400 hover:text-gray-900 hover:bg-gray-50/50',
-                    isSidebarCollapsed ? 'justify-center space-x-0' : 'space-x-3'
-                  ]">
+                <div class="relative group/tooltip">
+                  <a :href="item.href"
+                    class="flex items-center px-5 py-3 rounded-2xl transition-all duration-300 group/link relative overflow-hidden"
+                    :class="[
+                      isActive(item.href) ? 'bg-gray-50 text-gray-900 shadow-sm' : 'text-gray-400 hover:text-gray-900 hover:bg-gray-50/50',
+                      isSidebarCollapsed ? 'justify-center space-x-0' : 'space-x-3'
+                    ]">
 
-                  <div class="w-8 flex justify-center transition-all duration-300 flex-shrink-0"
-                    :class="isActive(item.href) ? 'text-gray-900 scale-110' : 'text-gray-300 group-hover:text-gray-600 group-hover:scale-110'">
-                    <i :class="item.icon" class="text-base"></i>
-                  </div>
-                  <span
-                    class="text-sm font-semibold tracking-tight transition-all duration-500 whitespace-nowrap overflow-hidden"
-                    x-text="item.label" :class="isSidebarCollapsed ? 'w-0 opacity-0' : 'w-auto opacity-100'"></span>
+                    <div class="w-8 flex justify-center transition-all duration-300 flex-shrink-0"
+                      :class="isActive(item.href) ? 'text-gray-900 scale-110' : 'text-gray-300 group-hover/link:text-gray-600 group-hover/link:scale-110'">
+                      <i :class="item.icon" class="text-base"></i>
+                    </div>
+                    <span
+                      class="text-sm font-semibold tracking-tight transition-all duration-500 whitespace-nowrap overflow-hidden"
+                      x-text="item.label" :class="isSidebarCollapsed ? 'w-0 opacity-0' : 'w-auto opacity-100'"></span>
 
-                  <!-- Subtle Pulse Indicator for active -->
-                  <div x-show="isActive(item.href)"
-                    class="absolute rounded-full bg-gray-900 shadow-sm transition-all duration-500"
-                    :class="isSidebarCollapsed ? 'inset-0 bg-gray-900/5' : 'right-4 w-1.5 h-1.5'">
+                    <!-- Subtle Pulse Indicator for active -->
+                    <div x-show="isActive(item.href)"
+                      class="absolute rounded-full bg-gray-900 shadow-sm transition-all duration-500"
+                      :class="isSidebarCollapsed ? 'inset-0 bg-gray-900/5' : 'right-4 w-1.5 h-1.5'">
+                    </div>
+                  </a>
+
+                  <!-- Tooltip for Collapsed Item -->
+                  <div x-show="isSidebarCollapsed"
+                    class="absolute left-full ml-4 px-3 py-1 bg-gray-900 text-white text-[10px] font-bold uppercase tracking-widest rounded-md opacity-0 group-hover/tooltip:opacity-100 pointer-events-none transition-all z-50 whitespace-nowrap">
+                    <span x-text="item.label"></span>
                   </div>
-                </a>
+                </div>
               </template>
             </div>
           </div>
@@ -348,7 +384,7 @@
   </div>
 
   <!-- Mobile Sidebar Overlay & Menu -->
-  <div x-show="sidebarOpen" class="fixed inset-0 z-50 md:hidden" style="display: none;">
+  <div x-show="sidebarOpen" class="fixed inset-0 z-50 md:hidden" x-cloak>
     <!-- Backdrop -->
     <div x-show="sidebarOpen" x-transition:enter="transition ease-out duration-300" x-transition:enter-start="opacity-0"
       x-transition:enter-end="opacity-100" x-transition:leave="transition ease-in duration-200"
@@ -555,25 +591,28 @@
       }
     })();
 
-    function appData() {
-      return {
+    document.addEventListener('alpine:init', () => {
+      Alpine.data('appData', () => ({
         sidebarOpen: false,
         menuGroups: [
           {
             title: 'General',
+            icon: 'fas fa-grid-2',
             items: [
               { label: 'Dashboard', href: '/dashboard', icon: 'fas fa-home' }
             ]
           },
           {
             title: 'Operations',
+            icon: 'fas fa-briefcase',
             items: [
               { label: 'Tickets', href: '/service-tickets', icon: 'fas fa-ticket' },
-              { label: 'Expenditure', href: '/expenditures', icon: 'fas fa-wallet' }
+              { label: 'Accounting', href: '/accounting', icon: 'fas fa-indian-rupee-sign' }
             ]
           },
           {
             title: 'Inventory',
+            icon: 'fas fa-warehouse',
             items: [
               { label: 'Products', href: '/products', icon: 'fas fa-box' },
               { label: 'Categories', href: '/categories', icon: 'fas fa-tags' }
@@ -581,6 +620,7 @@
           },
           {
             title: 'Sales & CRM',
+            icon: 'fas fa-handshake',
             items: [
               { label: 'Leads', href: '/leads', icon: 'fas fa-bullseye' },
               { label: 'Contacts', href: '/contacts', icon: 'fas fa-address-book' }
@@ -588,6 +628,7 @@
           },
           {
             title: 'System',
+            icon: 'fas fa-sliders-h',
             items: [
               { label: 'Settings', href: '/settings', icon: 'fas fa-cog' }
             ]
@@ -618,9 +659,6 @@
         },
 
         toggleGroup(title) {
-          // If sidebar is collapsed, expand it first or just toggle?
-          // Usually better to expand it or just let it stay collapsed and show tooltips (complex)
-          // For now, let's just toggle and maybe expand sidebar if it was collapsed
           if (this.isSidebarCollapsed) {
             this.isSidebarCollapsed = false;
           }
@@ -668,8 +706,8 @@
         onConfirm() {
           this.$store.app.onConfirm();
         }
-      }
-    }
+      }));
+    });
   </script>
 
   <%- script %>

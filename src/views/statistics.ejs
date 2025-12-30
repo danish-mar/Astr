@@ -36,9 +36,10 @@
         </div>
     </div>
 
-    <div class="max-w-[1400px] mx-auto px-8">
+    <div class="max-w-[1400px] mx-auto px-8 space-y-12">
         <!-- High-Impact Summary Chips -->
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 mb-12">
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+            <!-- Revenue Card -->
             <div
                 class="bg-white border border-gray-100 rounded-[40px] p-8 shadow-sm hover:shadow-xl hover:shadow-gray-100 transition-all group animate__animated animate__fadeInUp">
                 <div class="flex items-center justify-between mb-8">
@@ -50,105 +51,32 @@
                         <span class="text-[10px] font-bold text-gray-300 uppercase tracking-widest block mb-1">Total
                             Revenue</span>
                         <div class="flex items-center gap-2 justify-end">
-                            <i class="fas fa-caret-up text-green-500 text-xs"></i>
-                            <span class="text-[11px] font-bold text-green-600"
-                                x-text="stats.revenueGrowth + '%'"></span>
+                            <i class="fas"
+                                :class="stats.revenueGrowth >= 0 ? 'fa-caret-up text-green-500' : 'fa-caret-down text-red-500'"></i>
+                            <span class="text-[11px] font-bold"
+                                :class="stats.revenueGrowth >= 0 ? 'text-green-600' : 'text-red-600'"
+                                x-text="Math.abs(stats.revenueGrowth) + '%'"></span>
                         </div>
                     </div>
                 </div>
-                <h3 class="text-3xl font-bold text-gray-900 tracking-tighter mb-6">₹<span
-                        x-text="formatNumber(stats.totalRevenue)">0</span></h3>
-
-                <div class="space-y-3 pt-6 border-t border-gray-50">
-                    <div class="flex items-center justify-between">
-                        <span class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Product
-                            Sales</span>
-                        <span class="text-xs font-bold text-gray-900">₹<span
-                                x-text="formatNumber(stats.productRevenue || 0)">0</span></span>
-                    </div>
-                    <div class="w-full bg-gray-50 h-1.5 rounded-full overflow-hidden">
-                        <div class="bg-indigo-500 h-full rounded-full transition-all duration-1000"
-                            :style="`width: ${stats.productRevenue && stats.totalRevenue ? (stats.productRevenue / stats.totalRevenue * 100) : 0}%`">
-                        </div>
-                    </div>
-                    <div class="flex items-center justify-between pt-2">
-                        <span class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Services</span>
-                        <span class="text-xs font-bold text-gray-900">₹<span
-                                x-text="formatNumber(stats.serviceRevenue || 0)">0</span></span>
-                    </div>
-                    <div class="w-full bg-gray-50 h-1.5 rounded-full overflow-hidden">
-                        <div class="bg-purple-500 h-full rounded-full transition-all duration-1000"
-                            :style="`width: ${stats.serviceRevenue && stats.totalRevenue ? (stats.serviceRevenue / stats.totalRevenue * 100) : 0}%`">
-                        </div>
-                    </div>
-                </div>
+                <h3 class="text-3xl font-bold text-gray-900 tracking-tighter"
+                    x-text="'₹' + formatNumber(stats.totalRevenue)">0</h3>
             </div>
 
-            <div class="bg-white border border-gray-100 rounded-[40px] p-8 shadow-sm hover:shadow-xl hover:shadow-gray-100 transition-all group animate__animated animate__fadeInUp"
-                style="animation-delay: 0.1s">
-                <div class="flex items-center justify-between mb-8">
-                    <div
-                        class="w-14 h-14 bg-indigo-50 rounded-[22px] flex items-center justify-center text-indigo-600 group-hover:bg-indigo-600 group-hover:text-white transition-all">
-                        <i class="fas fa-ticket text-lg"></i>
-                    </div>
-                    <span class="text-[10px] font-bold text-gray-300 uppercase tracking-widest">Tickets Closed</span>
-                </div>
-                <h3 class="text-3xl font-bold text-gray-900 tracking-tighter mb-2" x-text="stats.ticketsClosed">0</h3>
-                <p class="text-gray-400 font-bold text-sm">Managed resolutions</p>
-                <div class="mt-8 p-4 bg-gray-50 rounded-[20px] flex items-center justify-between">
-                    <span class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Efficiency Rate</span>
-                    <span class="text-xs font-bold text-indigo-600">Optimal</span>
-                </div>
-            </div>
-
-            <div class="bg-white border border-gray-100 rounded-[40px] p-8 shadow-sm hover:shadow-xl hover:shadow-gray-100 transition-all group animate__animated animate__fadeInUp"
-                style="animation-delay: 0.2s">
-                <div class="flex items-center justify-between mb-8">
-                    <div
-                        class="w-14 h-14 bg-purple-50 rounded-[22px] flex items-center justify-center text-purple-600 group-hover:bg-purple-600 group-hover:text-white transition-all">
-                        <i class="fas fa-box text-lg"></i>
-                    </div>
-                    <span class="text-[10px] font-bold text-gray-300 uppercase tracking-widest">Products Sold</span>
-                </div>
-                <h3 class="text-3xl font-bold text-gray-900 tracking-tighter mb-2" x-text="stats.productsSold">0</h3>
-                <p class="text-gray-400 font-bold text-sm">Inventory turnover</p>
-                <div class="mt-8 p-4 bg-gray-100/50 rounded-[20px] flex items-center justify-between">
-                    <span class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Velocity</span>
-                    <span class="text-xs font-bold text-purple-600">Accelerating</span>
-                </div>
-            </div>
-
-            <div class="bg-white border border-gray-100 rounded-[40px] p-8 shadow-sm hover:shadow-xl hover:shadow-gray-100 transition-all group animate__animated animate__fadeInUp"
-                style="animation-delay: 0.3s">
-                <div class="flex items-center justify-between mb-8">
-                    <div
-                        class="w-14 h-14 bg-amber-50 rounded-[22px] flex items-center justify-center text-amber-600 group-hover:bg-amber-600 group-hover:text-white transition-all">
-                        <i class="fas fa-chart-line text-lg"></i>
-                    </div>
-                    <span class="text-[10px] font-bold text-gray-300 uppercase tracking-widest">Avg Ticket</span>
-                </div>
-                <h3 class="text-3xl font-bold text-gray-900 tracking-tighter mb-2">₹<span
-                        x-text="formatNumber(stats.avgTicketValue)">0</span></h3>
-                <p class="text-gray-400 font-bold text-sm">Average sale value</p>
-                <div class="mt-8 p-4 bg-amber-50/50 rounded-[20px] flex items-center justify-between">
-                    <span class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Quality Score</span>
-                    <span class="text-xs font-bold text-amber-600">Good</span>
-                </div>
-            </div>
         </div>
 
         <!-- Analytical Canvas -->
-        <div class="grid grid-cols-1 lg:grid-cols-12 gap-12 mb-12">
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
             <!-- Revenue Trend -->
             <div
                 class="lg:col-span-8 bg-white border border-gray-100 rounded-[40px] p-10 shadow-sm animate__animated animate__fadeInLeft">
                 <div class="flex items-center justify-between mb-10">
                     <div>
                         <h3 class="text-2xl font-bold text-gray-900 tracking-tight">Revenue Trend</h3>
-                        <p class="text-gray-400 font-medium text-sm mt-1">Growth over time for the selected range.</p>
+                        <p class="text-gray-400 font-medium text-sm mt-1">Daily service revenue flow.</p>
                     </div>
                 </div>
-                <div class="h-[400px]">
+                <div class="h-[300px]">
                     <canvas id="detailedRevenueChart"></canvas>
                 </div>
             </div>
@@ -157,8 +85,8 @@
             <div
                 class="lg:col-span-4 bg-white border border-gray-100 rounded-[40px] p-10 shadow-sm animate__animated animate__fadeInRight">
                 <h3 class="text-2xl font-bold text-gray-900 tracking-tight mb-2">Category Split</h3>
-                <p class="text-gray-400 font-medium text-sm mb-12">Sales by product category.</p>
-                <div class="h-[300px] flex items-center justify-center">
+                <p class="text-gray-400 font-medium text-sm mb-12">Product sales by category.</p>
+                <div class="h-[250px] flex items-center justify-center">
                     <canvas id="categoryChart"></canvas>
                 </div>
             </div>
@@ -170,32 +98,32 @@
             <div
                 class="bg-white border border-gray-100 rounded-[40px] shadow-sm overflow-hidden animate__animated animate__fadeInUp">
                 <div class="p-10 border-b border-gray-50 flex items-center justify-between">
-                    <h3 class="text-2xl font-bold text-gray-900 tracking-tight">Top Products</h3>
+                    <h3 class="text-2xl font-bold text-gray-900 tracking-tight">Top Selling Assets</h3>
                     <span
-                        class="px-3 py-1 bg-gray-100 text-gray-400 text-[10px] font-bold rounded-full uppercase tracking-widest">Top
-                        5 Sold</span>
+                        class="px-3 py-1 bg-gray-100 text-gray-400 text-[10px] font-bold rounded-full uppercase tracking-widest">Premium
+                        Units</span>
                 </div>
                 <div class="overflow-x-auto">
                     <table class="w-full text-left">
                         <thead>
                             <tr class="bg-gray-50/50">
                                 <th class="px-10 py-5 text-[10px] font-bold text-gray-300 uppercase tracking-widest">
-                                    Unit</th>
+                                    Product</th>
                                 <th
                                     class="px-10 py-5 text-[10px] font-bold text-gray-300 uppercase tracking-widest text-right">
-                                    Volume</th>
+                                    Qty</th>
                                 <th
                                     class="px-10 py-5 text-[10px] font-bold text-gray-300 uppercase tracking-widest text-right">
-                                    Net Asset</th>
+                                    Revenue</th>
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-gray-50">
                             <template x-for="product in topProducts" :key="product._id">
                                 <tr class="hover:bg-gray-50/30 transition-colors">
                                     <td class="px-10 py-6">
-                                        <p class="font-bold text-gray-900 text-sm" x-text="product.name"></p>
+                                        <p class="font-bold text-gray-900 text-sm" x-text="product._id"></p>
                                         <p class="text-[10px] font-bold text-gray-400 uppercase tracking-widest mt-1"
-                                            x-text="product.category"></p>
+                                            x-text="product.category || 'General'"></p>
                                     </td>
                                     <td class="px-10 py-6 text-right">
                                         <span class="px-2.5 py-1 bg-gray-100 rounded-lg text-xs font-bold text-gray-900"
@@ -219,7 +147,7 @@
                         class="px-3 py-1 bg-gray-100 text-gray-400 text-[10px] font-bold rounded-full uppercase tracking-widest">Technicians</span>
                 </div>
                 <div class="space-y-6">
-                    <template x-for="(employee, index) in topEmployees" :key="employee._id">
+                    <template x-for="(employee, index) in topEmployees" :key="employee.name">
                         <div
                             class="group flex items-center justify-between p-6 bg-gray-50 rounded-[32px] border border-transparent hover:border-gray-200 hover:bg-white hover:shadow-xl hover:shadow-gray-100 transition-all">
                             <div class="flex items-center gap-6">
@@ -227,8 +155,8 @@
                                     x-text="index + 1"></div>
                                 <div>
                                     <p class="font-bold text-gray-900 text-sm" x-text="employee.name"></p>
-                                    <p class="text-[10px] font-bold text-gray-400 uppercase tracking-widest mt-1"
-                                        x-text="employee.position"></p>
+                                    <p class="text-[10px] font-bold text-gray-400 uppercase tracking-widest mt-1">Senior
+                                        Member</p>
                                 </div>
                             </div>
                             <div class="text-right">
