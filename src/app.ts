@@ -24,7 +24,7 @@ app.use(requestLogger);
 // View engine setup
 app.set("view engine", "ejs");
 // Use absolute path for views to work in both dev and prod
-app.set("views", path.join(process.cwd(), "src", "views"));
+app.set("views", path.join(__dirname, "views"));
 
 
 // Use express-ejs-layouts

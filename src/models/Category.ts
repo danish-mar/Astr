@@ -71,7 +71,7 @@ const categorySchema = new Schema<ICategory>(
 );
 
 // 4. Add indexes
-categorySchema.index({ name: 1 });
+// name is already indexed by unique: true
 
 // 5. Add a pre-save hook to handle unique name validation better
 // 5. Add a pre-save hook to handle unique name validation better
