@@ -3,7 +3,7 @@ import {
     getDashboardStats,
     getDetailedStats,
 } from "../controllers/statisticsController";
-import { authenticate as protect, authorize } from "../middleware/auth";
+import { authenticate as protect, requirePermission } from "../middleware/auth";
 
 const router = Router();
 
@@ -11,6 +11,6 @@ const router = Router();
 router.use(protect);
 
 router.get("/dashboard", getDashboardStats);
-router.get("/detailed", authorize("Admin", "CEO", "Manager"), getDetailedStats);
+router.get("/detailed", requirePermission("accounting:read"), getDetailedStats);
 
 export default router;

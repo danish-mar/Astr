@@ -10,6 +10,7 @@ import aiRoutes from "../aiRoutes";
 import leadRoutes from "../leadRoutes";
 import expenditureRoutes from "../expenditureRoutes";
 import accountingRoutes from "../accountingRoutes";
+import attendanceRoutes from "../attendanceRoutes";
 
 
 const router = Router();
@@ -26,6 +27,7 @@ router.use("/ai", aiRoutes);
 router.use("/leads", leadRoutes);
 router.use("/expenditures", expenditureRoutes);
 router.use("/accounting", accountingRoutes);
+router.use("/attendance", attendanceRoutes);
 
 
 export default router;

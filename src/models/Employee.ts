@@ -1,4 +1,4 @@
-import { Schema, model, Document, Types, Model } from "mongoose";
+import mongoose, { Schema, model, Document, Types, Model } from "mongoose";
 import bcrypt from "bcrypt";
 
 // 1. Define TypeScript interface for Employee document
@@ -11,6 +11,20 @@ export interface IEmployee extends Document {
   email?: string;
   phone?: string;
   isActive: boolean;
+  status: "Active" | "Resigned" | "Suspended";
+  group?: string;
+  accountId?: mongoose.Types.ObjectId;
+  permissions: string[];
+  salaryConfig: {
+    type: 'daily' | 'monthly';
+    amount: number;
+  };
+  personalInfo?: {
+    email?: string;
+    phone?: string;
+    address?: string;
+    joiningDate?: Date;
+  };
   lastLogin?: Date;
   createdAt: Date;
   updatedAt: Date;
@@ -92,6 +106,43 @@ const employeeSchema = new Schema<IEmployee, IEmployeeModel>(
     isActive: {
       type: Boolean,
       default: true,
+    },
+    status: {
+      type: String,
+      enum: ["Active", "Resigned", "Suspended"],
+      default: "Active",
+    },
+    group: {
+      type: String,
+      default: "General",
+    },
+    accountId: {
+      type: Schema.Types.ObjectId,
+      ref: "Account",
+    },
+    permissions: {
+      type: [String],
+      default: [],
+    },
+    salaryConfig: {
+      type: {
+        type: String,
+        enum: ['daily', 'monthly'],
+        default: 'monthly',
+      },
+      amount: {
+        type: Number,
+        default: 0,
+      },
+    },
+    personalInfo: {
+      email: String,
+      phone: String,
+      address: String,
+      joiningDate: {
+        type: Date,
+        default: Date.now,
+      },
     },
     lastLogin: {
       type: Date,

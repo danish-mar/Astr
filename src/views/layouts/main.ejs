@@ -270,32 +270,55 @@
             <div x-show="expandedGroups.includes(group.title) || isSidebarCollapsed" x-collapse class="space-y-1 pt-1">
               <template x-for="item in group.items" :key="item.href">
                 <div class="relative group/tooltip">
-                  <a :href="item.href"
-                    class="flex items-center px-5 py-3 rounded-2xl transition-all duration-300 group/link relative overflow-hidden"
-                    :class="[
-                      isActive(item.href) ? 'bg-gray-50 text-gray-900 shadow-sm' : 'text-gray-400 hover:text-gray-900 hover:bg-gray-50/50',
-                      isSidebarCollapsed ? 'justify-center space-x-0' : 'space-x-3'
-                    ]">
+                  <!-- Active/Allowed Link -->
+                  <template x-if="hasPermission(item.permission)">
+                    <a :href="item.href"
+                      class="flex items-center px-5 py-3 rounded-2xl transition-all duration-300 group/link relative overflow-hidden"
+                      :class="[
+                        isActive(item.href) ? 'bg-gray-50 text-gray-900 shadow-sm' : 'text-gray-400 hover:text-gray-900 hover:bg-gray-50/50',
+                        isSidebarCollapsed ? 'justify-center space-x-0' : 'space-x-3'
+                      ]">
 
-                    <div class="w-8 flex justify-center transition-all duration-300 flex-shrink-0"
-                      :class="isActive(item.href) ? 'text-gray-900 scale-110' : 'text-gray-300 group-hover/link:text-gray-600 group-hover/link:scale-110'">
-                      <i :class="item.icon" class="text-base"></i>
+                      <div class="w-8 flex justify-center transition-all duration-300 flex-shrink-0"
+                        :class="isActive(item.href) ? 'text-gray-900 scale-110' : 'text-gray-300 group-hover/link:text-gray-600 group-hover/link:scale-110'">
+                        <i :class="item.icon" class="text-base"></i>
+                      </div>
+                      <span
+                        class="text-sm font-semibold tracking-tight transition-all duration-500 whitespace-nowrap overflow-hidden"
+                        x-text="item.label" :class="isSidebarCollapsed ? 'w-0 opacity-0' : 'w-auto opacity-100'"></span>
+
+                      <!-- Subtle Pulse Indicator for active -->
+                      <div x-show="isActive(item.href)"
+                        class="absolute rounded-full bg-gray-900 shadow-sm transition-all duration-500"
+                        :class="isSidebarCollapsed ? 'inset-0 bg-gray-900/5' : 'right-4 w-1.5 h-1.5'">
+                      </div>
+                    </a>
+                  </template>
+
+                  <!-- Unauthorized/Disabled Placeholder -->
+                  <template x-if="!hasPermission(item.permission)">
+                    <div
+                      class="flex items-center px-5 py-3 rounded-2xl transition-all duration-300 relative overflow-hidden opacity-40 cursor-not-allowed group/unauthorized"
+                      :class="isSidebarCollapsed ? 'justify-center space-x-0' : 'space-x-3'">
+                      <div class="w-8 flex justify-center flex-shrink-0 text-gray-300">
+                        <i :class="item.icon" class="text-base"></i>
+                      </div>
+                      <span class="text-sm font-semibold tracking-tight text-gray-300 whitespace-nowrap overflow-hidden"
+                        x-text="item.label" :class="isSidebarCollapsed ? 'w-0 opacity-0' : 'w-auto opacity-100'"></span>
+
+                      <!-- Unauthorized Tip -->
+                      <div x-show="!isSidebarCollapsed"
+                        class="absolute right-4 text-[8px] font-black uppercase tracking-widest text-red-400">
+                        Locked
+                      </div>
                     </div>
-                    <span
-                      class="text-sm font-semibold tracking-tight transition-all duration-500 whitespace-nowrap overflow-hidden"
-                      x-text="item.label" :class="isSidebarCollapsed ? 'w-0 opacity-0' : 'w-auto opacity-100'"></span>
+                  </template>
 
-                    <!-- Subtle Pulse Indicator for active -->
-                    <div x-show="isActive(item.href)"
-                      class="absolute rounded-full bg-gray-900 shadow-sm transition-all duration-500"
-                      :class="isSidebarCollapsed ? 'inset-0 bg-gray-900/5' : 'right-4 w-1.5 h-1.5'">
-                    </div>
-                  </a>
-
-                  <!-- Tooltip for Collapsed Item -->
+                  <!-- Tooltip for All (showing Unauthorized for locked ones) -->
                   <div x-show="isSidebarCollapsed"
                     class="absolute left-full ml-4 px-3 py-1 bg-gray-900 text-white text-[10px] font-bold uppercase tracking-widest rounded-md opacity-0 group-hover/tooltip:opacity-100 pointer-events-none transition-all z-50 whitespace-nowrap">
                     <span x-text="item.label"></span>
+                    <span x-show="!hasPermission(item.permission)" class="text-red-400 ml-1">(Unauthorized)</span>
                   </div>
                 </div>
               </template>
@@ -363,7 +386,7 @@
       <!-- Bottom Navigation (Mobile Only) -->
       <nav
         class="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-white/80 backdrop-blur-xl border-t border-gray-100 px-6 py-3 flex items-center justify-between safe-area-bottom">
-        <template x-for="item in allNavItems.slice(0, 4)" :key="item.href">
+        <template x-for="item in allNavItems.filter(i => hasPermission(i.permission)).slice(0, 4)" :key="item.href">
           <a :href="item.href" class="flex flex-col items-center gap-1 transition-all"
             :class="isActive(item.href) ? 'text-gray-900' : 'text-gray-400'">
             <div class="w-10 h-10 rounded-xl flex items-center justify-center transition-all"
@@ -431,15 +454,17 @@
             <!-- Mobile Group Items -->
             <div x-show="expandedGroups.includes(group.title)" x-collapse class="space-y-1">
               <template x-for="item in group.items" :key="item.href">
-                <a :href="item.href"
-                  class="flex items-center gap-4 px-6 py-3.5 rounded-[22px] transition-all duration-300 group"
-                  :class="isActive(item.href) ? 'bg-gray-900 text-white shadow-xl shadow-gray-200' : 'text-gray-400 hover:bg-gray-50 hover:text-gray-900'">
-                  <div class="w-10 h-10 rounded-xl flex items-center justify-center transition-colors"
-                    :class="isActive(item.href) ? 'bg-white/10 text-white' : 'bg-gray-100 text-gray-400 group-hover:bg-white'">
-                    <i :class="item.icon" class="text-xs"></i>
-                  </div>
-                  <span x-text="item.label" class="text-[11px] font-bold uppercase tracking-widest"></span>
-                </a>
+                <template x-if="hasPermission(item.permission)">
+                  <a :href="item.href"
+                    class="flex items-center gap-4 px-6 py-3.5 rounded-[22px] transition-all duration-300 group"
+                    :class="isActive(item.href) ? 'bg-gray-900 text-white shadow-xl shadow-gray-200' : 'text-gray-400 hover:bg-gray-50 hover:text-gray-900'">
+                    <div class="w-10 h-10 rounded-xl flex items-center justify-center transition-colors"
+                      :class="isActive(item.href) ? 'bg-white/10 text-white' : 'bg-gray-100 text-gray-400 group-hover:bg-white'">
+                      <i :class="item.icon" class="text-xs"></i>
+                    </div>
+                    <span x-text="item.label" class="text-[11px] font-bold uppercase tracking-widest"></span>
+                  </a>
+                </template>
               </template>
             </div>
           </div>
@@ -606,31 +631,32 @@
             title: 'Operations',
             icon: 'fas fa-briefcase',
             items: [
-              { label: 'Tickets', href: '/service-tickets', icon: 'fas fa-ticket' },
-              { label: 'Accounting', href: '/accounting', icon: 'fas fa-indian-rupee-sign' }
+              { label: 'Tickets', href: '/service-tickets', icon: 'fas fa-ticket', permission: 'tickets:read' },
+              { label: 'Accounting', href: '/accounting', icon: 'fas fa-indian-rupee-sign', permission: 'accounting:read' }
             ]
           },
           {
             title: 'Inventory',
             icon: 'fas fa-warehouse',
             items: [
-              { label: 'Products', href: '/products', icon: 'fas fa-box' },
-              { label: 'Categories', href: '/categories', icon: 'fas fa-tags' }
+              { label: 'Products', href: '/products', icon: 'fas fa-box', permission: 'products:read' },
+              { label: 'Categories', href: '/categories', icon: 'fas fa-tags', permission: 'products:read' }
             ]
           },
           {
             title: 'Sales & CRM',
             icon: 'fas fa-handshake',
             items: [
-              { label: 'Leads', href: '/leads', icon: 'fas fa-bullseye' },
-              { label: 'Contacts', href: '/contacts', icon: 'fas fa-address-book' }
+              { label: 'Leads', href: '/leads', icon: 'fas fa-bullseye', permission: 'leads:read' },
+              { label: 'Contacts', href: '/contacts', icon: 'fas fa-address-book', permission: 'contacts:read' }
             ]
           },
           {
             title: 'System',
             icon: 'fas fa-sliders-h',
             items: [
-              { label: 'Settings', href: '/settings', icon: 'fas fa-cog' }
+              { label: 'Team', href: '/team', icon: 'fas fa-users-gear', permission: 'settings:manage' },
+              { label: 'Settings', href: '/settings', icon: 'fas fa-cog', permission: 'settings:manage' }
             ]
           }
         ],
@@ -651,6 +677,25 @@
               this.expandedGroups.push(group.title);
             }
           });
+
+          // Check for unauthorized access
+          this.checkPagePermission();
+        },
+
+        checkPagePermission() {
+          const currentPath = window.location.pathname;
+          // Flatten menu items
+          const allItems = this.menuGroups.flatMap(g => g.items);
+          const currentItem = allItems.find(item => item.href === currentPath || currentPath.startsWith(item.href + '/'));
+
+          if (currentItem && currentItem.permission && !this.hasPermission(currentItem.permission)) {
+            // Wait for store to be ready then redirect
+            setTimeout(() => {
+              if (!this.hasPermission(currentItem.permission)) {
+                window.location.href = '/dashboard';
+              }
+            }, 500);
+          }
         },
 
         toggleSidebar() {
@@ -675,6 +720,14 @@
 
         isActive(path) {
           return window.location.pathname === path || window.location.pathname.startsWith(path + '/');
+        },
+
+        hasPermission(permission) {
+          if (!permission) return true;
+          if (!this.user) return false;
+          // Admin/CEO override
+          if (this.user.position === 'Admin' || this.user.position === 'CEO') return true;
+          return (this.user.permissions || []).includes(permission);
         },
 
         get user() {

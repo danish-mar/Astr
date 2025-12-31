@@ -3,7 +3,7 @@ import {
   getSettings,
   updateSettings,
 } from "../controllers/shopSettingsController";
-import { authenticate as protect, authorize } from "../middleware/auth";
+import { authenticate as protect, requirePermission } from "../middleware/auth";
 
 const router = Router();
 
@@ -11,6 +11,6 @@ const router = Router();
 router.use(protect);
 
 router.get("/", getSettings);
-router.put("/", authorize("Admin", "CEO", "Manager"), updateSettings);
+router.put("/", requirePermission("settings:manage"), updateSettings);
 
 export default router;

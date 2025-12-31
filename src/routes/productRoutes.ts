@@ -18,7 +18,7 @@ import {
 
 import multer from "multer";
 
-import { authenticate, authorize, validateObjectId } from "../middleware";
+import { authenticate, authorize, validateObjectId, requirePermission } from "../middleware";
 import { productUpload } from "../utils/s3Service";
 
 
@@ -26,10 +26,10 @@ const router = Router();
 const upload = multer({ dest: 'uploads/' });
 
 // CSV Import/Export
-router.get("/export", authenticate, authorize("Admin", "Manager", "CEO"), exportProducts);
-router.get("/export-excel", authenticate, authorize("Admin", "Manager", "CEO"), exportProductsToExcel);
+router.get("/export", authenticate, requirePermission("products:write"), exportProducts);
+router.get("/export-excel", authenticate, requirePermission("products:write"), exportProductsToExcel);
 
-router.post("/import/preview", authenticate, authorize("Admin", "Manager", "CEO"), (req, res, next) => {
+router.post("/import/preview", authenticate, requirePermission("products:write"), (req, res, next) => {
   console.log('DEBUG: Route /import/preview hit');
   upload.single('file')(req, res, (err) => {
     if (err) {
@@ -40,7 +40,7 @@ router.post("/import/preview", authenticate, authorize("Admin", "Manager", "CEO"
     next();
   });
 }, previewImport);
-router.post("/import", authenticate, authorize("Admin", "Manager", "CEO"), (req, res, next) => {
+router.post("/import", authenticate, requirePermission("products:write"), (req, res, next) => {
   console.log('DEBUG: Route /import hit');
   upload.single('file')(req, res, (err) => {
     if (err) {
@@ -53,24 +53,24 @@ router.post("/import", authenticate, authorize("Admin", "Manager", "CEO"), (req,
 }, importProducts);
 
 // Public/authenticated routes
-router.get("/filters", authenticate, getFilters);
-router.get("/", authenticate, getAllProducts);
-router.get("/stats", authenticate, getProductStats);
-router.get("/product-id/:productId", authenticate, getProductByProductID);
-router.get("/:id", authenticate, validateObjectId("id"), getProductById);
+router.get("/filters", authenticate, requirePermission("products:read"), getFilters);
+router.get("/", authenticate, requirePermission("products:read"), getAllProducts);
+router.get("/stats", authenticate, requirePermission("products:read"), getProductStats);
+router.get("/product-id/:productId", authenticate, requirePermission("products:read"), getProductByProductID);
+router.get("/:id", authenticate, requirePermission("products:read"), validateObjectId("id"), getProductById);
 
 // Protected routes (Admin, Manager, Sales, CEO)
 router.post(
   "/",
   authenticate,
-  authorize("Admin", "Manager", "Sales", "CEO"),
+  requirePermission("products:write"),
   productUpload.array('images', 5),
   createProduct
 );
 router.put(
   "/:id",
   authenticate,
-  authorize("Admin", "Manager", "Sales", "CEO"),
+  requirePermission("products:write"),
   validateObjectId("id"),
   productUpload.array('images', 5),
   updateProduct
@@ -78,23 +78,23 @@ router.put(
 router.patch(
   "/:id/assign-id",
   authenticate,
-  authorize("Admin", "Manager", "CEO"),
+  requirePermission("products:write"),
   validateObjectId("id"),
   assignProductIDToProduct
 );
 router.patch(
   "/:id/mark-sold",
   authenticate,
-  authorize("Admin", "Manager", "Sales", "CEO"),
+  requirePermission("products:write"),
   validateObjectId("id"),
   markProductAsSold
 );
 
-// Delete (Admin, CEO only)
+// Delete (Admin, CEO only or with products:write)
 router.delete(
   "/:id",
   authenticate,
-  authorize("Admin", "CEO"),
+  requirePermission("products:write"),
   validateObjectId("id"),
   deleteProduct
 );

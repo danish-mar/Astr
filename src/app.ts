@@ -132,6 +132,11 @@ app.get("/about", (req: Request, res: Response) => {
   res.render("about", { title: "Astr - About" });
 });
 
+// Team Management
+app.get("/team", (req: Request, res: Response) => {
+  res.render("team", { title: "Astr - Team Management" });
+});
+
 // 404 handler for API routes
 app.use("/api", notFoundHandler);
 

@@ -1,0 +1,521 @@
+<div x-data="teamData" x-init="init()" class="min-h-screen bg-[#f8fafc] pb-32 selection:bg-indigo-100">
+    <!-- Professional Light Header -->
+    <div class="sticky top-0 z-50 bg-white/80 backdrop-blur-xl border-b border-gray-200/50">
+        <div class="max-w-[1600px] mx-auto px-6 md:px-10 py-8">
+            <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-8">
+                <div>
+                    <div class="flex items-center gap-3 mb-3">
+                        <span
+                            class="px-3 py-1 bg-indigo-50 text-indigo-600 text-[10px] font-bold uppercase tracking-widest rounded-full border border-indigo-100">Governance
+                            Hub</span>
+                        <div class="h-1 w-1 rounded-full bg-gray-300"></div>
+                        <span class="text-gray-400 text-[10px] font-bold uppercase tracking-widest"
+                            x-text="`${users.length} Total Units`"></span>
+                    </div>
+                    <h1 class="text-4xl font-black text-gray-900 tracking-tight">Team Management</h1>
+                    <p class="text-gray-500 mt-2 font-medium">System-wide personnel orchestration and financial
+                        auditing.</p>
+                </div>
+
+                <div class="flex flex-col sm:flex-row items-center gap-4">
+                    <!-- Shift Controller -->
+                    <div class="flex items-center bg-gray-100/50 p-1.5 rounded-2xl border border-gray-200/50 shadow-sm">
+                        <template x-if="!attendanceStatus?.checkIn">
+                            <button @click="performCheckIn()"
+                                class="px-6 py-3 bg-white text-gray-900 rounded-xl text-[11px] font-bold uppercase tracking-widest hover:bg-indigo-600 hover:text-white transition-all shadow-sm border border-gray-200 flex items-center gap-2 active:scale-95">
+                                <i class="fas fa-play text-[10px]"></i> Start Shift
+                            </button>
+                        </template>
+                        <template x-if="attendanceStatus?.checkIn && !attendanceStatus?.checkOut">
+                            <button @click="performCheckOut()"
+                                class="px-6 py-3 bg-amber-500 text-white rounded-xl text-[11px] font-bold uppercase tracking-widest hover:bg-amber-600 transition-all shadow-sm flex items-center gap-2 active:scale-95">
+                                <i class="fas fa-stop text-[10px]"></i> End Shift
+                            </button>
+                        </template>
+                        <template x-if="attendanceStatus?.checkOut">
+                            <div
+                                class="px-6 py-3 bg-emerald-50 text-emerald-600 rounded-xl text-[11px] font-bold uppercase tracking-widest border border-emerald-100 flex items-center gap-2">
+                                <i class="fas fa-check-double"></i> Complete
+                            </div>
+                        </template>
+                        <div x-show="attendanceStatus && attendanceStatus.checkIn && !attendanceStatus.checkOut"
+                            class="px-6 hidden xl:block border-l border-gray-200 ml-2">
+                            <p class="text-[9px] font-bold text-gray-400 uppercase tracking-widest mb-0.5">Live Session
+                            </p>
+                            <p class="text-[12px] font-black text-gray-900 tabular-nums"
+                                x-text="attendanceStatus && attendanceStatus.checkIn ? new Date(attendanceStatus.checkIn).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : '--:--'">
+                            </p>
+                        </div>
+                    </div>
+
+                    <button @click="openUserModal()"
+                        class="bg-indigo-600 hover:bg-indigo-700 text-white px-8 py-4.5 rounded-2xl font-bold shadow-lg shadow-indigo-100 transition-all active:scale-95 flex items-center justify-center gap-3">
+                        <i class="fas fa-user-plus text-sm"></i>
+                        <span class="text-[11px] uppercase tracking-widest">Onboard Agent</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Contextual Filter Layer -->
+            <div
+                class="mt-8 pt-8 border-t border-gray-100 flex flex-col md:flex-row md:items-center justify-between gap-6">
+                <div class="flex items-center gap-6 overflow-x-auto pb-2 md:pb-0 scrollbar-hide">
+                    <span
+                        class="text-[10px] font-black text-gray-300 uppercase tracking-widest whitespace-nowrap">Clusters</span>
+                    <div class="flex items-center gap-2">
+                        <template x-for="g in ['All', ...groups]" :key="g">
+                            <button @click="filters.group = g"
+                                class="px-5 py-2 rounded-xl text-[10px] font-bold uppercase tracking-widest transition-all whitespace-nowrap border"
+                                :class="filters.group === g ? 'bg-indigo-600 border-indigo-600 text-white shadow-md shadow-indigo-100' : 'bg-white border-gray-200 text-gray-500 hover:border-gray-300'">
+                                <span x-text="g"></span>
+                            </button>
+                        </template>
+                    </div>
+                </div>
+
+                <div class="flex items-center gap-3">
+                    <button @click="filters.showResigned = !filters.showResigned"
+                        class="px-5 py-3 rounded-xl text-[10px] font-bold uppercase tracking-widest transition-all flex items-center gap-2 border bg-white"
+                        :class="filters.showResigned ? 'border-amber-200 text-amber-600 bg-amber-50' : 'border-gray-200 text-gray-400 hover:border-gray-300'">
+                        <i class="fas" :class="filters.showResigned ? 'fa-eye' : 'fa-eye-slash-slash'"></i>
+                        <span x-text="filters.showResigned ? 'Showing Archived' : 'Hiding Archived'"></span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="max-w-[1600px] mx-auto px-6 md:px-10 mt-10">
+        <!-- List Header (Hidden on Mobile) -->
+        <div
+            class="hidden lg:grid grid-cols-12 gap-6 px-10 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest bg-white border border-gray-200 rounded-t-3xl shadow-sm">
+            <div class="col-span-4">Identity & Cluster</div>
+            <div class="col-span-2">Position</div>
+            <div class="col-span-2 text-center">Settlement Rate</div>
+            <div class="col-span-2 text-center">Financials</div>
+            <div class="col-span-2 text-right">Operations</div>
+        </div>
+
+        <!-- High-Density Personnel List -->
+        <div
+            class="flex flex-col gap-4 lg:gap-0 bg-white lg:border lg:border-t-0 border-gray-200 lg:rounded-b-3xl overflow-hidden shadow-sm">
+            <template x-for="user in filteredUsers()" :key="user._id">
+                <div class="group relative grid grid-cols-1 lg:grid-cols-12 gap-6 items-center px-6 lg:px-10 py-6 hover:bg-gray-50/50 transition-all border-b border-gray-100 last:border-0"
+                    :class="activeAuraIds.includes(user._id) ? 'active-aura-border' : ''">
+
+                    <!-- Mobile Role Badge -->
+                    <div class="lg:hidden flex items-center justify-between mb-4">
+                        <span
+                            class="px-3 py-1 bg-gray-100 text-gray-600 text-[9px] font-black uppercase tracking-widest rounded-full"
+                            x-text="user.group"></span>
+                        <div x-show="activeAuraIds.includes(user._id)" class="flex items-center gap-2">
+                            <div class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></div>
+                            <span class="text-[9px] font-black text-emerald-600 uppercase tracking-widest">Active</span>
+                        </div>
+                    </div>
+
+                    <!-- Column 1: Identity -->
+                    <div class="col-span-4 flex items-center gap-5">
+                        <div class="relative flex-shrink-0">
+                            <div class="w-14 h-14 rounded-2xl bg-gray-50 flex items-center justify-center text-gray-900 font-black text-xl border border-gray-200 group-hover:bg-indigo-600 group-hover:text-white group-hover:border-indigo-600 transition-all duration-300"
+                                x-text="user.name.charAt(0)"></div>
+                            <!-- Status Dot -->
+                            <div class="absolute -bottom-1 -right-1 w-5 h-5 rounded-lg border-4 border-white shadow-sm flex items-center justify-center transition-transform group-hover:scale-110"
+                                :class="user.status === 'Resigned' ? 'bg-rose-500' : (user.isActive ? 'bg-emerald-500' : 'bg-gray-300')">
+                                <i class="fas text-[8px] text-white"
+                                    :class="user.status === 'Resigned' ? 'fa-times' : (user.isActive ? 'fa-check' : 'fa-clock')"></i>
+                            </div>
+                        </div>
+                        <div class="overflow-hidden">
+                            <h4 class="text-base font-bold text-gray-900 truncate" x-text="user.name"></h4>
+                            <div class="flex items-center gap-2 mt-1">
+                                <span class="text-[10px] font-bold text-gray-400 capitalize"
+                                    x-text="user.username"></span>
+                                <div class="w-1 h-1 rounded-full bg-gray-200 lg:block hidden"></div>
+                                <span
+                                    class="text-[10px] font-black text-indigo-500 uppercase tracking-widest lg:block hidden"
+                                    x-text="user.group"></span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Column 2: Position -->
+                    <div class="col-span-2 hidden lg:block">
+                        <span
+                            class="px-3 py-1.5 bg-gray-50 text-gray-600 text-[10px] font-black uppercase tracking-widest rounded-lg border border-gray-100"
+                            x-text="user.position"></span>
+                    </div>
+
+                    <!-- Column 3: Rate -->
+                    <div class="col-span-2 text-center hidden lg:block">
+                        <div class="flex flex-col">
+                            <span class="text-sm font-black text-gray-900 tabular-nums"
+                                x-text="`₹${user.salaryConfig?.amount}`"></span>
+                            <span class="text-[9px] font-bold text-gray-400 uppercase tracking-widest"
+                                x-text="user.salaryConfig?.type === 'daily' ? 'Per Day' : 'Per Month'"></span>
+                        </div>
+                    </div>
+
+                    <!-- Column 4: Financials -->
+                    <div
+                        class="col-span-2 text-center lg:block flex justify-between items-center bg-gray-50/50 p-4 lg:p-0 rounded-2xl lg:bg-transparent">
+                        <span
+                            class="lg:hidden text-[9px] font-black text-gray-400 uppercase tracking-widest">Accounting</span>
+                        <button @click="syncLedger(user)"
+                            class="flex items-center gap-2 text-[10px] font-black uppercase tracking-tighter transition-all justify-center w-full"
+                            :class="user.accountId ? 'text-emerald-600' : 'text-amber-500 hover:text-amber-600'">
+                            <i class="fas" :class="user.accountId ? 'fa-check-circle' : 'fa-exclamation-triangle'"></i>
+                            <span x-text="user.accountId ? 'Synced' : 'Link Ledger'"></span>
+                        </button>
+                    </div>
+
+                    <!-- Column 5: Actions -->
+                    <div
+                        class="col-span-2 flex items-center justify-end gap-2 mt-4 lg:mt-0 pt-4 lg:pt-0 border-t lg:border-0 border-gray-100">
+                        <button @click="viewProfile(user)" title="Payroll Visualizer"
+                            class="w-10 h-10 flex items-center justify-center rounded-xl bg-gray-50 text-gray-400 hover:bg-gray-900 hover:text-white transition-all border border-gray-100 shadow-sm">
+                            <i class="fas fa-chart-pie text-xs"></i>
+                        </button>
+                        <button @click="openPermissionMatrix(user)" title="Permission Matrix"
+                            class="w-10 h-10 flex items-center justify-center rounded-xl bg-gray-50 text-gray-400 hover:bg-indigo-600 hover:text-white transition-all border border-gray-100 shadow-sm">
+                            <i class="fas fa-shield-halved text-xs"></i>
+                        </button>
+                        <button @click="openUserModal(user)" title="Edit Unit"
+                            class="w-10 h-10 flex items-center justify-center rounded-xl bg-gray-50 text-gray-400 hover:bg-gray-900 hover:text-white transition-all border border-gray-100 shadow-sm">
+                            <i class="fas fa-pen-nib text-xs"></i>
+                        </button>
+
+                        <div class="relative" x-data="{ open: false }">
+                            <button @click="open = !open" @click.away="open = false" title="Governance"
+                                class="w-10 h-10 flex items-center justify-center rounded-xl bg-gray-50 text-gray-400 hover:bg-rose-500 hover:text-white transition-all border border-gray-100 shadow-sm">
+                                <i class="fas fa-ellipsis-v text-xs"></i>
+                            </button>
+                            <div x-show="open"
+                                class="absolute top-1/2 -translate-y-1/2 right-full mr-4 w-56 bg-white rounded-3xl shadow-2xl border border-gray-200 p-2.5 z-50 flex flex-col gap-1 origin-right animate__animated animate__fadeInRight animate__faster">
+                                <button @click="openPasswordReset(user)"
+                                    class="w-full px-5 py-4 text-left rounded-2xl hover:bg-amber-50 text-amber-600 text-[10px] font-black uppercase tracking-widest transition-all flex items-center justify-between">
+                                    <span>Reset Key</span>
+                                    <i class="fas fa-key"></i>
+                                </button>
+                                <button @click="updateStatus(user, user.status === 'Resigned' ? 'Active' : 'Resigned')"
+                                    class="w-full px-5 py-4 text-left rounded-2xl hover:bg-rose-50 text-rose-600 text-[10px] font-black uppercase tracking-widest transition-all flex items-center justify-between">
+                                    <span x-text="user.status === 'Resigned' ? 'Restore Unit' : 'Relieve Unit'"></span>
+                                    <i class="fas"
+                                        :class="user.status === 'Resigned' ? 'fa-user-check' : 'fa-user-slash'"></i>
+                                </button>
+                                <div class="h-px bg-gray-100 my-1 mx-2"></div>
+                                <button @click="deleteUser(user)"
+                                    class="w-full px-5 py-4 text-left rounded-2xl hover:bg-red-600 hover:text-white text-red-600 text-[10px] font-black uppercase tracking-widest transition-all flex items-center justify-between group/del">
+                                    <span>Purge Record</span>
+                                    <i class="fas fa-trash-alt opacity-50 group-hover:opacity-100"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </template>
+
+            <div x-show="filteredUsers().length === 0" class="py-32 text-center bg-white">
+                <div
+                    class="w-20 h-20 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-6 border border-gray-100">
+                    <i class="fas fa-users-slash text-gray-300 text-2xl"></i>
+                </div>
+                <h5 class="text-xl font-bold text-gray-900">No personnel units found</h5>
+                <p class="text-gray-400 mt-2">Try adjusting your cluster filters or audit settings.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modals (Re-using logic, refined for light theme) -->
+    <!-- Onboarding Modal -->
+    <div x-show="modals.user" class="fixed inset-0 z-[100] flex items-center justify-center p-6 lg:p-12" x-cloak>
+        <div @click="modals.user = false"
+            class="absolute inset-0 bg-gray-900/40 backdrop-blur-xl animate__animated animate__fadeIn"></div>
+        <div
+            class="relative bg-white rounded-3xl lg:rounded-[44px] shadow-[0_20px_100px_rgba(0,0,0,0.1)] max-w-2xl w-full p-10 lg:p-16 animate__animated animate__zoomIn max-h-[95vh] overflow-y-auto scrollbar-hide">
+            <div class="flex items-center justify-between mb-12">
+                <div>
+                    <h3 class="text-4xl font-black text-gray-900 tracking-tight"
+                        x-text="editMode ? 'Recalibrate Unit' : 'Deploy New Unit'"></h3>
+                    <p class="text-gray-500 font-medium mt-2">Initialize tactical data and financial bindings.</p>
+                </div>
+                <button @click="modals.user = false"
+                    class="w-12 h-12 rounded-full bg-gray-50 text-gray-400 hover:bg-rose-50 hover:text-rose-500 transition-all flex items-center justify-center border border-gray-100">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+
+            <form @submit.prevent="saveUser()" class="space-y-8">
+                <div class="grid grid-cols-2 gap-8">
+                    <div class="space-y-2">
+                        <label class="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-2">Real
+                            Identity</label>
+                        <input type="text" x-model="userForm.name" required placeholder="John Doe"
+                            class="w-full px-8 py-5 bg-gray-50 border border-gray-200 rounded-2xl font-bold text-gray-900 focus:border-indigo-600 outline-none transition-all placeholder:text-gray-300">
+                    </div>
+                    <div class="space-y-2">
+                        <label class="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-2">System
+                            Login</label>
+                        <input type="text" x-model="userForm.username" :disabled="editMode" required
+                            placeholder="johndoe"
+                            class="w-full px-8 py-5 bg-gray-50 border border-gray-200 rounded-2xl font-bold text-gray-900 focus:border-indigo-600 outline-none transition-all disabled:opacity-50 placeholder:text-gray-300">
+                    </div>
+                </div>
+
+                <div x-show="!editMode" class="space-y-2">
+                    <label class="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-2">Access
+                        Key</label>
+                    <input type="password" x-model="userForm.password" :required="!editMode"
+                        placeholder="Set secure password"
+                        class="w-full px-8 py-5 bg-gray-50 border border-gray-200 rounded-2xl font-bold text-gray-900 focus:border-indigo-600 outline-none transition-all placeholder:text-gray-300 text-center tracking-[0.3em]">
+                </div>
+
+                <div class="grid grid-cols-2 gap-8">
+                    <div class="space-y-2">
+                        <label class="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-2">Cluster
+                            Unit</label>
+                        <div class="relative">
+                            <select x-model="userForm.group" required
+                                class="w-full px-8 py-5 bg-gray-50 border border-gray-200 rounded-2xl font-bold text-gray-900 focus:border-indigo-600 outline-none transition-all cursor-pointer appearance-none">
+                                <template x-for="g in groups" :key="g">
+                                    <option :value="g" x-text="g"></option>
+                                </template>
+                            </select>
+                            <i
+                                class="fas fa-chevron-down absolute right-8 top-1/2 -translate-y-1/2 pointer-events-none text-gray-400 text-[10px]"></i>
+                        </div>
+                    </div>
+                    <div class="space-y-2">
+                        <label class="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-2">Operational
+                            Rank</label>
+                        <div class="relative">
+                            <select x-model="userForm.position" required
+                                class="w-full px-8 py-5 bg-gray-50 border border-gray-200 rounded-2xl font-bold text-gray-900 focus:border-indigo-600 outline-none transition-all cursor-pointer appearance-none">
+                                <option value="Staff">Staff</option>
+                                <option value="Technician">Technician</option>
+                                <option value="Sales">Sales</option>
+                                <option value="Manager">Manager</option>
+                                <option value="Admin">Administrator</option>
+                            </select>
+                            <i
+                                class="fas fa-chevron-down absolute right-8 top-1/2 -translate-y-1/2 pointer-events-none text-gray-400 text-[10px]"></i>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-2 gap-8">
+                    <div class="space-y-2">
+                        <label class="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-2">Fee
+                            Calculation</label>
+                        <select x-model="userForm.salaryConfig.type" required
+                            class="w-full px-8 py-5 bg-gray-50 border border-gray-200 rounded-2xl font-bold text-gray-900 focus:border-indigo-600 outline-none transition-all cursor-pointer">
+                            <option value="daily">Daily Stipend</option>
+                            <option value="monthly">Monthly Fixed</option>
+                        </select>
+                    </div>
+                    <div class="space-y-2">
+                        <label class="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-2">Allocation
+                            (₹)</label>
+                        <input type="number" x-model="userForm.salaryConfig.amount" required
+                            class="w-full px-8 py-5 bg-gray-50 border border-gray-200 rounded-2xl font-bold text-gray-900 focus:border-indigo-600 outline-none transition-all">
+                    </div>
+                </div>
+
+                <div class="flex items-center justify-between pt-12">
+                    <button type="button" @click="modals.user = false"
+                        class="text-[11px] font-black uppercase tracking-widest text-gray-400 hover:text-gray-900 transition-colors">Abort</button>
+                    <button type="submit" :disabled="saving"
+                        class="px-12 py-5 bg-indigo-600 text-white rounded-2xl text-[11px] font-black uppercase tracking-widest shadow-xl shadow-indigo-100 hover:bg-indigo-700 transition-all active:scale-95 disabled:opacity-50">
+                        <span x-text="saving ? 'Syncing...' : 'Confirm Action'"></span>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Permission Matrix Modal -->
+    <div x-show="modals.permissions" class="fixed inset-0 z-[100] flex items-center justify-center p-6 lg:p-12" x-cloak>
+        <div @click="modals.permissions = false"
+            class="absolute inset-0 bg-gray-900/40 backdrop-blur-xl animate__animated animate__fadeIn"></div>
+        <div
+            class="relative bg-white border border-gray-200 rounded-[44px] shadow-2xl max-w-4xl w-full p-12 lg:p-16 animate__animated animate__zoomIn flex flex-col max-h-[95vh] overflow-hidden">
+            <div class="text-center mb-16">
+                <h3 class="text-4xl font-black text-gray-900 tracking-tight">Security Protocol Matrix</h3>
+                <p class="text-gray-500 font-medium mt-3">Define granular authorization layers for this personnel unit.
+                </p>
+            </div>
+
+            <div class="flex-1 overflow-y-auto pr-6 custom-scrollbar space-y-16">
+                <template x-for="(perms, category) in permissionTree" :key="category">
+                    <div class="space-y-8">
+                        <h4 class="text-[11px] font-black text-gray-400 uppercase tracking-[0.4em] ml-2"
+                            x-text="category"></h4>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <template x-for="perm in permList(perms)" :key="perm.id">
+                                <label
+                                    class="flex items-center justify-between p-7 bg-white border border-gray-200 rounded-[32px] cursor-pointer hover:border-indigo-600 hover:shadow-xl hover:shadow-indigo-50 transition-all group">
+                                    <div class="max-w-[75%]">
+                                        <p class="text-base font-black text-gray-900 mb-1 group-hover:text-indigo-600 transition-colors"
+                                            x-text="perm.label"></p>
+                                        <p class="text-[11px] text-gray-400 font-medium leading-relaxed"
+                                            x-text="perm.description"></p>
+                                    </div>
+                                    <div class="relative">
+                                        <input type="checkbox" :value="perm.id" x-model="selectedPermissions"
+                                            class="peer hidden">
+                                        <div
+                                            class="w-16 h-9 bg-gray-100 rounded-full peer-checked:bg-indigo-600 transition-all after:content-[''] after:absolute after:top-1 after:left-1 after:bg-white after:rounded-full after:h-7 after:w-7 after:transition-all peer-checked:after:translate-x-7 relative border-2 border-transparent">
+                                        </div>
+                                    </div>
+                                </label>
+                            </template>
+                        </div>
+                    </div>
+                </template>
+            </div>
+
+            <div class="pt-12">
+                <button @click="savePermissions()"
+                    class="w-full py-6 bg-indigo-600 text-white rounded-[28px] text-[12px] font-black uppercase tracking-widest shadow-2xl shadow-indigo-100 hover:bg-indigo-700 transition-all active:scale-95">Commit
+                    Permission Changes</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Password Reset Modal -->
+    <div x-show="modals.password" class="fixed inset-0 z-[100] flex items-center justify-center p-6" x-cloak>
+        <div @click="modals.password = false"
+            class="absolute inset-0 bg-gray-900/40 backdrop-blur-xl animate__animated animate__fadeIn"></div>
+        <div
+            class="relative bg-white border border-gray-200 rounded-[44px] shadow-2xl max-w-md w-full p-12 lg:p-16 animate__animated animate__zoomIn text-center">
+            <div
+                class="w-20 h-20 bg-amber-50 rounded-3xl flex items-center justify-center mx-auto mb-8 border border-amber-100">
+                <i class="fas fa-lock text-amber-500 text-2xl"></i>
+            </div>
+            <h3 class="text-3xl font-black text-gray-900 tracking-tight">Security Rotation</h3>
+            <p class="text-[11px] font-black text-gray-400 uppercase tracking-widest mt-3 mb-12">Rotate access key for
+                <span class="text-indigo-600" x-text="selectedUser?.username"></span></p>
+
+            <input type="password" x-model="passwordForm.newPassword" placeholder="Enter New Master Key"
+                class="w-full px-8 py-6 bg-gray-50 border border-gray-200 rounded-2xl font-black text-center text-gray-900 focus:border-indigo-600 outline-none transition-all placeholder:text-gray-300 tracking-[0.2em] mb-10">
+
+            <button @click="resetPassword()"
+                class="w-full py-5 bg-indigo-600 text-white rounded-2xl text-[12px] font-black uppercase tracking-widest shadow-2xl shadow-indigo-100 hover:bg-indigo-700 transition-all active:scale-95">Confirm
+                Key rotation</button>
+            <button @click="modals.password = false"
+                class="mt-8 text-[11px] font-black text-gray-400 uppercase tracking-widest hover:text-gray-900 transition-colors">Cancel
+                Rotation</button>
+        </div>
+    </div>
+
+    <!-- Profile/Payroll Visualizer Modal -->
+    <div x-show="modals.profile" class="fixed inset-0 z-[100] flex items-center justify-center p-6" x-cloak>
+        <div @click="modals.profile = false"
+            class="absolute inset-0 bg-gray-900/40 backdrop-blur-xl animate__animated animate__fadeIn"></div>
+        <div
+            class="relative bg-white border border-gray-200 rounded-[56px] shadow-2xl max-w-2xl w-full p-12 lg:p-16 animate__animated animate__zoomIn">
+            <template x-if="selectedUser">
+                <div class="space-y-12">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <h3 class="text-4xl font-black text-gray-900 tracking-tight" x-text="selectedUser.name">
+                            </h3>
+                            <div class="flex items-center gap-3 mt-4">
+                                <span
+                                    class="px-3 py-1 bg-indigo-50 text-indigo-600 text-[10px] font-black uppercase tracking-widest rounded-lg border border-indigo-100"
+                                    x-text="selectedUser.group"></span>
+                                <span class="text-[10px] font-bold text-gray-400 uppercase tracking-widest"
+                                    x-text="selectedUser.status"></span>
+                            </div>
+                        </div>
+                        <div class="w-24 h-24 bg-gray-50 rounded-[32px] flex items-center justify-center text-gray-900 font-black text-3xl border border-gray-200"
+                            x-text="selectedUser.name.charAt(0)"></div>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                        <div
+                            class="p-10 bg-indigo-600 text-white rounded-[40px] shadow-2xl shadow-indigo-200 relative overflow-hidden">
+                            <div class="absolute top-0 right-0 p-8 opacity-10">
+                                <i class="fas fa-receipt text-7xl"></i>
+                            </div>
+                            <p class="text-[11px] font-black uppercase tracking-widest text-indigo-100 mb-4">Estimated
+                                Settlement</p>
+                            <h4 class="text-5xl font-black tracking-tighter mb-6">₹<span
+                                    x-text="payrollData?.earnedSalary || '0'"></span></h4>
+                            <p class="text-[12px] font-medium text-white/50 leading-relaxed"
+                                x-text="`${payrollData?.daysPresent || 0} active attendance cycles verified in current period.`">
+                            </p>
+                        </div>
+                        <div
+                            class="p-10 bg-gray-50 border border-gray-200 rounded-[40px] flex flex-col justify-between">
+                            <div>
+                                <p class="text-[11px] font-black uppercase tracking-widest text-gray-400 mb-6">Financial
+                                    Status</p>
+                                <div class="flex items-center gap-4">
+                                    <div class="w-4 h-4 rounded-full shadow-lg"
+                                        :class="selectedUser.accountId ? 'bg-emerald-500 shadow-emerald-100' : 'bg-amber-500 shadow-amber-100'">
+                                    </div>
+                                    <span class="text-xl font-black text-gray-900"
+                                        x-text="selectedUser.accountId ? 'Ledger Integrated' : 'Ledger Missing'"></span>
+                                </div>
+                            </div>
+                            <button @click="syncLedger(selectedUser)" x-show="!selectedUser.accountId"
+                                class="w-full mt-10 py-5 bg-white border border-gray-200 text-gray-900 rounded-2xl text-[11px] font-black uppercase tracking-widest hover:bg-indigo-600 hover:text-white hover:border-indigo-600 transition-all active:scale-95 shadow-sm">Sync
+                                with Ledger</button>
+                            <div x-show="selectedUser.accountId"
+                                class="mt-10 py-5 text-center text-[10px] font-black text-gray-300 uppercase tracking-widest bg-white border border-dashed border-gray-200 rounded-2xl">
+                                Verified Connection</div>
+                        </div>
+                    </div>
+
+                    <div class="flex justify-center pt-8">
+                        <button @click="modals.profile = false"
+                            class="px-12 py-5 text-[11px] font-black uppercase tracking-widest text-gray-400 hover:text-gray-900 transition-colors">Dismiss
+                            Report</button>
+                    </div>
+                </div>
+            </template>
+        </div>
+    </div>
+</div>
+
+<style>
+    @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@100;400;700;900&display=swap');
+
+    * {
+        font-family: 'Outfit', sans-serif;
+    }
+
+    .active-aura-border {
+        border-left: 6px solid #10b981 !important;
+        background: linear-gradient(to right, #ecfdf5 0%, transparent 15%);
+    }
+
+    .custom-scrollbar::-webkit-scrollbar {
+        width: 4px;
+    }
+
+    .custom-scrollbar::-webkit-scrollbar-track {
+        background: transparent;
+    }
+
+    .custom-scrollbar::-webkit-scrollbar-thumb {
+        background: #e2e8f0;
+        border-radius: 20px;
+    }
+
+    .scrollbar-hide::-webkit-scrollbar {
+        display: none;
+    }
+
+    .scrollbar-hide {
+        -ms-overflow-style: none;
+        scrollbar-width: none;
+    }
+
+    [x-cloak] {
+        display: none !important;
+    }
+</style>
+
+<script src="/js/pages/team.js"></script>

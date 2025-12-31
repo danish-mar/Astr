@@ -1,5 +1,7 @@
 import { Request, Response } from "express";
 import Employee from "../models/Employee";
+import Contact from "../models/Contact";
+import Account from "../models/Account";
 import { sendSuccess, sendError, sendPaginated, handleError } from "../utils";
 import { validateRequiredFields, isValidObjectId } from "../utils";
 import jwt from "jsonwebtoken";
@@ -7,116 +9,27 @@ import jwt from "jsonwebtoken";
 // Generate JWT token
 const generateToken = (id: string): string => {
   return jwt.sign({ id }, process.env.JWT_SECRET || "secret", {
-    expiresIn: process.env.JWT_EXPIRE || "7d",
-  } as jwt.SignOptions);
+    expiresIn: (process.env.JWT_EXPIRE || "7d") as any,
+  });
 };
 
-// Get all employees with filtering and pagination
-export const getAllEmployees = async (req: Request, res: Response) => {
-  try {
-    const { position, isActive, search, page = 1, limit = 10 } = req.query;
-
-    const filter: any = {};
-
-    // Filter by position
-    if (position && position !== "All") {
-      filter.position = position;
-    }
-
-    // Filter by active status
-    if (isActive !== undefined) {
-      filter.isActive = isActive === "true";
-    }
-
-    // Search by name or username
-    if (search) {
-      filter.$or = [
-        { name: { $regex: search, $options: "i" } },
-        { username: { $regex: search, $options: "i" } },
-      ];
-    }
-
-    const pageNum = parseInt(page as string);
-    const limitNum = parseInt(limit as string);
-    const skip = (pageNum - 1) * limitNum;
-
-    const employees = await Employee.find(filter)
-      .sort({ createdAt: -1 })
-      .skip(skip)
-      .limit(limitNum);
-
-    const total = await Employee.countDocuments(filter);
-
-    return sendPaginated(
-      res,
-      employees,
-      pageNum,
-      limitNum,
-      total,
-      "Employees retrieved successfully"
-    );
-  } catch (error) {
-    return handleError(error, res);
-  }
-};
-
-// Get single employee by ID
-export const getEmployeeById = async (req: Request, res: Response) => {
-  try {
-    const { id } = req.params;
-
-    if (!isValidObjectId(id)) {
-      return sendError(res, "Invalid employee ID", 400);
-    }
-
-    const employee = await Employee.findById(id);
-
-    if (!employee) {
-      return sendError(res, "Employee not found", 404);
-    }
-
-    return sendSuccess(res, employee, "Employee retrieved successfully");
-  } catch (error) {
-    return handleError(error, res);
-  }
-};
-
-// Create new employee
+// Create a new employee
 export const createEmployee = async (req: Request, res: Response) => {
   try {
-    const { username, password, name, position, email, phone } = req.body;
+    const { username, password, name, position, salaryConfig } = req.body;
 
-    // Validate required fields
-    const missing = validateRequiredFields(req.body, [
-      "username",
-      "password",
-      "name",
-      "position",
-    ]);
-    if (missing.length > 0) {
-      return sendError(
-        res,
-        `Missing required fields: ${missing.join(", ")}`,
-        400
-      );
-    }
-
-    // Check if username already exists
-    const existingEmployee = await Employee.findOne({
-      username: username.toLowerCase(),
-    });
+    // Check if employee already exists
+    const existingEmployee = await Employee.findOne({ username });
     if (existingEmployee) {
-      return sendError(res, "Username already exists", 409);
+      return sendError(res, "Username already exists", 400);
     }
 
-    // Create employee
     const employee = new Employee({
-      username: username.toLowerCase(),
+      username,
       password,
       name,
       position,
-      email,
-      phone,
+      salaryConfig,
     });
 
     await employee.save();
@@ -127,30 +40,57 @@ export const createEmployee = async (req: Request, res: Response) => {
   }
 };
 
-// Update employee
-export const updateEmployee = async (req: Request, res: Response) => {
+// Get all employees
+export const getAllEmployees = async (req: Request, res: Response) => {
+  try {
+    const employees = await Employee.find().sort({ createdAt: -1 });
+    return sendSuccess(res, employees, "Employees retrieved successfully");
+  } catch (error) {
+    return handleError(error, res);
+  }
+};
+
+// Get employee by ID
+export const getEmployeeById = async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
-    const { name, position, email, phone, isActive } = req.body;
 
     if (!isValidObjectId(id)) {
       return sendError(res, "Invalid employee ID", 400);
     }
 
     const employee = await Employee.findById(id);
-
     if (!employee) {
       return sendError(res, "Employee not found", 404);
     }
 
-    // Update fields (username and password not updatable here)
-    if (name) employee.name = name;
-    if (position) employee.position = position;
-    if (email !== undefined) employee.email = email;
-    if (phone !== undefined) employee.phone = phone;
-    if (isActive !== undefined) employee.isActive = isActive;
+    return sendSuccess(res, employee, "Employee retrieved successfully");
+  } catch (error) {
+    return handleError(error, res);
+  }
+};
 
-    await employee.save();
+// Update employee
+export const updateEmployee = async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    const updateData = req.body;
+
+    if (!isValidObjectId(id)) {
+      return sendError(res, "Invalid employee ID", 400);
+    }
+
+    // Don't allow password update through this route
+    delete updateData.password;
+
+    const employee = await Employee.findByIdAndUpdate(id, updateData, {
+      new: true,
+      runValidators: true,
+    });
+
+    if (!employee) {
+      return sendError(res, "Employee not found", 404);
+    }
 
     return sendSuccess(res, employee, "Employee updated successfully");
   } catch (error) {
@@ -161,47 +101,20 @@ export const updateEmployee = async (req: Request, res: Response) => {
 // Update employee password
 export const updateEmployeePassword = async (req: Request, res: Response) => {
   try {
-    const { id } = req.params;
     const { currentPassword, newPassword } = req.body;
+    const employeeId = (req as any).employee._id;
 
-    if (!isValidObjectId(id)) {
-      return sendError(res, "Invalid employee ID", 400);
-    }
-
-    // Validate required fields
-    const missing = validateRequiredFields(req.body, [
-      "currentPassword",
-      "newPassword",
-    ]);
-    if (missing.length > 0) {
-      return sendError(
-        res,
-        `Missing required fields: ${missing.join(", ")}`,
-        400
-      );
-    }
-
-    if (newPassword.length < 6) {
-      return sendError(
-        res,
-        "New password must be at least 6 characters long",
-        400
-      );
-    }
-
-    const employee = await Employee.findById(id).select("+password");
-
+    const employee = await Employee.findById(employeeId).select("+password");
     if (!employee) {
       return sendError(res, "Employee not found", 404);
     }
 
-    // Verify current password
+    // Check if current password is correct
     const isMatch = await employee.comparePassword(currentPassword);
     if (!isMatch) {
-      return sendError(res, "Current password is incorrect", 401);
+      return sendError(res, "Incorrect current password", 400);
     }
 
-    // Update password
     employee.password = newPassword;
     await employee.save();
 
@@ -211,7 +124,7 @@ export const updateEmployeePassword = async (req: Request, res: Response) => {
   }
 };
 
-// Delete employee (soft delete - set isActive to false)
+// Delete employee (Deactivate)
 export const deleteEmployee = async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
@@ -220,17 +133,17 @@ export const deleteEmployee = async (req: Request, res: Response) => {
       return sendError(res, "Invalid employee ID", 400);
     }
 
-    const employee = await Employee.findById(id);
+    const employee = await Employee.findByIdAndUpdate(
+      id,
+      { isActive: false, status: "Resigned" },
+      { new: true }
+    );
 
     if (!employee) {
       return sendError(res, "Employee not found", 404);
     }
 
-    // Soft delete - set isActive to false
-    employee.isActive = false;
-    await employee.save();
-
-    return sendSuccess(res, null, "Employee deactivated successfully");
+    return sendSuccess(res, employee, "Employee deactivated successfully");
   } catch (error) {
     return handleError(error, res);
   }
@@ -249,52 +162,68 @@ export const permanentlyDeleteEmployee = async (
     }
 
     const employee = await Employee.findByIdAndDelete(id);
-
     if (!employee) {
       return sendError(res, "Employee not found", 404);
     }
 
-    return sendSuccess(res, null, "Employee permanently deleted successfully");
+    return sendSuccess(res, null, "Employee permanently deleted");
   } catch (error) {
     return handleError(error, res);
   }
 };
 
-// Employee login (REPLACE EXISTING FUNCTION)
+// Login employee
 export const loginEmployee = async (req: Request, res: Response) => {
   try {
     const { username, password } = req.body;
 
-    // Validate required fields
-    const missing = validateRequiredFields(req.body, ["username", "password"]);
-    if (missing.length > 0) {
-      return sendError(
-        res,
-        `Missing required fields: ${missing.join(", ")}`,
-        400
-      );
+    const employee = await Employee.findOne({ username }).select("+password");
+    if (!employee) {
+      return sendError(res, "Invalid credentials", 401);
     }
 
-    // Authenticate employee
-    const employeeData = await Employee.authenticate(
-      username.toLowerCase(),
-      password
-    );
-
-    if (!employeeData) {
-      return sendError(res, "Invalid username or password", 401);
+    if (employee.status !== "Active") {
+      return sendError(res, "Account is deactivated", 403);
     }
 
-    // Generate JWT token
-    const token = generateToken(employeeData._id.toString());
+    const isMatch = await employee.comparePassword(password);
+    if (!isMatch) {
+      return sendError(res, "Invalid credentials", 401);
+    }
+
+    // Update last login
+    employee.lastLogin = new Date();
+    await employee.save();
+
+    const token = generateToken(employee._id.toString());
 
     return sendSuccess(
       res,
       {
-        employee: employeeData,
         token,
+        employee: {
+          _id: employee._id,
+          username: employee.username,
+          name: employee.name,
+          position: employee.position,
+          permissions: employee.permissions,
+        },
       },
       "Login successful"
+    );
+  } catch (error) {
+    return handleError(error, res);
+  }
+};
+
+// Get current employee
+export const getCurrentEmployee = async (req: Request, res: Response) => {
+  try {
+    const employee = (req as any).employee;
+    return sendSuccess(
+      res,
+      employee,
+      "Current employee retrieved successfully"
     );
   } catch (error) {
     return handleError(error, res);
@@ -304,35 +233,19 @@ export const loginEmployee = async (req: Request, res: Response) => {
 // Get employee statistics
 export const getEmployeeStats = async (req: Request, res: Response) => {
   try {
-    const total = await Employee.countDocuments();
-    const active = await Employee.countDocuments({ isActive: true });
-    const inactive = await Employee.countDocuments({ isActive: false });
-
-    const byPosition = await Employee.aggregate([
-      {
-        $match: { isActive: true },
-      },
-      {
-        $group: {
-          _id: "$position",
-          count: { $sum: 1 },
-        },
-      },
+    const totalEmployees = await Employee.countDocuments();
+    const activeEmployees = await Employee.countDocuments({ status: "Active" });
+    const positions = await Employee.aggregate([
+      { $group: { _id: "$position", count: { $sum: 1 } } },
     ]);
-
-    const result = {
-      total,
-      active,
-      inactive,
-      byPosition: byPosition.reduce((acc: any, curr: any) => {
-        acc[curr._id] = curr.count;
-        return acc;
-      }, {}),
-    };
 
     return sendSuccess(
       res,
-      result,
+      {
+        total: totalEmployees,
+        active: activeEmployees,
+        positions,
+      },
       "Employee statistics retrieved successfully"
     );
   } catch (error) {
@@ -340,17 +253,213 @@ export const getEmployeeStats = async (req: Request, res: Response) => {
   }
 };
 
-// Get current logged-in employee
-export const getCurrentEmployee = async (req: Request, res: Response) => {
+// Admin reset password for any user
+export const adminResetPassword = async (req: Request, res: Response) => {
   try {
-    // Employee is already attached by auth middleware
-    const employee = (req as any).employee;
+    const { id } = req.params;
+    const { newPassword } = req.body;
+
+    if (!isValidObjectId(id)) {
+      return sendError(res, "Invalid employee ID", 400);
+    }
+
+    if (!newPassword || newPassword.length < 6) {
+      return sendError(
+        res,
+        "New password must be at least 6 characters long",
+        400
+      );
+    }
+
+    const employee = await Employee.findById(id).select("+password");
+
+    if (!employee) {
+      return sendError(res, "Employee not found", 404);
+    }
+
+    employee.password = newPassword;
+    await employee.save();
 
     return sendSuccess(
       res,
-      employee,
-      "Current employee retrieved successfully"
+      null,
+      `Password for ${employee.username} has been reset successfully`
     );
+  } catch (error) {
+    return handleError(error, res);
+  }
+};
+
+// Update permissions for a user
+export const updatePermissions = async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    const { permissions } = req.body;
+
+    if (!isValidObjectId(id)) {
+      return sendError(res, "Invalid employee ID", 400);
+    }
+
+    if (!Array.isArray(permissions)) {
+      return sendError(res, "Permissions must be an array of strings", 400);
+    }
+
+    const employee = await Employee.findByIdAndUpdate(
+      id,
+      { permissions },
+      { new: true, runValidators: true }
+    );
+
+    if (!employee) {
+      return sendError(res, "Employee not found", 404);
+    }
+
+    return sendSuccess(res, employee, "Permissions updated successfully");
+  } catch (error) {
+    return handleError(error, res);
+  }
+};
+
+// Get detailed profile for admin view
+export const getDetailedProfile = async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+
+    if (!isValidObjectId(id)) {
+      return sendError(res, "Invalid employee ID", 400);
+    }
+
+    const employee = await Employee.findById(id);
+
+    if (!employee) {
+      return sendError(res, "Employee not found", 404);
+    }
+
+    // You could aggregate logs/stats here in the future
+    return sendSuccess(
+      res,
+      employee,
+      "Detailed profile retrieved successfully"
+    );
+  } catch (error) {
+    return handleError(error, res);
+  }
+};
+
+// Sync employee to Accounting Ledger
+export const syncEmployeeLedger = async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+
+    if (!isValidObjectId(id)) {
+      return sendError(res, "Invalid employee ID", 400);
+    }
+
+    const employee = await Employee.findById(id);
+    if (!employee) {
+      return sendError(res, "Employee not found", 404);
+    }
+
+    // 1. Check if contact exists for this employee (by type and name)
+    let contact = await Contact.findOne({
+      contactType: "Employee",
+      name: employee.name,
+      ...(employee.phone && { phone: employee.phone }),
+    });
+
+    if (!contact) {
+      contact = await Contact.create({
+        name: employee.name,
+        phone: employee.phone || "",
+        contactType: "Employee",
+        notes: `System generated contact for employee: ${employee.username}`,
+      });
+    }
+
+    // 2. Check if account exists
+    let account = await Account.findOne({
+      contact: contact._id,
+      accountName: `${employee.name} (Salary Payable)`,
+    });
+    if (!account) {
+      account = await Account.create({
+        contact: contact._id,
+        accountName: `${employee.name} (Salary Payable)`,
+        accountType: "Payable",
+        description: `Salary payable ledger for ${employee.name}`,
+        totalBalance: 0,
+      });
+    }
+
+    // 3. Link account to employee
+    employee.accountId = account._id as any;
+    await employee.save();
+
+    return sendSuccess(
+      res,
+      { employee, account },
+      "Employee synchronized with accounting ledger"
+    );
+  } catch (error) {
+    return handleError(error, res);
+  }
+};
+
+// Update employee professional status (Resigned, Suspended, Active)
+export const updateEmployeeStatus = async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    const { status } = req.body;
+
+    if (!isValidObjectId(id)) {
+      return sendError(res, "Invalid employee ID", 400);
+    }
+
+    if (!["Active", "Resigned", "Suspended"].includes(status)) {
+      return sendError(res, "Invalid status value", 400);
+    }
+
+    const employee = await Employee.findById(id);
+    if (!employee) {
+      return sendError(res, "Employee not found", 404);
+    }
+
+    employee.status = status;
+    // If resigned or suspended, deactivate login
+    if (status !== "Active") {
+      employee.isActive = false;
+    } else {
+      employee.isActive = true;
+    }
+
+    await employee.save();
+
+    return sendSuccess(res, employee, `Employee status updated to ${status}`);
+  } catch (error) {
+    return handleError(error, res);
+  }
+};
+
+// Update employee organizational group
+export const updateEmployeeGroup = async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    const { group } = req.body;
+
+    if (!isValidObjectId(id)) {
+      return sendError(res, "Invalid employee ID", 400);
+    }
+
+    const employee = await Employee.findByIdAndUpdate(
+      id,
+      { group },
+      { new: true }
+    );
+    if (!employee) {
+      return sendError(res, "Employee not found", 404);
+    }
+
+    return sendSuccess(res, employee, "Employee group updated successfully");
   } catch (error) {
     return handleError(error, res);
   }

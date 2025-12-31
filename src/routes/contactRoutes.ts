@@ -8,34 +8,34 @@ import {
   getContactsByType,
   getContactStats,
 } from "../controllers/contactController";
-import { authenticate, authorize, validateObjectId } from "../middleware";
+import { authenticate, authorize, validateObjectId, requirePermission } from "../middleware";
 
 const router = Router();
 
 // Public/authenticated routes
-router.get("/", authenticate, getAllContacts);
-router.get("/stats", authenticate, getContactStats);
-router.get("/type/:type", authenticate, getContactsByType);
-router.get("/:id", authenticate, validateObjectId("id"), getContactById);
+router.get("/", authenticate, requirePermission("contacts:read"), getAllContacts);
+router.get("/stats", authenticate, requirePermission("contacts:read"), getContactStats);
+router.get("/type/:type", authenticate, requirePermission("contacts:read"), getContactsByType);
+router.get("/:id", authenticate, requirePermission("contacts:read"), validateObjectId("id"), getContactById);
 
-// Protected routes (Admin, Manager, CEO)
+// Protected routes (require contacts:write)
 router.post(
   "/",
   authenticate,
-  authorize("Admin", "Manager", "CEO"),
+  requirePermission("contacts:write"),
   createContact
 );
 router.put(
   "/:id",
   authenticate,
-  authorize("Admin", "Manager", "CEO"),
+  requirePermission("contacts:write"),
   validateObjectId("id"),
   updateContact
 );
 router.delete(
   "/:id",
   authenticate,
-  authorize("Admin", "CEO"),
+  requirePermission("contacts:write"),
   validateObjectId("id"),
   deleteContact
 );

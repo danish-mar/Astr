@@ -66,6 +66,30 @@ export const authorize = (...positions: string[]) => {
   };
 };
 
+// Check if employee has specific permission
+export const requirePermission = (permission: string) => {
+  return (req: AuthRequest, res: Response, next: NextFunction) => {
+    if (!req.employee) {
+      return sendError(res, "Authentication required", 401);
+    }
+
+    // Admins have all permissions by default
+    if (req.employee.position === "Admin" || req.employee.position === "CEO") {
+      return next();
+    }
+
+    if (!req.employee.permissions || !req.employee.permissions.includes(permission)) {
+      return sendError(
+        res,
+        `Access denied. Required permission: ${permission}`,
+        403
+      );
+    }
+
+    next();
+  };
+};
+
 // Optional authentication (doesn't fail if no token)
 export const optionalAuth = async (
   req: AuthRequest,

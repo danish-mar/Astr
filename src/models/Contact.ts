@@ -5,7 +5,7 @@ export interface IContact extends Document {
   _id: Types.ObjectId;
   name: string;
   phone: string;
-  contactType: "Vendor" | "Customer" | "Supplier" | "Custom";
+  contactType: "Vendor" | "Customer" | "Supplier" | "Custom" | "Employee";
   address?: string;
   companyName?: string;
   notes?: string;
@@ -24,10 +24,11 @@ const contactSchema = new Schema<IContact>(
     },
     phone: {
       type: String,
-      required: [true, "Phone number is required"],
       trim: true,
       validate: {
-        validator: function (v: string) {
+        validator: function (v: string | null | undefined) {
+          // If no phone is provided, skip validation (it's optional now)
+          if (!v) return true;
           // Basic phone validation (10 digits for India)
           return /^[0-9]{10}$/.test(v);
         },
@@ -38,7 +39,7 @@ const contactSchema = new Schema<IContact>(
       type: String,
       required: [true, "Contact type is required"],
       enum: {
-        values: ["Vendor", "Customer", "Supplier", "Custom"],
+        values: ["Vendor", "Customer", "Supplier", "Custom", "Employee"],
         message: "{VALUE} is not a valid contact type",
       },
     },

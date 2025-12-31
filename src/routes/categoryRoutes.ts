@@ -8,17 +8,18 @@ import {
   getCategoriesWithCount,
   getCategoryTemplate,
 } from "../controllers/categoryController";
-import { authenticate, authorize, validateObjectId } from "../middleware";
+import { authenticate, authorize, validateObjectId, requirePermission } from "../middleware";
 
 const router = Router();
 
 // Public/authenticated routes
-router.get("/", authenticate, getAllCategories);
-router.get("/with-count", authenticate, getCategoriesWithCount);
-router.get("/:id", authenticate, validateObjectId("id"), getCategoryById);
+router.get("/", authenticate, requirePermission("products:read"), getAllCategories);
+router.get("/with-count", authenticate, requirePermission("products:read"), getCategoriesWithCount);
+router.get("/:id", authenticate, requirePermission("products:read"), validateObjectId("id"), getCategoryById);
 router.get(
   "/:id/template",
   authenticate,
+  requirePermission("products:read"),
   validateObjectId("id"),
   getCategoryTemplate
 );
@@ -27,20 +28,20 @@ router.get(
 router.post(
   "/",
   authenticate,
-  authorize("Admin", "Manager", "CEO"),
+  requirePermission("products:write"),
   createCategory
 );
 router.put(
   "/:id",
   authenticate,
-  authorize("Admin", "Manager", "CEO"),
+  requirePermission("products:write"),
   validateObjectId("id"),
   updateCategory
 );
 router.delete(
   "/:id",
   authenticate,
-  authorize("Admin", "CEO"),
+  requirePermission("products:write"),
   validateObjectId("id"),
   deleteCategory
 );
