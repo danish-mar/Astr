@@ -1,7 +1,8 @@
 <div align="center">
 
-# ✨ Astr 
-### *Your Premium Service & Repair Shop Management Platform*
+# ✨ Astr
+
+### _v3.0.0 — The Sharp Minimal Overhaul_
 
 [![TypeScript](https://img.shields.io/badge/TypeScript-007ACC?style=for-the-badge&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
 [![Node.js](https://img.shields.io/badge/Node.js-339933?style=for-the-badge&logo=nodedotjs&logoColor=white)](https://nodejs.org/)
@@ -10,7 +11,6 @@
 [![Alpine.js](https://img.shields.io/badge/Alpine.js-8BC0D0?style=for-the-badge&logo=alpinedotjs&logoColor=black)](https://alpinejs.dev/)
 [![TailwindCSS](https://img.shields.io/badge/Tailwind_CSS-38B2AC?style=for-the-badge&logo=tailwind-css&logoColor=white)](https://tailwindcss.com/)
 [![Docker](https://img.shields.io/badge/Docker-2496ED?style=for-the-badge&logo=docker&logoColor=white)](https://www.docker.com/)
-[![GitHub Actions](https://img.shields.io/badge/GitHub_Actions-2088FF?style=for-the-badge&logo=github-actions&logoColor=white)](https://github.com/features/actions)
 
 ---
 
@@ -20,36 +20,36 @@
 
 ## 🌟 What is Astr?
 
-**Astr** is a battle-tested, full-stack management system engineered for service and repair shops that demand **speed** and **elegance**. Built with modern TypeScript from the ground up, it combines enterprise-grade architecture with an iOS-inspired aesthetic that your team will actually *want* to use.
+**Astr** is a high-performance management system engineered for service and repair shops that demand **precision** and **extreme speed**. Version 3.0 introduces the **Sharp Minimal** aesthetic—a professional, industrial design language that eliminates clutter and focuses on pure operational efficiency.
 
-Perfect for mobile repair shops, electronics stores, computer service centers, or any business that needs to track products, customers, and repairs in one blazing-fast platform.
-
-> 💡 **Pro Tip:** This entire system was architected and deployed in record time—proving that quality doesn't require months of development.
+Built with modern TypeScript, Astr combines enterprise-grade stability with a lightning-fast UI that feels like a native desktop application.
 
 <br/>
 
-## ⚡ Feature Highlights
+## ⚡ v3.0 Feature Highlights
 
 <table>
 <tr>
 <td width="50%">
 
-### 🎨 **Frontend Magic**
-- 🪟 **Glassmorphic UI** — Premium iOS-inspired design language
-- ⚡ **Alpine.js Reactivity** — Zero-latency interaction
-- 🎭 **Cinematic UX** — Smooth animations & micro-interactions
-- 📱 **Mobile-First** — Apple-style experience on every device
-- 🎯 **One-Tap Workflow** — Low-friction management logic
+### 🎨 **Sharp Minimal UX**
+
+- 📐 **Industrial Precision** — High-contrast, sharp-cornered design
+- 🔍 **Unified Global Search** — Instant access via `Cmd + K` or `/`
+- 🔔 **Activity Notifications** — Real-time event tracking in the header
+- � **Universal Deep Linking** — Share direct links to any ticket or product
+- � **Micro-Animations** — Tactile feedback for every action
 
 </td>
 <td width="50%">
 
 ### 🔧 **Operational Power**
-- 🛡️ **Enterprise Security** — JWT-protected data & roles
-- 💸 **Expense Tracking** — Real-time operational cost logging
-- 🎯 **Lead Management** — Track & convert potential customers
-- ☁️ **Cloud Storage** — AWS S3 powered product media
-- 📈 **Master Stats** — Predictive insights & live charts
+
+- 🛡️ **Role-Based Security** — Granular access control for Techs & Admin
+- � **Precision Accounting** — Real-time payable/receivable mapping
+- 🎯 **Lead Workspace** — Landscape dual-view for high-velocity sales
+- ☁️ **S3-Engineered** — MinIO/AWS S3 powered high-res product media
+- 📈 **Pulse Analytics** — Real-time revenue & stock health dashboard
 
 </td>
 </tr>
@@ -63,16 +63,16 @@ Perfect for mobile repair shops, electronics stores, computer service centers, o
 
 </div>
 
-| Module | Description | Key Features |
-|--------|-------------|--------------|
-| 🎫 **Service Tickets** | End-to-end repair lifecycle | Status tracking, technician control, digital receipts |
-| 💸 **Expenditures** | Operational cost tracking | Category-wise spend, today's total, insights |
-| 📦 **Inventory** | Premium product catalog | S3 Cloud images, rich specs, stock status |
-| 🎯 **Lead Tracker** | Sales pipeline management | Targeted follow-ups, product interest, status alerts |
-| 👥 **Contacts** | Smart customer/vendor hub | Quick search, history tracking, CRM-lite |
-| 📊 **Analytics** | Revenue & spend insights | Trend analysis, spend-vs-earn, category charts |
-| 🔐 **Auth System** | Role-based secure access | Admin/Staff/Tech specialized views |
-| ⚙️ **Settings** | Global shop configuration | Logo, currency, themes, and S3 control |
+| Module                 | Description                 | v3.0 Enhancements                                      |
+| ---------------------- | --------------------------- | ------------------------------------------------------ |
+| 🎫 **Service Tickets** | End-to-end repair lifecycle | Instant ID search, technician assignment, status logs  |
+| 💸 **Accounting**      | Financial health tracker    | Balance-based summaries, interactive accounts, tags    |
+| 📦 **Inventory**       | Premium product catalog     | Smart filtering, S3 media management, "Sold" tracking  |
+| 🎯 **Lead Tracker**    | Sales pipeline management   | **New Landscape Workspace**, interest mapping, history |
+| 👥 **Contacts**        | Smart customer/vendor hub   | Deep linking support, history tracking, CRM features   |
+| 📊 **Dashboard**       | Mission control center      | Predictive stats, earnings trends, quick-action cards  |
+| 🔐 **Auth System**     | Restricted access           | Biometric-ready login UI, JWT-signed sessions          |
+| ⚙️ **Settings**        | Global orchestration        | System-wide versioning, S3 config, branding control    |
 
 <br/>
 
@@ -87,44 +87,45 @@ Perfect for mobile repair shops, electronics stores, computer service centers, o
 <td align="center" width="25%">
 <img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/typescript/typescript-original.svg" width="64" height="64" />
 <br/><strong>TypeScript</strong>
-<br/><sub>Type-safe codebase</sub>
+<br/><sub>v5.9+ Precision</sub>
 </td>
 <td align="center" width="25%">
 <img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/nodejs/nodejs-original.svg" width="64" height="64" />
 <br/><strong>Node.js</strong>
-<br/><sub>Async runtime</sub>
+<br/><sub>Modern V8 Engine</sub>
 </td>
 <td align="center" width="25%">
 <img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/mongodb/mongodb-original.svg" width="64" height="64" />
 <br/><strong>MongoDB</strong>
-<br/><sub>NoSQL database</sub>
+<br/><sub>Distributed Storage</sub>
 </td>
 <td align="center" width="25%">
 <img src="https://www.svgrepo.com/show/374002/alpine.svg" width="64" height="64" />
 <br/><strong>Alpine.js</strong>
-<br/><sub>Reactive frontend</sub>
+<br/><sub>Lightweight Reactivity</sub>
 </td>
 </tr>
 </table>
 
-### Backend Architecture
+### Enterprise Architecture
+
 ```
 TypeScript + Node.js + Express.js
-├── 🔐 JWT Authentication & Authorization
-├── 🗄️ MongoDB + Mongoose ODM
-├── 📡 RESTful API with versioning (/api/v1)
-├── 🛡️ Input validation & error handling
-└── 📝 Request logging middleware
+├── � Global Search Engine (Cross-Model Index)
+├── 🔔 Event-Driven Notifications
+├── 🗄️ MongoDB Persistence Layer
+├── 📡 RESTful v1 API
+└── � Real-time Request Auditing
 ```
 
-### Frontend Stack
+### Frontend Engineering
+
 ```
-EJS Templates + Alpine.js + TailwindCSS
-├── 🎨 Glassmorphic design system
-├── ⚡ CDN-based dependencies (zero build!)
-├── 📊 Chart.js for analytics
-├── 🌐 Axios for API calls
-└── 🎭 Animate.css for smooth UX
+EJS + Alpine.js + TailwindCSS
+├── 💎 Sharp Minimal Design System
+├── 🚀 Zero-Bundler Performance
+├── 📊 Live Data Visualization (Chart.js)
+└── 🔗 Link-State Sync (Deep Linking)
 ```
 
 <br/>
@@ -135,60 +136,32 @@ EJS Templates + Alpine.js + TailwindCSS
 
 </div>
 
-### Option 1: Local Development
+### Option 1: Development Environment
 
 ```bash
-# 📥 Clone the repository
+# 📥 Clone
 git clone https://git.sangonomiya.icu/danish-mar/Astr.git
 cd Astr
 
-# 📦 Install dependencies
+# 📦 Setup
 npm install
-
-# ⚙️ Configure environment
 cp .env.example .env
-# Edit .env with your MongoDB URI and JWT secret
 
-# 🌱 Seed database with sample data
+# 🌱 Initialize
 npm run seed
 
-# 🔥 Start development server
+# 🔥 Launch
 npm run dev
 ```
 
-### Option 2: Docker Compose (Recommended)
+### Option 2: Production (Docker)
 
 ```bash
-# 📥 Clone the repository
-git clone https://git.sangonomiya.icu/danish-mar/Astr.git
-cd Astr
-
-# ⚙️ Set JWT secret (optional, defaults to a placeholder)
-export JWT_SECRET="your-super-secret-jwt-key"
-
-# 🐳 Start all services (MongoDB + Astr)
+# � Spin up unified stack (App + DB + MinIO)
 docker-compose up -d
 
-# 📊 Check service status
+# 📊 Check Health
 docker-compose ps
-
-# 📝 View logs
-docker-compose logs -f astr-app
-```
-
-### Option 3: Pull from GitHub Container Registry
-
-```bash
-# 🐳 Pull the latest image
-docker pull ghcr.io/danish-mar/astr:latest
-
-# 🚀 Run the container
-docker run -d \
-  -p 3000:3000 \
-  -e MONGODB_URI="your-mongodb-uri" \
-  -e JWT_SECRET="your-jwt-secret" \
-  --name astr-app \
-  ghcr.io/danish-mar/astr:latest
 ```
 
 <div align="center">
@@ -210,6 +183,7 @@ docker run -d \
 ### Automated Builds
 
 Every push to the `main` branch automatically:
+
 - ✅ Runs CI checks (TypeScript build validation)
 - 🐳 Builds optimized Docker image
 - 📦 Pushes to GitHub Container Registry
@@ -224,12 +198,12 @@ Every push to the `main` branch automatically:
 
 ### Environment Variables
 
-| Variable | Description | Default |
-|----------|-------------|----------|
-| `PORT` | Application port | `3000` |
-| `MONGODB_URI` | MongoDB connection string | Required |
-| `JWT_SECRET` | Secret key for JWT tokens | Required |
-| `NODE_ENV` | Environment mode | `production` |
+| Variable      | Description               | Default      |
+| ------------- | ------------------------- | ------------ |
+| `PORT`        | Application port          | `3000`       |
+| `MONGODB_URI` | MongoDB connection string | Required     |
+| `JWT_SECRET`  | Secret key for JWT tokens | Required     |
+| `NODE_ENV`    | Environment mode          | `production` |
 
 <br/>
 
@@ -285,13 +259,13 @@ This project proves that **rapid development** doesn't mean sacrificing quality.
 
 <div align="center">
 
-| Metric | Value |
-|--------|-------|
-| 📝 **Total Lines of Code** | 10,000+ |
-| ⚡ **API Response Time** | < 50ms avg |
-| 🎯 **Code Coverage** | Type-safe |
-| 🚀 **Build Time** | Instant (no bundler!) |
-| 📱 **Mobile Responsive** | 100% |
+| Metric                     | Value                 |
+| -------------------------- | --------------------- |
+| 📝 **Total Lines of Code** | 10,000+               |
+| ⚡ **API Response Time**   | < 50ms avg            |
+| 🎯 **Code Coverage**       | Type-safe             |
+| 🚀 **Build Time**          | Instant (no bundler!) |
+| 📱 **Mobile Responsive**   | 100%                  |
 
 </div>
 
