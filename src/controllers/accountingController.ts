@@ -8,32 +8,32 @@ import mongoose from "mongoose";
  */
 export const getAccountingSummary = async (req: Request, res: Response) => {
     try {
-        const summary = await Account.aggregate([
-            {
-                $group: {
-                    _id: "$accountType",
-                    totalBalance: { $sum: "$totalBalance" }
-                }
-            }
-        ]);
-
+        const accounts = await Account.find({});
+        
         const formattedSummary = {
             totalPayable: 0,
             totalReceivable: 0,
             netBalance: 0
         };
 
-        summary.forEach(item => {
-            if (item._id === "Payable") formattedSummary.totalPayable = item.totalBalance;
-            if (item._id === "Receivable") formattedSummary.totalReceivable = item.totalBalance;
+        accounts.forEach(acc => {
+            const balance = acc.totalBalance || 0;
+            if (balance > 0) {
+                formattedSummary.totalPayable += balance;
+            } else if (balance < 0) {
+                formattedSummary.totalReceivable += Math.abs(balance);
+            }
         });
 
-        // Balance = Credit (Payable) - Debit (Receivable)
-        // In our case, higher Payable means liability.
-        formattedSummary.netBalance = formattedSummary.totalPayable - formattedSummary.totalReceivable;
+        // Net Position = Assets (Receivables) - Liabilities (Payables)
+        // If Receivables (They owe us) > Payables (We owe them) -> Positive (Debit/Welfare)
+        formattedSummary.netBalance = formattedSummary.totalReceivable - formattedSummary.totalPayable;
+
+        console.log("[Accounting] Summary Re-computed (Balance Based):", formattedSummary);
 
         return sendSuccess(res, formattedSummary, "Accounting summary fetched successfully");
     } catch (error) {
+        console.error("[Accounting] Summary Failure:", error);
         return handleError(error, res);
     }
 };

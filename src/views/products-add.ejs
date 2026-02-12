@@ -1,35 +1,29 @@
-<div x-data="productAddData" x-init="init()" class="min-h-screen bg-[#fcfcfd] pb-32 overflow-x-hidden">
-    <!-- Ultra-Premium Floating Header -->
-    <div class="sticky top-0 z-50 bg-white/60 backdrop-blur-2xl border-b border-gray-100/50">
-        <div class="max-w-[1600px] mx-auto px-10 py-8">
-            <div
-                class="flex flex-col md:flex-row md:items-center md:justify-between gap-8 animate__animated animate__fadeIn">
+<div x-data="productAddData" x-init="init()" class="min-h-screen bg-slate-50 pb-32 overflow-x-hidden">
+    <!-- SHARP MINIMAL HEADER -->
+    <div class="sticky top-0 z-50 bg-white border-b border-slate-200">
+        <div class="max-w-[1600px] mx-auto px-10 py-6">
+            <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-6">
                 <div class="space-y-2">
                     <div class="flex items-center gap-3">
                         <a href="/products"
-                            class="group flex items-center gap-2 px-4 py-2 bg-gray-50 text-[10px] font-black text-gray-400 uppercase tracking-widest rounded-full hover:bg-gray-100 hover:text-gray-900 transition-all">
+                            class="group flex items-center gap-2 px-4 py-2 bg-slate-50 text-[9px] font-black text-slate-400 uppercase tracking-widest rounded-lg hover:bg-slate-100 hover:text-slate-900 transition-all">
                             <i
                                 class="fas fa-chevron-left text-[8px] group-hover:-translate-x-1 transition-transform"></i>
                             Inventory
                         </a>
-                        <span class="w-1.5 h-1.5 rounded-full bg-blue-500/20"></span>
-                        <span class="text-[10px] font-bold text-blue-600 uppercase tracking-widest">New Asset
-                            Protocol</span>
+                        <span class="w-1.5 h-1.5 rounded-full bg-primary-500/20"></span>
+                        <span class="text-[9px] font-black text-primary-600 uppercase tracking-widest">New Product</span>
                     </div>
-                    <h1 class="text-5xl font-black text-gray-900 tracking-tighter">Create Product</h1>
-                    <p class="text-gray-400 font-medium text-lg leading-relaxed">Initialize a new high-fidelity entry
-                        into the Astr ecosystem.</p>
+                    <h1 class="text-3xl font-bold text-slate-900 tracking-tight uppercase">Add Product</h1>
+                    <p class="text-slate-500 font-bold text-sm">Create a new inventory entry with complete specifications.</p>
                 </div>
 
                 <div class="flex items-center gap-4">
                     <button @click="saveProduct()" :disabled="saving"
-                        class="relative group px-12 py-6 bg-gray-900 text-white rounded-[32px] text-[11px] font-black uppercase tracking-[0.3em] overflow-hidden transition-all hover:scale-[1.02] active:scale-95 disabled:opacity-50 shadow-[0_20px_40px_-10px_rgba(0,0,0,0.3)]">
-                        <div
-                            class="absolute inset-0 bg-gradient-to-r from-blue-600 to-indigo-600 opacity-0 group-hover:opacity-100 transition-opacity duration-500">
-                        </div>
-                        <div class="relative flex items-center justify-center gap-4">
-                            <i :class="saving ? 'fas fa-spinner fa-spin' : 'fas fa-plus'" class="text-[10px]"></i>
-                            <span x-text="saving ? 'Processing...' : 'Deploy Product'"></span>
+                        class="relative group px-8 py-3 bg-primary-600 text-white rounded-xl text-[10px] font-black uppercase tracking-widest overflow-hidden transition-all hover:bg-primary-700 active:scale-95 disabled:opacity-50 shadow-xl shadow-primary-200">
+                        <div class="relative flex items-center justify-center gap-3">
+                            <i :class="saving ? 'fas fa-spinner fa-spin' : 'fas fa-check'" class="text-[9px]"></i>
+                            <span x-text="saving ? 'Saving...' : 'Save Product'"></span>
                         </div>
                     </button>
                 </div>
@@ -37,247 +31,221 @@
         </div>
     </div>
 
-    <!-- The Workspace Canvas -->
-    <div class="max-w-[1600px] mx-auto px-10 mt-16">
-        <div class="grid grid-cols-1 xl:grid-cols-12 gap-16">
+    <!-- Main Workspace -->
+    <div class="max-w-[1600px] mx-auto px-10 mt-12">
+        <div class="grid grid-cols-1 xl:grid-cols-12 gap-12">
 
-            <!-- Left Console: Primary Architecture -->
-            <div class="xl:col-span-8 space-y-16 animate__animated animate__fadeInUp">
+            <!-- Left: Primary Form -->
+            <div class="xl:col-span-8 space-y-12">
 
-                <!-- Identification Module -->
+                <!-- Identification Section -->
                 <section
-                    class="group bg-white rounded-[48px] p-16 border border-gray-100/50 shadow-[0_40px_100px_-20px_rgba(0,0,0,0.02)] hover:shadow-[0_40px_100px_-20px_rgba(0,0,0,0.05)] transition-all duration-700">
-                    <div class="flex items-start justify-between mb-20">
-                        <div class="space-y-2">
-                            <h3 class="text-3xl font-black text-gray-900 tracking-tight">Identity & Valuation</h3>
-                            <p class="text-gray-400 font-medium text-base">Define the core parameters of your product.
-                            </p>
+                    class="bg-white rounded-[24px] p-12 border border-slate-200 shadow-sm">
+                    <div class="flex items-start justify-between mb-12">
+                        <div class="space-y-1">
+                            <h3 class="text-xl font-bold text-slate-900 tracking-tight uppercase">Product Details</h3>
+                            <p class="text-slate-400 font-bold text-xs uppercase tracking-widest">Core Information</p>
                         </div>
                         <div
-                            class="w-16 h-16 bg-blue-50 rounded-[28px] flex items-center justify-center text-blue-600 shadow-xl shadow-blue-50/50 animate-pulse">
-                            <i class="fas fa-fingerprint text-xl"></i>
+                            class="w-12 h-12 bg-primary-50 rounded-xl flex items-center justify-center text-primary-600">
+                            <i class="fas fa-box text-sm"></i>
                         </div>
                     </div>
 
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-12">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
                         <!-- Name & Price -->
-                        <div class="space-y-8">
-                            <div class="space-y-4">
+                        <div class="space-y-6">
+                            <div class="space-y-3">
                                 <label
-                                    class="text-[11px] font-black text-gray-400 uppercase tracking-[0.2em] ml-2">Display
+                                    class="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1">Product
                                     Name</label>
-                                <div class="relative group">
+                                <div class="relative">
                                     <input type="text" x-model="formData.name" required
                                         placeholder="e.g. MacBook Pro M3 Max"
-                                        class="block w-full px-8 py-6 bg-gray-50/50 border-2 border-transparent rounded-[28px] text-gray-900 text-lg font-bold focus:bg-white focus:border-blue-500/20 focus:ring-0 outline-none transition-all placeholder:text-gray-300">
-                                    <div
-                                        class="absolute inset-0 rounded-[28px] border border-gray-100 pointer-events-none group-hover:border-gray-200 transition-colors">
-                                    </div>
+                                        class="block w-full px-4 py-3 bg-white border border-slate-200 rounded-xl text-slate-900 text-sm font-bold focus:bg-slate-50 focus:border-primary-400 focus:ring-4 focus:ring-primary-100 outline-none transition-all placeholder:text-slate-300">
                                 </div>
                             </div>
 
-                            <div class="space-y-4">
+                            <div class="space-y-3">
                                 <label
-                                    class="text-[11px] font-black text-gray-400 uppercase tracking-[0.2em] ml-2">Market
-                                    Price (₹)</label>
-                                <div class="relative group">
+                                    class="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1">Price (₹)</label>
+                                <div class="relative">
                                     <div
-                                        class="absolute left-8 top-1/2 -translate-y-1/2 text-gray-300 font-black text-xl">
+                                        class="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 font-bold text-sm">
                                         ₹</div>
                                     <input type="number" x-model="formData.price" required min="0" placeholder="0.00"
-                                        class="block w-full pl-14 pr-8 py-6 bg-gray-50/50 border-2 border-transparent rounded-[28px] text-gray-900 text-lg font-black focus:bg-white focus:border-blue-500/20 focus:ring-0 outline-none transition-all placeholder:text-gray-200">
-                                    <div
-                                        class="absolute inset-0 rounded-[28px] border border-gray-100 pointer-events-none group-hover:border-gray-200 transition-colors">
-                                    </div>
+                                        class="block w-full pl-8 pr-4 py-3 bg-white border border-slate-200 rounded-xl text-slate-900 text-sm font-bold focus:bg-slate-50 focus:border-primary-400 focus:ring-4 focus:ring-primary-100 outline-none transition-all placeholder:text-slate-300">
                                 </div>
                             </div>
                         </div>
 
                         <!-- Category & Source -->
-                        <div class="space-y-8">
-                            <div class="space-y-4">
+                        <div class="space-y-6">
+                            <div class="space-y-3">
                                 <label
-                                    class="text-[11px] font-black text-gray-400 uppercase tracking-[0.2em] ml-2">Category
-                                    Matrix</label>
-                                <div class="relative group">
+                                    class="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1">Category</label>
+                                <div class="relative">
                                     <select x-model="formData.category" @change="onCategoryChange()" required
-                                        class="block w-full px-8 py-6 bg-gray-50/50 border-2 border-transparent rounded-[28px] text-gray-900 font-bold focus:bg-white focus:border-blue-500/20 focus:ring-0 outline-none transition-all appearance-none cursor-pointer">
-                                        <option value="">Select Domain...</option>
+                                        class="block w-full px-4 py-3 bg-white border border-slate-200 rounded-xl text-slate-900 text-sm font-bold focus:bg-slate-50 focus:border-primary-400 focus:ring-4 focus:ring-primary-100 outline-none transition-all appearance-none cursor-pointer">
+                                        <option value="">Select Category...</option>
                                         <template x-for="category in categories" :key="category._id">
                                             <option :value="category._id" x-text="category.name"></option>
                                         </template>
                                     </select>
                                     <div
-                                        class="absolute right-8 top-1/2 -translate-y-1/2 text-gray-300 pointer-events-none">
-                                        <i class="fas fa-chevron-down text-xs"></i>
-                                    </div>
-                                    <div
-                                        class="absolute inset-0 rounded-[28px] border border-gray-100 pointer-events-none group-hover:border-gray-200 transition-colors">
+                                        class="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none">
+                                        <i class="fas fa-chevron-down text-[8px]"></i>
                                     </div>
                                 </div>
                             </div>
 
-                            <div class="space-y-4">
+                            <div class="space-y-3">
                                 <label
-                                    class="text-[11px] font-black text-gray-400 uppercase tracking-[0.2em] ml-2">Acquisition
-                                    Vector</label>
-                                <div class="flex items-center gap-4">
-                                    <div class="relative group flex-1">
+                                    class="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1">Source</label>
+                                <div class="flex items-center gap-3">
+                                    <div class="relative flex-1">
                                         <select x-model="formData.source" required
-                                            class="block w-full px-8 py-6 bg-gray-50/50 border-2 border-transparent rounded-[28px] text-gray-900 font-bold focus:bg-white focus:border-blue-500/20 focus:ring-0 outline-none transition-all appearance-none cursor-pointer">
-                                            <option value="">Select Origin...</option>
+                                            class="block w-full px-4 py-3 bg-white border border-slate-200 rounded-xl text-slate-900 text-sm font-bold focus:bg-slate-50 focus:border-primary-400 focus:ring-4 focus:ring-primary-100 outline-none transition-all appearance-none cursor-pointer">
+                                            <option value="">Select Source...</option>
                                             <template x-for="contact in contacts" :key="contact._id">
                                                 <option :value="contact._id"
                                                     x-text="contact.name + ' (' + contact.contactType + ')'"></option>
                                             </template>
                                         </select>
                                         <div
-                                            class="absolute right-8 top-1/2 -translate-y-1/2 text-gray-300 pointer-events-none">
-                                            <i class="fas fa-chevron-down text-xs"></i>
-                                        </div>
-                                        <div
-                                            class="absolute inset-0 rounded-[28px] border border-gray-100 pointer-events-none group-hover:border-gray-200 transition-colors">
+                                            class="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none">
+                                            <i class="fas fa-chevron-down text-[8px]"></i>
                                         </div>
                                     </div>
                                     <button @click.prevent="showQuickAddContact = !showQuickAddContact"
-                                        class="w-20 h-20 bg-gray-900 text-white rounded-[28px] flex items-center justify-center hover:scale-105 active:scale-95 transition-all shadow-xl shadow-gray-200/50">
-                                        <i class="fas fa-plus"></i>
+                                        class="w-12 h-12 bg-slate-900 text-white rounded-xl flex items-center justify-center hover:bg-slate-800 active:scale-95 transition-all">
+                                        <i class="fas fa-plus text-xs"></i>
                                     </button>
                                 </div>
                             </div>
                         </div>
                     </div>
 
-                    <!-- Quick Contact Portal -->
-                    <div x-show="showQuickAddContact" x-transition:enter="transition ease-out duration-500"
-                        x-transition:enter-start="opacity-0 -translate-y-10 scale-95"
-                        x-transition:enter-end="opacity-100 translate-y-0 scale-100"
-                        class="mt-12 bg-gray-50/50 rounded-[40px] p-12 border border-blue-100/50 space-y-10">
+                    <!-- Quick Contact Form -->
+                    <div x-show="showQuickAddContact" x-transition:enter="transition ease-out duration-300"
+                        x-transition:enter-start="opacity-0 -translate-y-4"
+                        x-transition:enter-end="opacity-100 translate-y-0"
+                        class="mt-8 bg-slate-50 rounded-xl p-8 border border-slate-200 space-y-6">
                         <div class="flex items-center justify-between">
-                            <h4 class="text-[11px] font-black text-blue-600 uppercase tracking-[0.3em]">New Entity Entry
-                            </h4>
+                            <h4 class="text-[9px] font-black text-primary-600 uppercase tracking-widest">Add New Contact</h4>
                             <button @click="showQuickAddContact = false"
-                                class="text-gray-300 hover:text-gray-600 transition-colors">
+                                class="text-slate-400 hover:text-slate-600 transition-colors">
                                 <i class="fas fa-times text-xs"></i>
                             </button>
                         </div>
-                        <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
-                            <input type="text" x-model="quickContact.name" placeholder="Legal Name"
-                                class="px-8 py-5 bg-white border border-gray-100 rounded-[24px] text-sm font-bold outline-none focus:ring-4 focus:ring-blue-50 transition-all">
-                            <input type="tel" x-model="quickContact.phone" placeholder="Phone Link"
-                                class="px-8 py-5 bg-white border border-gray-100 rounded-[24px] text-sm font-bold outline-none focus:ring-4 focus:ring-blue-50 transition-all">
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                            <input type="text" x-model="quickContact.name" placeholder="Contact Name"
+                                class="px-4 py-3 bg-white border border-slate-200 rounded-xl text-sm font-bold outline-none focus:ring-4 focus:ring-primary-100 focus:border-primary-400 transition-all">
+                            <input type="tel" x-model="quickContact.phone" placeholder="Phone Number"
+                                class="px-4 py-3 bg-white border border-slate-200 rounded-xl text-sm font-bold outline-none focus:ring-4 focus:ring-primary-100 focus:border-primary-400 transition-all">
                             <select x-model="quickContact.contactType"
-                                class="px-8 py-5 bg-white border border-gray-100 rounded-[24px] text-sm font-bold outline-none focus:ring-4 focus:ring-blue-50 transition-all appearance-none">
-                                <option value="">Classification...</option>
+                                class="px-4 py-3 bg-white border border-slate-200 rounded-xl text-sm font-bold outline-none focus:ring-4 focus:ring-primary-100 focus:border-primary-400 transition-all appearance-none">
+                                <option value="">Select Type...</option>
                                 <option value="Vendor">Vendor</option>
                                 <option value="Supplier">Supplier</option>
-                                <option value="Customer">Standard</option>
+                                <option value="Customer">Customer</option>
                             </select>
                         </div>
                         <button @click.prevent="saveQuickContact()"
-                            class="w-full py-5 bg-blue-600 text-white rounded-[24px] text-[10px] font-black uppercase tracking-[0.3em] hover:bg-blue-700 transition-all shadow-2xl shadow-blue-200/50">
-                            Initialize Entry
+                            class="w-full py-3 bg-primary-600 text-white rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-primary-700 transition-all shadow-lg shadow-primary-200">
+                            Add Contact
                         </button>
                     </div>
 
                     <div
-                        class="mt-16 flex items-center justify-between p-10 bg-gray-50/50 rounded-[32px] border-2 border-dashed border-gray-100 hover:border-blue-200 hover:bg-white transition-all duration-500">
+                        class="mt-8 flex items-center justify-between p-6 bg-slate-50 rounded-xl border border-slate-200">
                         <div class="space-y-1">
-                            <p class="text-lg font-black text-gray-900 tracking-tight">System Serial Designation</p>
-                            <p class="text-sm font-medium text-gray-400">Generate a unique 6-character cryptographic ID
-                                automatically.</p>
+                            <p class="text-sm font-bold text-slate-900 uppercase tracking-tight">Auto-Generate Product ID</p>
+                            <p class="text-[9px] font-bold text-slate-400 uppercase tracking-widest">6-Character Unique Identifier</p>
                         </div>
-                        <label class="relative inline-flex items-center cursor-pointer scale-125">
+                        <label class="relative inline-flex items-center cursor-pointer">
                             <input type="checkbox" x-model="formData.assignProductID" class="sr-only peer">
                             <div
-                                class="w-16 h-8 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-1 after:left-[4px] after:bg-white after:rounded-full after:h-6 after:w-6 after:transition-all peer-checked:bg-blue-600">
+                                class="w-14 h-7 bg-slate-200 peer-focus:outline-none rounded-lg peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-0.5 after:left-[4px] after:bg-white after:rounded-md after:h-6 after:w-6 after:transition-all peer-checked:bg-primary-600">
                             </div>
                         </label>
                     </div>
                 </section>
 
-                <!-- Technical Matrix Configuration -->
+                <!-- Technical Specifications -->
                 <section
-                    class="bg-white rounded-[48px] p-16 border border-gray-100/50 shadow-[0_40px_100px_-20px_rgba(0,0,0,0.02)]"
+                    class="bg-white rounded-[24px] p-12 border border-slate-200 shadow-sm"
                     x-show="selectedCategoryTemplate && selectedCategoryTemplate.length > 0"
-                    x-transition:enter="transition-all ease-out duration-700"
-                    x-transition:enter-start="opacity-0 translate-y-20 scale-98"
-                    x-transition:enter-end="opacity-100 translate-y-0 scale-100">
+                    x-transition:enter="transition-all ease-out duration-500"
+                    x-transition:enter-start="opacity-0 translate-y-8"
+                    x-transition:enter-end="opacity-100 translate-y-0">
 
-                    <div class="flex items-start justify-between mb-20">
-                        <div class="space-y-4">
-                            <h3 class="text-3xl font-black text-gray-900 tracking-tight">Technical Architecture</h3>
-                            <p class="text-gray-400 font-medium text-base">Calibrate specific hardware and utility
-                                parameters for this asset.</p>
+                    <div class="flex items-start justify-between mb-12">
+                        <div class="space-y-1">
+                            <h3 class="text-xl font-bold text-slate-900 tracking-tight uppercase">Specifications</h3>
+                            <p class="text-slate-400 font-bold text-xs uppercase tracking-widest">Technical Details</p>
                         </div>
                         <div
-                            class="w-16 h-16 bg-indigo-50 rounded-[28px] flex items-center justify-center text-indigo-600 shadow-xl shadow-indigo-50/50">
-                            <i class="fas fa-microchip text-xl"></i>
+                            class="w-12 h-12 bg-primary-50 rounded-xl flex items-center justify-center text-primary-600">
+                            <i class="fas fa-microchip text-sm"></i>
                         </div>
                     </div>
 
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-16">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
                         <template x-for="field in selectedCategoryTemplate" :key="field.fieldName">
-                            <div class="space-y-6">
+                            <div class="space-y-3">
                                 <label
-                                    class="text-[11px] font-black text-gray-400 uppercase tracking-[0.2em] ml-2 flex items-center justify-between">
+                                    class="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1 flex items-center justify-between">
                                     <span x-text="field.fieldName"></span>
                                     <span x-show="field.required"
-                                        class="text-[9px] px-2 py-0.5 bg-indigo-50 text-indigo-600 rounded-full">REQUIRED</span>
+                                        class="text-[8px] px-2 py-0.5 bg-primary-50 text-primary-600 rounded-md font-black">REQUIRED</span>
                                 </label>
 
-                                <div class="relative group">
+                                <div class="relative">
                                     <template x-if="field.fieldType === 'text' || field.fieldType === 'number'">
                                         <input :type="field.fieldType"
                                             x-model="formData.specifications[field.fieldName]"
                                             :required="field.required"
                                             :placeholder="'Enter ' + field.fieldName.toLowerCase()"
-                                            class="block w-full px-8 py-6 bg-gray-50/50 border-2 border-transparent rounded-[28px] text-gray-900 font-bold focus:bg-white focus:border-indigo-500/20 outline-none transition-all">
+                                            class="block w-full px-4 py-3 bg-white border border-slate-200 rounded-xl text-slate-900 text-sm font-bold focus:bg-slate-50 focus:border-primary-400 focus:ring-4 focus:ring-primary-100 outline-none transition-all">
                                     </template>
 
                                     <template x-if="field.fieldType === 'textarea'">
-                                        <textarea x-model="formData.specifications[field.fieldName]" rows="4"
+                                        <textarea x-model="formData.specifications[field.fieldName]" rows="3"
                                             :required="field.required"
                                             :placeholder="'Describe ' + field.fieldName.toLowerCase()"
-                                            class="block w-full px-8 py-6 bg-gray-50/50 border-2 border-transparent rounded-[28px] text-gray-900 font-bold focus:bg-white focus:border-indigo-500/20 outline-none transition-all resize-none"></textarea>
+                                            class="block w-full px-4 py-3 bg-white border border-slate-200 rounded-xl text-slate-900 text-sm font-bold focus:bg-slate-50 focus:border-primary-400 focus:ring-4 focus:ring-primary-100 outline-none transition-all resize-none"></textarea>
                                     </template>
 
                                     <template x-if="field.fieldType === 'select'">
                                         <select x-model="formData.specifications[field.fieldName]"
                                             @change="onSpecChange(field.fieldName)" :required="field.required"
-                                            class="block w-full px-8 py-6 bg-gray-50/50 border-2 border-transparent rounded-[28px] text-gray-900 font-bold focus:bg-white focus:border-indigo-500/20 outline-none transition-all appearance-none cursor-pointer">
-                                            <option value="">Select Property...</option>
+                                            class="block w-full px-4 py-3 bg-white border border-slate-200 rounded-xl text-slate-900 text-sm font-bold focus:bg-slate-50 focus:border-primary-400 focus:ring-4 focus:ring-primary-100 outline-none transition-all appearance-none cursor-pointer">
+                                            <option value="">Select Option...</option>
                                             <template x-for="option in field.options" :key="getOptionValue(option)">
                                                 <option :value="getOptionValue(option)" x-text="getOptionValue(option)">
                                                 </option>
                                             </template>
                                         </select>
                                     </template>
-
-                                    <div
-                                        class="absolute inset-0 rounded-[28px] border border-gray-100 pointer-events-none group-hover:border-gray-200 transition-colors">
-                                    </div>
                                 </div>
 
-                                <!-- Nested Variant Expansion -->
+                                <!-- Nested Fields -->
                                 <template x-if="hasLinkedFields(field.fieldName)">
                                     <div
-                                        class="mt-8 p-10 bg-indigo-50/30 rounded-[32px] border border-indigo-100/50 space-y-10 animate__animated animate__fadeIn">
+                                        class="mt-6 p-6 bg-primary-50/30 rounded-xl border border-primary-100 space-y-6">
                                         <template x-for="linkedField in getLinkedFields(field.fieldName)"
                                             :key="linkedField.fieldName">
-                                            <div class="space-y-4">
+                                            <div class="space-y-2">
                                                 <label
-                                                    class="text-[10px] font-black text-indigo-900 uppercase tracking-widest ml-2 flex items-center justify-between">
+                                                    class="text-[8px] font-black text-primary-900 uppercase tracking-widest ml-1 flex items-center justify-between">
                                                     <span x-text="linkedField.fieldName"></span>
                                                     <span x-show="linkedField.required"
-                                                        class="text-red-400">Essential</span>
+                                                        class="text-red-500">REQUIRED</span>
                                                 </label>
-                                                <div class="relative group">
+                                                <div class="relative">
                                                     <input x-model="formData.specifications[linkedField.fieldName]"
-                                                        class="block w-full px-8 py-5 bg-white border-2 border-transparent rounded-[24px] text-gray-900 font-bold focus:border-indigo-500/30 outline-none transition-all">
-                                                    <div
-                                                        class="absolute inset-0 rounded-[24px] border border-indigo-100/50 pointer-events-none group-hover:border-indigo-200 transition-colors">
-                                                    </div>
+                                                        class="block w-full px-4 py-2.5 bg-white border border-primary-200 rounded-lg text-slate-900 text-sm font-bold focus:border-primary-400 outline-none transition-all">
                                                 </div>
                                             </div>
                                         </template>
@@ -289,29 +257,29 @@
                 </section>
             </div>
 
-            <!-- Right Console: Metadata & Interaction -->
-            <div class="xl:col-span-4 space-y-16 animate__animated animate__fadeInRight">
+            <!-- Right: Metadata -->
+            <div class="xl:col-span-4 space-y-12">
 
-                <!-- Visual Assets Laboratory -->
-                <section class="bg-white rounded-[40px] p-12 border border-gray-100/50 shadow-sm">
-                    <div class="flex items-center gap-4 mb-12">
+                <!-- Visual Assets -->
+                <section class="bg-white rounded-[24px] p-8 border border-slate-200 shadow-sm">
+                    <div class="flex items-center gap-3 mb-8">
                         <div
-                            class="w-12 h-12 bg-emerald-50 rounded-2xl flex items-center justify-center text-emerald-600">
-                            <i class="fas fa-camera text-sm"></i>
+                            class="w-10 h-10 bg-primary-50 rounded-lg flex items-center justify-center text-primary-600">
+                            <i class="fas fa-camera text-xs"></i>
                         </div>
-                        <h3 class="text-2xl font-black text-gray-900 tracking-tight">Visual Assets</h3>
+                        <h3 class="text-lg font-bold text-slate-900 uppercase tracking-tight">Images</h3>
                     </div>
 
-                    <div class="space-y-10">
-                        <div class="grid grid-cols-2 gap-6">
+                    <div class="space-y-6">
+                        <div class="grid grid-cols-2 gap-4">
                             <template x-for="(preview, index) in imagePreviews" :key="index">
                                 <div
-                                    class="relative group aspect-[4/3] rounded-[24px] overflow-hidden bg-gray-50 border border-gray-100 transition-all hover:scale-105">
+                                    class="relative group aspect-[4/3] rounded-xl overflow-hidden bg-slate-50 border border-slate-200 transition-all hover:scale-105">
                                     <img :src="preview" class="w-full h-full object-cover">
                                     <div
                                         class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
                                         <button @click.prevent="removeImage(index)"
-                                            class="w-12 h-12 bg-white/20 backdrop-blur-md text-white rounded-full hover:bg-red-500 transition-all">
+                                            class="w-10 h-10 bg-white/20 backdrop-blur-sm text-white rounded-lg hover:bg-red-500 transition-all">
                                             <i class="fas fa-trash-alt text-xs"></i>
                                         </button>
                                     </div>
@@ -319,81 +287,75 @@
                             </template>
 
                             <label x-show="imagePreviews.length < 5"
-                                class="aspect-[4/3] rounded-[24px] border-2 border-dashed border-gray-200 flex flex-col items-center justify-center cursor-pointer hover:bg-gray-50 hover:border-blue-500/50 hover:text-blue-600 transition-all group">
+                                class="aspect-[4/3] rounded-xl border-2 border-dashed border-slate-200 flex flex-col items-center justify-center cursor-pointer hover:bg-slate-50 hover:border-primary-400 hover:text-primary-600 transition-all group">
                                 <input type="file" multiple accept="image/*" class="hidden"
                                     @change="handleImageUpload($event)">
                                 <div
-                                    class="w-12 h-12 bg-gray-50 rounded-full flex items-center justify-center mb-3 group-hover:bg-blue-50 transition-colors">
+                                    class="w-10 h-10 bg-slate-50 rounded-lg flex items-center justify-center mb-2 group-hover:bg-primary-50 transition-colors">
                                     <i class="fas fa-plus text-xs opacity-40 group-hover:opacity-100"></i>
                                 </div>
                                 <span
-                                    class="text-[10px] font-black uppercase tracking-widest text-gray-400 group-hover:text-blue-600">Add
-                                    Capture</span>
+                                    class="text-[9px] font-black uppercase tracking-widest text-slate-400 group-hover:text-primary-600">Add
+                                    Image</span>
                             </label>
                         </div>
 
-                        <div class="p-6 bg-gray-50 rounded-[28px] border border-gray-100 text-center">
-                            <p class="text-[10px] font-black text-gray-300 uppercase tracking-[0.2em] leading-relaxed">
-                                Optimized S3 Architecture<br>
-                                <span class="text-gray-400">Max 5 Dynamic Frames</span>
+                        <div class="p-4 bg-slate-50 rounded-xl border border-slate-200 text-center">
+                            <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest">
+                                Max 5 Images
                             </p>
                         </div>
                     </div>
                 </section>
 
-                <!-- Taxonomy & Metadata -->
-                <section class="bg-white rounded-[40px] p-12 border border-gray-100/50 shadow-sm">
-                    <div class="flex items-center gap-4 mb-12">
+                <!-- Tags -->
+                <section class="bg-white rounded-[24px] p-8 border border-slate-200 shadow-sm">
+                    <div class="flex items-center gap-3 mb-8">
                         <div
-                            class="w-12 h-12 bg-purple-50 rounded-2xl flex items-center justify-center text-purple-600">
-                            <i class="fas fa-project-diagram text-sm"></i>
+                            class="w-10 h-10 bg-primary-50 rounded-lg flex items-center justify-center text-primary-600">
+                            <i class="fas fa-tags text-xs"></i>
                         </div>
-                        <h3 class="text-2xl font-black text-gray-900 tracking-tight">Taxonomy Markers</h3>
+                        <h3 class="text-lg font-bold text-slate-900 uppercase tracking-tight">Tags</h3>
                     </div>
 
-                    <div class="space-y-8">
-                        <div class="flex flex-wrap gap-3">
+                    <div class="space-y-6">
+                        <div class="flex flex-wrap gap-2">
                             <template x-for="(tag, index) in formData.tags" :key="index">
                                 <div
-                                    class="group flex items-center gap-3 px-6 py-3 bg-gray-50 text-[10px] font-black text-gray-900 uppercase tracking-widest rounded-full border border-gray-100 transition-all hover:bg-white hover:shadow-xl hover:shadow-purple-50">
+                                    class="group flex items-center gap-2 px-4 py-2 bg-slate-50 text-[9px] font-black text-slate-900 uppercase tracking-widest rounded-lg border border-slate-200 transition-all hover:bg-white hover:shadow-md">
                                     <span x-text="tag"></span>
                                     <button @click.prevent="formData.tags.splice(index, 1)"
-                                        class="text-gray-300 group-hover:text-red-500 transition-colors">
-                                        <i class="fas fa-times-circle"></i>
+                                        class="text-slate-400 group-hover:text-red-500 transition-colors">
+                                        <i class="fas fa-times-circle text-xs"></i>
                                     </button>
                                 </div>
                             </template>
                         </div>
 
-                        <div class="relative group">
+                        <div class="relative">
                             <input type="text" x-model="newTag" @keydown.enter.prevent="addTag()"
-                                placeholder="Add system marker..."
-                                class="w-full pl-8 pr-20 py-5 bg-gray-50/50 border-2 border-transparent rounded-[24px] text-xs font-bold focus:bg-white focus:border-purple-500/20 focus:ring-0 transition-all outline-none">
+                                placeholder="Add tag..."
+                                class="w-full pl-4 pr-20 py-3 bg-white border border-slate-200 rounded-xl text-xs font-bold focus:bg-slate-50 focus:border-primary-400 focus:ring-4 focus:ring-primary-100 transition-all outline-none">
                             <button @click.prevent="addTag()"
-                                class="absolute right-3 top-3 bottom-3 px-6 bg-gray-900 text-white rounded-[18px] text-[9px] font-black uppercase tracking-widest hover:bg-black transition-all">
+                                class="absolute right-2 top-2 bottom-2 px-4 bg-slate-900 text-white rounded-lg text-[9px] font-black uppercase tracking-widest hover:bg-slate-800 transition-all">
                                 Add
                             </button>
-                            <div class="absolute inset-0 rounded-[24px] border border-gray-100 pointer-events-none">
-                            </div>
                         </div>
                     </div>
                 </section>
 
-                <!-- Internal Chronicles (Notes) -->
-                <section class="bg-white rounded-[40px] p-12 border border-gray-100/50 shadow-sm overflow-hidden">
-                    <div class="flex items-center gap-4 mb-12">
-                        <div class="w-12 h-12 bg-amber-50 rounded-2xl flex items-center justify-center text-amber-600">
-                            <i class="fas fa-scroll text-sm"></i>
+                <!-- Notes -->
+                <section class="bg-white rounded-[24px] p-8 border border-slate-200 shadow-sm">
+                    <div class="flex items-center gap-3 mb-8">
+                        <div class="w-10 h-10 bg-primary-50 rounded-lg flex items-center justify-center text-primary-600">
+                            <i class="fas fa-note-sticky text-xs"></i>
                         </div>
-                        <h3 class="text-2xl font-black text-gray-900 tracking-tight">Internal Notes</h3>
+                        <h3 class="text-lg font-bold text-slate-900 uppercase tracking-tight">Notes</h3>
                     </div>
-                    <div class="relative group">
-                        <textarea x-model="formData.notes" rows="8"
-                            placeholder="Operational history and private chronicles..."
-                            class="w-full px-8 py-8 bg-gray-50/50 border-2 border-transparent rounded-[32px] text-gray-900 font-bold text-sm focus:bg-white focus:border-amber-500/20 focus:ring-0 outline-none transition-all resize-none placeholder:text-gray-300 placeholder:italic"></textarea>
-                        <div
-                            class="absolute inset-0 rounded-[32px] border border-gray-100 pointer-events-none group-hover:border-gray-200 transition-colors">
-                        </div>
+                    <div class="relative">
+                        <textarea x-model="formData.notes" rows="6"
+                            placeholder="Add internal notes..."
+                            class="w-full px-4 py-4 bg-white border border-slate-200 rounded-xl text-slate-900 font-bold text-sm focus:bg-slate-50 focus:border-primary-400 focus:ring-4 focus:ring-primary-100 outline-none transition-all resize-none placeholder:text-slate-300"></textarea>
                     </div>
                 </section>
             </div>

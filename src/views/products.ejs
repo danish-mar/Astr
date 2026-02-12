@@ -1,18 +1,15 @@
 <div x-data="productsData" x-init="init()" class="min-h-screen pb-12">
-  <!-- Apple-style Header -->
-  <div
-    class="sticky top-0 z-40 bg-white/70 backdrop-blur-xl border-b border-gray-100 mb-8"
-  >
+  <!-- SHARP MINIMAL GATEWAY HEADER -->
+  <div class="bg-white border-b border-slate-200 mb-8">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-      <div
-        class="flex flex-col md:flex-row md:items-center md:justify-between py-6 gap-4"
-      >
+      <!-- Top Section: Title & Actions -->
+      <div class="flex flex-col md:flex-row md:items-center md:justify-between py-6 gap-4">
         <div>
-          <h1 class="text-3xl font-bold text-gray-900 tracking-tight">
-            Inventory
+          <h1 class="text-2xl font-bold text-slate-900 tracking-tight uppercase">
+            Inventory Gateway
           </h1>
-          <p class="text-sm text-gray-500 mt-1">
-            Manage and track your products collection
+          <p class="text-[9px] font-black text-slate-400 mt-1 uppercase tracking-widest">
+            Stock Management & Product Catalog
           </p>
         </div>
 
@@ -25,12 +22,12 @@
           >
             <button
               @click="open = !open"
-              class="inline-flex items-center px-4 py-2 bg-gray-50 text-gray-700 text-sm font-medium rounded-xl hover:bg-gray-100 transition-all border border-gray-200/50"
+              class="inline-flex items-center px-4 py-2 bg-slate-50 text-slate-700 text-[10px] font-black uppercase tracking-widest rounded-xl hover:bg-slate-100 transition-all border border-slate-200"
             >
-              <i class="fas fa-download mr-2 text-gray-400"></i>
+              <i class="fas fa-download mr-2 text-slate-400"></i>
               Export
               <i
-                class="fas fa-chevron-down ml-2 text-[10px] text-gray-400 transition-transform duration-200"
+                class="fas fa-chevron-down ml-2 text-[8px] text-slate-400 transition-transform duration-200"
                 :class="open ? 'rotate-180' : ''"
               ></i>
             </button>
@@ -39,36 +36,36 @@
               x-transition:enter="transition ease-out duration-200"
               x-transition:enter-start="opacity-0 scale-95 translate-y-2"
               x-transition:enter-end="opacity-100 scale-100 translate-y-0"
-              class="absolute right-0 mt-2 w-48 bg-white/90 backdrop-blur-xl rounded-2xl shadow-2xl border border-gray-100 z-50 overflow-hidden py-1"
+              class="absolute right-0 mt-2 w-56 bg-white rounded-xl shadow-xl border border-slate-200 z-50 overflow-hidden py-1"
             >
               <button
                 @click="exportProducts(false); open = false"
-                class="w-full text-left px-4 py-3 text-sm text-gray-700 hover:bg-blue-50/50 flex items-center transition-colors"
+                class="w-full text-left px-4 py-3 text-[10px] font-bold text-slate-700 hover:bg-slate-50 flex items-center transition-colors uppercase tracking-wider"
               >
-                <i class="fas fa-file-csv mr-3 text-gray-300"></i>
+                <i class="fas fa-file-csv mr-3 text-slate-300"></i>
                 Full Database (CSV)
               </button>
               <button
                 @click="exportToExcel(); open = false"
-                class="w-full text-left px-4 py-3 text-sm text-gray-700 hover:bg-blue-50/50 flex items-center transition-colors"
+                class="w-full text-left px-4 py-3 text-[10px] font-bold text-slate-700 hover:bg-slate-50 flex items-center transition-colors uppercase tracking-wider"
               >
-                <i class="fas fa-file-excel mr-3 text-green-500"></i>
-                Themed Excel (Categorized)
+                <i class="fas fa-file-excel mr-3 text-emerald-500"></i>
+                Themed Excel
               </button>
               <button
                 @click="exportToExcel(true); open = false"
-                class="w-full text-left px-4 py-3 text-sm text-blue-600 hover:bg-blue-50/50 flex items-center transition-colors border-t border-gray-50"
+                class="w-full text-left px-4 py-3 text-[10px] font-bold text-primary-600 hover:bg-primary-50 flex items-center transition-colors border-t border-slate-50 uppercase tracking-wider"
               >
-                <i class="fas fa-filter mr-3 text-blue-500"></i>
-                Filter Applied (Excel)
+                <i class="fas fa-filter mr-3 text-primary-500"></i>
+                Filter Applied
               </button>
 
               <template x-if="filters.category">
                 <button
                   @click="exportProducts(true); open = false"
-                  class="w-full text-left px-4 py-3 text-sm text-blue-600 hover:bg-blue-50/50 flex items-center transition-colors border-t border-gray-50 font-medium"
+                  class="w-full text-left px-4 py-3 text-[10px] font-bold text-primary-600 hover:bg-primary-50 flex items-center transition-colors border-t border-slate-50 uppercase tracking-wider"
                 >
-                  <i class="fas fa-file-export mr-3 text-blue-300"></i>
+                  <i class="fas fa-file-export mr-3 text-primary-300"></i>
                   Category Template
                 </button>
               </template>
@@ -78,9 +75,9 @@
           <!-- Import -->
           <button
             @click="triggerImport()"
-            class="inline-flex items-center px-4 py-2 bg-gray-50 text-gray-700 text-sm font-medium rounded-xl hover:bg-gray-100 transition-all border border-gray-200/50"
+            class="inline-flex items-center px-4 py-2 bg-slate-50 text-slate-700 text-[10px] font-black uppercase tracking-widest rounded-xl hover:bg-slate-100 transition-all border border-slate-200"
           >
-            <i class="fas fa-upload mr-2 text-gray-400"></i>
+            <i class="fas fa-upload mr-2 text-slate-400"></i>
             Import
           </button>
           <input
@@ -94,39 +91,90 @@
           <!-- Add Product -->
           <a
             href="/products/add"
-            class="inline-flex items-center px-6 py-2 bg-blue-600 text-white text-sm font-semibold rounded-xl hover:bg-blue-700 shadow-lg shadow-blue-200 transition-all hover:-translate-y-0.5 active:translate-y-0"
+            class="inline-flex items-center px-6 py-2 bg-primary-600 text-white text-[10px] font-black uppercase tracking-widest rounded-xl hover:bg-primary-700 shadow-xl shadow-primary-200 transition-all active:scale-95"
           >
             <i class="fas fa-plus mr-2"></i>
             New Product
           </a>
         </div>
       </div>
+
+      <!-- STOCK STATUS BAR (Horizontal) -->
+      <div class="pb-6">
+        <div class="bg-slate-50 border border-slate-200 rounded-[24px] p-6">
+          <div class="grid grid-cols-2 md:grid-cols-4 gap-6">
+            <!-- Total Items -->
+            <div class="space-y-2">
+              <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest">
+                Total Items
+              </p>
+              <div class="flex items-baseline gap-2">
+                <span class="text-2xl font-bold text-slate-900" x-text="stockSummary.totalItems"></span>
+                <span class="text-[10px] font-bold text-slate-400 uppercase">Units</span>
+              </div>
+            </div>
+
+            <!-- Available -->
+            <div class="space-y-2">
+              <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest">
+                Available
+              </p>
+              <div class="flex items-baseline gap-2">
+                <span class="text-2xl font-bold text-emerald-600" x-text="stockSummary.available"></span>
+                <span class="text-[10px] font-bold text-emerald-400 uppercase">Active</span>
+              </div>
+            </div>
+
+            <!-- Sold -->
+            <div class="space-y-2">
+              <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest">
+                Sold Out
+              </p>
+              <div class="flex items-baseline gap-2">
+                <span class="text-2xl font-bold text-slate-400" x-text="stockSummary.sold"></span>
+                <span class="text-[10px] font-bold text-slate-300 uppercase">Archived</span>
+              </div>
+            </div>
+
+            <!-- Total Value -->
+            <div class="space-y-2">
+              <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest">
+                Total Value
+              </p>
+              <div class="flex items-baseline gap-1">
+                <span class="text-sm font-bold text-slate-400">₹</span>
+                <span class="text-2xl font-bold text-slate-900" x-text="formatNumber(stockSummary.totalValue)"></span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
 
   <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-    <!-- Simplified Filters Section -->
+    <!-- SHARP MINIMAL FILTERS SECTION -->
     <div class="mb-10">
       <div
-        class="bg-gray-50/50 border border-gray-200/50 rounded-3xl p-6 md:p-8"
+        class="bg-slate-50 border border-slate-200 rounded-[24px] p-6 md:p-8"
       >
         <div class="flex flex-col md:flex-row md:items-end gap-6">
           <!-- Main Search -->
           <div class="flex-1">
             <label
-              class="block text-[11px] font-bold text-gray-400 uppercase tracking-widest mb-3 ml-1"
-              >Quick Search</label
+              class="block text-[9px] font-black text-slate-400 uppercase tracking-widest mb-3 ml-1"
+              >Search Inventory</label
             >
             <div class="relative group">
               <i
-                class="fas fa-search absolute left-4 top-1/2 -translate-y-1/2 text-gray-300 group-focus-within:text-blue-500 transition-colors"
+                class="fas fa-search absolute left-4 top-1/2 -translate-y-1/2 text-slate-300 group-focus-within:text-primary-500 transition-colors"
               ></i>
               <input
                 type="text"
                 x-model="filters.search"
                 @input.debounce.500ms="resetAndLoad()"
-                placeholder="Find a product..."
-                class="w-full pl-11 pr-4 py-3 bg-white border border-gray-200 rounded-2xl focus:ring-4 focus:ring-blue-100 focus:border-blue-400 outline-none transition-all text-sm placeholder:text-gray-300"
+                placeholder="Find products by name, ID, or specs..."
+                class="w-full pl-11 pr-4 py-3 bg-white border border-slate-200 rounded-xl focus:ring-4 focus:ring-primary-100 focus:border-primary-400 outline-none transition-all text-sm placeholder:text-slate-300"
               />
             </div>
           </div>
@@ -134,15 +182,15 @@
           <!-- Category -->
           <div class="w-full md:w-64">
             <label
-              class="block text-[11px] font-bold text-gray-400 uppercase tracking-widest mb-3 ml-1"
+              class="block text-[9px] font-black text-slate-400 uppercase tracking-widest mb-3 ml-1"
               >Category</label
             >
             <div class="relative group">
               <select
                 x-model="filters.category"
                 @change="resetAndLoad()"
-                :class="filters.category ? 'border-blue-400 ring-2 ring-blue-50 bg-blue-50/10' : 'border-gray-200'"
-                class="w-full px-4 py-3 bg-white border rounded-2xl focus:ring-4 focus:ring-blue-100 focus:border-blue-400 outline-none transition-all text-sm appearance-none cursor-pointer"
+                :class="filters.category ? 'border-primary-400 ring-2 ring-primary-50 bg-primary-50/10' : 'border-slate-200'"
+                class="w-full px-4 py-3 bg-white border rounded-xl focus:ring-4 focus:ring-primary-100 focus:border-primary-400 outline-none transition-all text-sm appearance-none cursor-pointer font-bold"
               >
                 <option value="">All Categories</option>
                 <template x-for="category in categories" :key="category._id">
@@ -150,13 +198,13 @@
                 </template>
               </select>
               <div
-                class="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none"
+                class="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none"
                 x-show="!filters.category"
               >
-                <i class="fas fa-chevron-down text-[10px]"></i>
+                <i class="fas fa-chevron-down text-[8px]"></i>
               </div>
               <div
-                class="absolute right-4 top-1/2 -translate-y-1/2 text-blue-500 pointer-events-none"
+                class="absolute right-4 top-1/2 -translate-y-1/2 text-primary-500 pointer-events-none"
                 x-show="filters.category"
               >
                 <i class="fas fa-check-circle text-xs"></i>
@@ -167,18 +215,18 @@
           <!-- Toggle Filters -->
           <button
             @click="showFilters = !showFilters"
-            class="flex items-center justify-center px-5 py-3 rounded-2xl text-sm font-medium transition-all relative"
-            :class="showFilters ? 'bg-blue-50 text-blue-600 border border-blue-100' : 'bg-white text-gray-600 border border-gray-200 hover:bg-gray-50'"
+            class="flex items-center justify-center px-5 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all relative"
+            :class="showFilters ? 'bg-primary-50 text-primary-600 border border-primary-200' : 'bg-white text-slate-600 border border-slate-200 hover:bg-slate-50'"
           >
             <i class="fas fa-sliders-h mr-2"></i>
-            Advanced Filters
+            Advanced
             <span
               x-show="activeFiltersCount > 0"
-              class="absolute -top-1 -right-1 w-5 h-5 bg-blue-600 text-white text-[10px] font-bold rounded-full flex items-center justify-center border-2 border-white"
+              class="absolute -top-1 -right-1 w-5 h-5 bg-primary-600 text-white text-[9px] font-bold rounded-full flex items-center justify-center border-2 border-white"
               x-text="activeFiltersCount"
             ></span>
             <i
-              class="fas fa-chevron-down ml-2 text-[10px] transition-transform"
+              class="fas fa-chevron-down ml-2 text-[8px] transition-transform"
               :class="showFilters ? 'rotate-180' : ''"
             ></i>
           </button>
@@ -186,37 +234,37 @@
 
         <!-- Collapsible Advanced Filters -->
         <div x-show="showFilters" x-collapse>
-          <div class="mt-8 pt-8 border-t border-gray-200/50 space-y-8">
+          <div class="mt-8 pt-8 border-t border-slate-200 space-y-8">
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
               <!-- Status Filter -->
               <div>
                 <label
-                  class="block text-[11px] font-bold text-gray-400 uppercase tracking-widest mb-4 ml-1"
+                  class="block text-[9px] font-black text-slate-400 uppercase tracking-widest mb-4 ml-1"
                   >Availability</label
                 >
                 <div
-                  class="flex bg-white p-1 rounded-2xl border border-gray-200 w-fit"
+                  class="flex bg-white p-1 rounded-xl border border-slate-200 w-fit"
                 >
                   <button
-                    @click="filters.isSold = null; resetAndLoad()"
-                    :class="filters.isSold === null ? 'bg-gray-900 text-white shadow-lg' : 'text-gray-500 hover:text-gray-800'"
-                    class="px-5 py-2 rounded-xl text-xs font-semibold transition-all"
+                    @click="setAvailabilityFilter(null)"
+                    :class="filters.isSold === null ? 'bg-slate-900 text-white shadow-lg' : 'text-slate-500 hover:text-slate-800'"
+                    class="px-5 py-2 rounded-lg text-[10px] font-black uppercase tracking-wider transition-all"
                   >
-                    Show All
+                    All
                   </button>
                   <button
-                    @click="filters.isSold = false; resetAndLoad()"
-                    :class="filters.isSold === false ? 'bg-green-600 text-white shadow-lg shadow-green-100' : 'text-gray-500 hover:text-gray-800'"
-                    class="px-5 py-2 rounded-xl text-xs font-semibold transition-all"
+                    @click="setAvailabilityFilter(false)"
+                    :class="filters.isSold === false ? 'bg-emerald-600 text-white shadow-lg shadow-emerald-100' : 'text-slate-500 hover:text-slate-800'"
+                    class="px-5 py-2 rounded-lg text-[10px] font-black uppercase tracking-wider transition-all"
                   >
                     Available
                   </button>
                   <button
-                    @click="filters.isSold = true; resetAndLoad()"
-                    :class="filters.isSold === true ? 'bg-gray-400 text-white shadow-lg' : 'text-gray-500 hover:text-gray-800'"
-                    class="px-5 py-2 rounded-xl text-xs font-semibold transition-all"
+                    @click="setAvailabilityFilter(true)"
+                    :class="filters.isSold === true ? 'bg-slate-400 text-white shadow-lg' : 'text-slate-500 hover:text-slate-800'"
+                    class="px-5 py-2 rounded-lg text-[10px] font-black uppercase tracking-wider transition-all"
                   >
-                    Sold Out
+                    Sold
                   </button>
                 </div>
               </div>
@@ -224,13 +272,13 @@
               <!-- Price Inputs -->
               <div class="lg:col-span-2">
                 <label
-                  class="block text-[11px] font-bold text-gray-400 uppercase tracking-widest mb-4 ml-1"
+                  class="block text-[9px] font-black text-slate-400 uppercase tracking-widest mb-4 ml-1"
                   >Price Range</label
                 >
                 <div class="flex items-center gap-3">
                   <div class="relative flex-1 max-w-[200px]">
                     <span
-                      class="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 text-xs font-medium"
+                      class="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 text-xs font-bold"
                       >₹</span
                     >
                     <input
@@ -238,14 +286,14 @@
                       x-model="filters.minPrice"
                       placeholder="From"
                       @input.debounce.500ms="resetAndLoad()"
-                      :class="filters.minPrice ? 'border-blue-400 bg-blue-50/10' : 'border-gray-200'"
-                      class="w-full pl-8 pr-4 py-2.5 bg-white border rounded-2xl focus:ring-4 focus:ring-blue-100 focus:border-blue-400 outline-none transition-all text-sm"
+                      :class="filters.minPrice ? 'border-primary-400 bg-primary-50/10' : 'border-slate-200'"
+                      class="w-full pl-8 pr-4 py-2.5 bg-white border rounded-xl focus:ring-4 focus:ring-primary-100 focus:border-primary-400 outline-none transition-all text-sm font-bold"
                     />
                   </div>
-                  <div class="w-3 h-[1px] bg-gray-300"></div>
+                  <div class="w-3 h-[1px] bg-slate-300"></div>
                   <div class="relative flex-1 max-w-[200px]">
                     <span
-                      class="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 text-xs font-medium"
+                      class="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 text-xs font-bold"
                       >₹</span
                     >
                     <input
@@ -253,8 +301,8 @@
                       x-model="filters.maxPrice"
                       placeholder="To"
                       @input.debounce.500ms="resetAndLoad()"
-                      :class="filters.maxPrice ? 'border-blue-400 bg-blue-50/10' : 'border-gray-200'"
-                      class="w-full pl-8 pr-4 py-2.5 bg-white border rounded-2xl focus:ring-4 focus:ring-blue-100 focus:border-blue-400 outline-none transition-all text-sm"
+                      :class="filters.maxPrice ? 'border-primary-400 bg-primary-50/10' : 'border-slate-200'"
+                      class="w-full pl-8 pr-4 py-2.5 bg-white border rounded-xl focus:ring-4 focus:ring-primary-100 focus:border-primary-400 outline-none transition-all text-sm font-bold"
                     />
                   </div>
                 </div>
@@ -267,7 +315,7 @@
               class="space-y-4"
             >
               <label
-                class="block text-[11px] font-bold text-gray-400 uppercase tracking-widest mb-1 ml-1"
+                class="block text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1 ml-1"
                 >Specifications</label
               >
               <div class="flex flex-wrap gap-3">
@@ -279,13 +327,13 @@
                   >
                     <button
                       @click="open = !open"
-                      :class="filters.specs[key]?.length > 0 ? 'border-blue-400 bg-blue-50/30 text-blue-600' : 'border-gray-200 text-gray-600'"
-                      class="flex items-center px-4 py-2 bg-white border rounded-xl text-xs font-medium transition-all group"
+                      :class="filters.specs[key]?.length > 0 ? 'border-primary-400 bg-primary-50/30 text-primary-600' : 'border-slate-200 text-slate-600'"
+                      class="flex items-center px-4 py-2 bg-white border rounded-xl text-[10px] font-black uppercase tracking-wider transition-all group"
                     >
                       <span x-text="key" class="mr-2"></span>
                       <template x-if="filters.specs[key]?.length > 0">
                         <span
-                          class="bg-blue-600 text-white text-[9px] px-1.5 py-0.5 rounded-full mr-2"
+                          class="bg-primary-600 text-white text-[9px] px-1.5 py-0.5 rounded-full mr-2"
                           x-text="filters.specs[key].length"
                         ></span>
                       </template>
@@ -299,20 +347,20 @@
                       x-transition:enter="transition ease-out duration-100"
                       x-transition:enter-start="opacity-0 scale-95"
                       x-transition:enter-end="opacity-100 scale-100"
-                      class="absolute left-0 mt-2 w-48 bg-white rounded-2xl shadow-xl border border-gray-100 z-50 py-2 max-h-64 overflow-y-auto"
+                      class="absolute left-0 mt-2 w-48 bg-white rounded-xl shadow-xl border border-slate-200 z-50 py-2 max-h-64 overflow-y-auto"
                     >
                       <template x-for="value in values" :key="value">
                         <label
-                          class="flex items-center px-4 py-2.5 hover:bg-gray-50 cursor-pointer group"
+                          class="flex items-center px-4 py-2.5 hover:bg-slate-50 cursor-pointer group"
                         >
                           <input
                             type="checkbox"
                             :checked="filters.specs[key]?.includes(value)"
                             @change="toggleFilter(key, value)"
-                            class="rounded-md border-gray-300 text-blue-600 focus:ring-blue-500 mr-3"
+                            class="rounded-md border-slate-300 text-primary-600 focus:ring-primary-500 mr-3"
                           />
                           <span
-                            class="text-xs text-gray-600 group-hover:text-gray-900"
+                            class="text-xs text-slate-600 group-hover:text-slate-900 font-bold"
                             x-text="value"
                           ></span>
                         </label>
@@ -327,91 +375,89 @@
       </div>
     </div>
 
-    <div class="flex items-center justify-between mb-8">
-      <div class="text-sm font-medium text-gray-500">
-        Showing
-        <span class="text-gray-900" x-text="products.length"></span> collection
-        items
+    <div class="flex items-center justify-between mb-6">
+      <div class="text-[10px] font-black text-slate-500 uppercase tracking-widest">
+        <span class="text-slate-900 text-sm font-bold" x-text="products.length"></span> Items
       </div>
-      <div class="flex bg-gray-100 p-1 rounded-xl">
+      <div class="flex bg-slate-100 p-1 rounded-xl">
         <button
           @click="viewMode = 'grid'"
-          :class="viewMode === 'grid' ? 'bg-white text-blue-600 shadow-sm' : 'text-gray-500 hover:text-gray-700'"
-          class="p-2 px-3 rounded-lg transition-all text-xs font-semibold flex items-center gap-2"
+          :class="viewMode === 'grid' ? 'bg-white text-primary-600 shadow-sm' : 'text-slate-500 hover:text-slate-700'"
+          class="p-2 px-3 rounded-lg transition-all text-[10px] font-black uppercase tracking-wider flex items-center gap-2"
         >
-          <i class="fas fa-th-large text-[10px]"></i>
-          Gallery
+          <i class="fas fa-th-large text-[9px]"></i>
+          Grid
         </button>
         <button
           @click="viewMode = 'list'"
-          :class="viewMode === 'list' ? 'bg-white text-blue-600 shadow-sm' : 'text-gray-500 hover:text-gray-700'"
-          class="p-2 px-3 rounded-lg transition-all text-xs font-semibold flex items-center gap-2"
+          :class="viewMode === 'list' ? 'bg-white text-primary-600 shadow-sm' : 'text-slate-500 hover:text-slate-700'"
+          class="p-2 px-3 rounded-lg transition-all text-[10px] font-black uppercase tracking-wider flex items-center gap-2"
         >
-          <i class="fas fa-list text-[10px]"></i>
+          <i class="fas fa-list text-[9px]"></i>
           List
         </button>
       </div>
     </div>
 
-    <!-- Loading State -->
+    <!-- SHARP MINIMAL LOADING STATE -->
     <div
       x-show="loading"
       class="flex flex-col items-center justify-center py-24"
     >
       <div
-        class="w-12 h-12 border-4 border-blue-100 border-t-blue-500 rounded-full animate-spin mb-4"
+        class="w-12 h-12 border-4 border-primary-100 border-t-primary-500 rounded-full animate-spin mb-4"
       ></div>
-      <p class="text-sm font-medium text-gray-400">Updating inventory...</p>
+      <p class="text-sm font-bold text-slate-400 uppercase tracking-wider">Loading Inventory...</p>
     </div>
 
-    <!-- Products Grid View -->
+    <!-- SHARP MINIMAL PRODUCT CARDS (Grid View) -->
     <div
       x-show="!loading && viewMode === 'grid'"
-      class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8"
+      class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
     >
       <template x-for="(product, index) in products" :key="product._id">
         <div
-          class="bg-white rounded-[32px] border border-gray-100 shadow-sm hover:shadow-2xl hover:shadow-gray-200 transition-all duration-500 overflow-hidden group flex flex-col h-full"
-          :style="`animation: fadeInUp 0.6s ease-out forwards; animation-delay: ${index * 0.05}s`"
+          class="bg-white rounded-[24px] border border-slate-200 shadow-sm hover:shadow-xl hover:shadow-slate-200/50 transition-all duration-300 overflow-hidden group flex flex-col h-full"
+          :style="`animation: fadeInUp 0.5s ease-out forwards; animation-delay: ${index * 0.04}s`"
         >
-          <div class="p-8 pb-4 flex-1">
+          <div class="p-6 pb-4 flex-1">
             <div class="flex items-start justify-between mb-4">
               <span
                 x-show="product.isSold"
-                class="px-3 py-1 bg-gray-100 text-gray-500 text-[10px] font-bold rounded-full tracking-wider uppercase"
-                >Sold Out</span
+                class="px-3 py-1 bg-slate-100 text-slate-500 text-[9px] font-black rounded-lg tracking-widest uppercase"
+                >Sold</span
               >
               <span
                 x-show="!product.isSold"
-                class="px-3 py-1 bg-green-50 text-green-600 text-[10px] font-bold rounded-full tracking-wider uppercase"
+                class="px-3 py-1 bg-emerald-50 text-emerald-600 text-[9px] font-black rounded-lg tracking-widest uppercase"
                 >Available</span
               >
 
               <span
                 x-show="product.productID"
-                class="text-[10px] font-mono text-gray-300"
+                class="text-[9px] font-mono text-slate-300 font-bold"
                 x-text="product.productID"
               ></span>
             </div>
 
             <h3
-              class="text-xl font-bold text-gray-900 mb-2 leading-tight group-hover:text-blue-600 transition-colors"
+              class="text-lg font-bold text-slate-900 mb-2 leading-tight group-hover:text-primary-600 transition-colors"
               x-text="product.name"
             ></h3>
 
-            <div class="flex items-baseline gap-1 mb-6">
-              <span class="text-gray-400 text-xs font-medium">₹</span>
+            <div class="flex items-baseline gap-1 mb-4">
+              <span class="text-slate-400 text-xs font-bold">₹</span>
               <span
-                class="text-2xl font-bold text-gray-900 tracking-tight"
+                class="text-2xl font-bold text-slate-900 tracking-tight"
                 x-text="Number(product.price).toLocaleString('en-IN')"
               ></span>
             </div>
 
             <div
-              class="flex items-center gap-2 text-xs text-gray-500 mb-6 bg-gray-50/50 w-fit px-3 py-1.5 rounded-full border border-gray-100"
+              class="flex items-center gap-2 text-[10px] text-slate-500 mb-4 bg-slate-50 w-fit px-3 py-1.5 rounded-lg border border-slate-100"
             >
-              <i class="fas fa-tag text-[10px] text-blue-400"></i>
-              <span x-text="product.category?.name || 'Uncategorized'"></span>
+              <i class="fas fa-tag text-[8px] text-primary-400"></i>
+              <span class="font-bold" x-text="product.category?.name || 'Uncategorized'"></span>
             </div>
 
             <div
@@ -419,49 +465,48 @@
             >
               <template x-for="tag in product.tags?.slice(0, 3)" :key="tag">
                 <span
-                  class="px-2.5 py-1 bg-gray-100 text-gray-600 text-[10px] font-medium rounded-lg"
+                  class="px-2.5 py-1 bg-slate-100 text-slate-600 text-[9px] font-bold rounded-lg uppercase tracking-wider"
                   x-text="tag"
                 ></span>
               </template>
             </div>
           </div>
 
-          <div class="p-6 pt-0 mt-auto">
+          <div class="p-5 pt-0 mt-auto">
             <div class="flex items-center gap-2">
               <button
                 @click="viewProduct(product)"
-                class="flex-1 px-4 py-3 bg-gray-900 text-white text-xs font-bold rounded-2xl hover:bg-blue-600 transition-all active:scale-95"
+                class="flex-1 px-4 py-2.5 bg-slate-900 text-white text-[10px] font-black uppercase tracking-wider rounded-xl hover:bg-primary-600 transition-all active:scale-95"
               >
-                View Details
+                View
               </button>
 
               <div class="flex gap-1">
                 <a
                   :href="`/products/edit/${product._id}`"
-                  class="p-3 bg-gray-50 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-2xl transition-all"
+                  class="p-2.5 bg-slate-50 text-slate-400 hover:text-primary-600 hover:bg-primary-50 rounded-xl transition-all"
                   title="Edit"
                 >
                   <i class="fas fa-pencil-alt text-sm"></i>
                 </a>
-                <a
-                  :href="`/product/${product.productID}`"
-                  target="_blank"
-                  class="p-3 bg-gray-50 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-2xl transition-all"
-                  title="Universal QR Shelf"
+                <button
+                  @click="showQROnly(product._id)"
+                  class="p-2.5 bg-slate-50 text-slate-400 hover:text-primary-600 hover:bg-primary-50 rounded-xl transition-all"
+                  title="QR Code"
                 >
                   <i class="fas fa-qrcode text-sm"></i>
-                </a>
+                </button>
                 <button
                   x-show="!product.isSold"
                   @click="markAsSold(product._id)"
-                  class="p-3 bg-gray-50 text-gray-400 hover:text-green-600 hover:bg-green-50 rounded-2xl transition-all"
+                  class="p-2.5 bg-slate-50 text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 rounded-xl transition-all"
                   title="Mark as Sold"
                 >
                   <i class="fas fa-check text-sm"></i>
                 </button>
                 <button
                   @click="deleteProduct(product._id)"
-                  class="p-3 bg-gray-50 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-2xl transition-all"
+                  class="p-2.5 bg-slate-50 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-xl transition-all"
                   title="Delete"
                 >
                   <i class="fas fa-trash-alt text-sm"></i>
@@ -641,7 +686,7 @@
             @click="prevPage()"
             :disabled="pagination.page === 1"
             :class="pagination.page === 1 ? 'opacity-50 cursor-not-allowed' : ''"
-            class="inline-flex items-center px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all"
+            class="inline-flex items-center px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus-ring-blue-500 transition-all"
           >
             <i class="fas fa-chevron-left mr-2"></i>
             Previous
@@ -688,7 +733,7 @@
       </div>
     </div>
 
-    <!-- Centered Product View Modal -->
+    <!-- SHARP MINIMAL PRODUCT VIEW MODAL -->
     <div
       x-show="showViewModal"
       x-transition:enter="transition ease-out duration-300"
@@ -697,98 +742,112 @@
       x-transition:leave="transition ease-in duration-200"
       x-transition:leave-start="opacity-100"
       x-transition:leave-end="opacity-0"
-      class="fixed inset-0 bg-gray-900/40 backdrop-blur-md z-50 flex items-center justify-center p-4"
+      class="fixed inset-0 bg-slate-900/60 z-[9999] flex items-center justify-center p-4"
       @click.self="closeViewModal()"
       style="display: none"
     >
       <div
         x-show="showViewModal"
-        x-transition:enter="transition ease-out duration-500 transform"
+        x-transition:enter="transition ease-out duration-400 transform"
         x-transition:enter-start="opacity-0 translate-y-8 scale-95"
         x-transition:enter-end="opacity-100 translate-y-0 scale-100"
-        x-transition:leave="transition ease-in duration-300 transform"
+        x-transition:leave="transition ease-in duration-250 transform"
         x-transition:leave-start="opacity-100 scale-100"
         x-transition:leave-end="opacity-0 scale-95"
-        class="bg-white rounded-[40px] shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-hidden flex flex-col relative"
+        class="bg-white rounded-[32px] shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-hidden flex flex-col relative border border-slate-200"
       >
-        <!-- Modal Body -->
+        <!-- Modal Header -->
+        <div class="bg-slate-50 border-b border-slate-200 px-8 py-6">
+          <div class="flex items-center justify-between">
+            <div>
+              <h2 class="text-lg font-bold text-slate-900 uppercase tracking-tight">Product Details</h2>
+              <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest mt-1">Complete Specification</p>
+            </div>
+            <button
+              @click="closeViewModal()"
+              class="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg transition-all"
+            >
+              <i class="fas fa-times text-lg"></i>
+            </button>
+          </div>
+        </div>
 
         <!-- Modal Body -->
         <div
-          class="overflow-y-auto flex-1 no-scrollbar p-12 md:p-16 relative z-10"
+          class="overflow-y-auto flex-1 no-scrollbar p-8 relative z-10"
         >
-          <div class="flex flex-col md:flex-row gap-16">
+          <div class="flex flex-col md:flex-row gap-12">
             <!-- Left Side: Main Info & Specs -->
-            <div class="flex-1 space-y-12">
+            <div class="flex-1 space-y-8">
               <div>
                 <span
-                  class="px-3 py-1 bg-gray-100 text-gray-500 text-[10px] font-bold rounded-lg uppercase tracking-widest mb-4 inline-block"
-                  x-text="viewData.category?.name || 'Asset'"
+                  class="px-3 py-1 bg-slate-100 text-slate-500 text-[9px] font-black rounded-lg uppercase tracking-widest mb-3 inline-block"
+                  x-text="viewData.category?.name || 'Product'"
                 ></span>
                 <h2
-                  class="text-5xl font-bold text-gray-900 tracking-tight mb-4"
+                  class="text-3xl font-bold text-slate-900 tracking-tight mb-3"
                   x-text="viewData.name"
                 ></h2>
                 <div class="flex items-baseline gap-2">
-                  <span class="text-2xl font-light text-gray-400">₹</span>
+                  <span class="text-xl font-bold text-slate-400">₹</span>
                   <span
-                    class="text-5xl font-bold text-gray-900 tracking-tight"
+                    class="text-4xl font-bold text-slate-900 tracking-tight"
                     x-text="Number(viewData.price).toLocaleString('en-IN')"
                   ></span>
                 </div>
               </div>
 
               <!-- Status & Provenance -->
-              <div class="grid grid-cols-2 gap-8 pt-4">
+              <div class="grid grid-cols-2 gap-6 pt-4">
                 <div class="space-y-2">
                   <p
-                    class="text-[10px] font-bold text-gray-400 uppercase tracking-widest"
+                    class="text-[9px] font-black text-slate-400 uppercase tracking-widest"
                   >
                     Availability
                   </p>
                   <div class="flex items-center gap-2">
                     <div
                       class="w-2 h-2 rounded-full"
-                      :class="viewData.isSold ? 'bg-gray-300' : 'bg-green-500'"
+                      :class="viewData.isSold ? 'bg-slate-300' : 'bg-emerald-500'"
                     ></div>
                     <span
-                      class="text-sm font-bold text-gray-700 uppercase"
-                      x-text="viewData.isSold ? 'Sold' : 'Available Now'"
+                      class="text-sm font-bold text-slate-700 uppercase tracking-wider"
+                      x-text="viewData.isSold ? 'Sold' : 'Available'"
                     ></span>
                   </div>
                 </div>
                 <div class="space-y-2">
                   <p
-                    class="text-[10px] font-bold text-gray-400 uppercase tracking-widest"
+                    class="text-[9px] font-black text-slate-400 uppercase tracking-widest"
                   >
-                    Provenance
+                    Source
                   </p>
                   <span
-                    class="text-sm font-bold text-gray-700"
+                    class="text-sm font-bold text-slate-700"
                     x-text="viewData.source?.name || 'Unknown'"
                   ></span>
                 </div>
               </div>
 
               <!-- Technical Specifications Grid -->
-              <div class="space-y-6 pt-8 border-t border-gray-100">
+              <div class="space-y-4 pt-6 border-t border-slate-200">
                 <h3
-                  class="text-[10px] font-bold text-gray-400 uppercase tracking-widest"
+                  class="text-[9px] font-black text-slate-400 uppercase tracking-widest"
                 >
                   Technical Specifications
                 </h3>
-                <div class="grid grid-cols-2 gap-x-12 gap-y-8">
+                <div class="grid grid-cols-2 gap-x-8 gap-y-6">
                   <template
                     x-for="spec in (viewData.formattedSpecs || [])"
                     :key="spec.label"
                   >
                     <div class="space-y-1">
                       <p
-                        class="text-[10px] font-medium text-gray-400 uppercase tracking-widest"
+                        class="text-[9px] font-black text-slate-400 uppercase tracking-widest"
                         x-text="spec.label"
                       ></p>
                       <p
-                        class="text-base font-bold text-gray-800"
+                        class="text-sm font-bold text-slate-800"
                         x-text="spec.value || '—'"
                       ></p>
                     </div>
@@ -797,8 +856,8 @@
                   <template
                     x-if="!viewData.formattedSpecs || viewData.formattedSpecs.length === 0"
                   >
-                    <p class="text-sm text-gray-300 italic col-span-2">
-                      No specifications defined for this item.
+                    <p class="text-sm text-slate-300 italic col-span-2">
+                      No specifications defined.
                     </p>
                   </template>
                 </div>
@@ -806,66 +865,87 @@
 
               <!-- Narrative / Notes -->
               <div
-                class="space-y-4 pt-8 border-t border-gray-100"
+                class="space-y-3 pt-6 border-t border-slate-200"
                 x-show="viewData.notes"
               >
                 <h3
-                  class="text-[10px] font-bold text-gray-400 uppercase tracking-widest"
+                  class="text-[9px] font-black text-slate-400 uppercase tracking-widest"
                 >
                   Product Details
                 </h3>
                 <p
-                  class="text-base text-gray-600 leading-relaxed"
+                  class="text-sm text-slate-600 leading-relaxed"
                   x-text="viewData.notes"
                 ></p>
               </div>
             </div>
 
             <!-- Right Side: Visual Stage -->
-            <div class="md:w-1/3 space-y-8">
-              <div
-                class="relative bg-gray-50 rounded-[32px] overflow-hidden aspect-square flex items-center justify-center p-6 border border-gray-100 shadow-inner"
-              >
-                <template
-                  x-for="(img, idx) in (viewData.images || [])"
-                  :key="idx"
-                >
-                  <div
-                    class="absolute inset-0 flex items-center justify-center p-8 transition-opacity duration-500"
-                    x-show="activeImageIndex === idx"
-                    x-cloak
-                  >
-                    <img
-                      :src="img.startsWith('http') ? img : img"
-                      class="max-w-full max-h-full object-contain filter drop-shadow-lg"
-                    />
+            <div class="md:w-1/3 space-y-6">
+               <!-- Image Carousel -->
+          <div class="relative bg-slate-50 rounded-[24px] overflow-hidden border border-slate-200">
+            <template x-if="viewData.images && viewData.images.length > 0">
+              <div class="relative group">
+                <img
+                  @click="expandImage(viewData.images[activeImageIndex])"
+                  :src="viewData.images[activeImageIndex]"
+                  class="w-full h-[400px] object-cover cursor-zoom-in"
+                />
+                
+                <!-- Navigation Arrows -->
+                <template x-if="viewData.images.length > 1">
+                  <div>
+                    <button
+                      @click="activeImageIndex = activeImageIndex > 0 ? activeImageIndex - 1 : viewData.images.length - 1"
+                      class="absolute left-4 top-1/2 -translate-y-1/2 w-12 h-12 bg-white/90 backdrop-blur-sm text-slate-900 rounded-xl opacity-0 group-hover:opacity-100 transition-all hover:bg-white hover:scale-110 shadow-xl"
+                    >
+                      <i class="fas fa-chevron-left"></i>
+                    </button>
+                    <button
+                      @click="activeImageIndex = activeImageIndex < viewData.images.length - 1 ? activeImageIndex + 1 : 0"
+                      class="absolute right-4 top-1/2 -translate-y-1/2 w-12 h-12 bg-white/90 backdrop-blur-sm text-slate-900 rounded-xl opacity-0 group-hover:opacity-100 transition-all hover:bg-white hover:scale-110 shadow-xl"
+                    >
+                      <i class="fas fa-chevron-right"></i>
+                    </button>
                   </div>
                 </template>
-
-                <!-- Slider Controls (Small Dots) -->
-                <div
-                  class="absolute bottom-4 left-0 right-0 flex justify-center gap-1.5"
-                  x-show="viewData.images?.length > 1"
-                >
-                  <template x-for="(img, idx) in viewData.images" :key="idx">
-                    <div
-                      class="w-1.5 h-1.5 rounded-full transition-all"
-                      :class="activeImageIndex === idx ? 'bg-gray-900 scale-125' : 'bg-gray-300 cursor-pointer'"
-                      @click="activeImageIndex = idx"
-                    ></div>
-                  </template>
+                
+                <!-- Image Counter -->
+                <div class="absolute bottom-4 right-4 px-3 py-1.5 bg-slate-900/80 backdrop-blur-sm text-white text-xs font-black rounded-lg">
+                  <span x-text="activeImageIndex + 1"></span> / <span x-text="viewData.images.length"></span>
                 </div>
-
-                <template
-                  x-if="!viewData.images || viewData.images.length === 0"
-                >
-                  <i class="fas fa-box-open text-6xl text-gray-200"></i>
-                </template>
               </div>
+            </template>
+            <template x-if="!viewData.images || viewData.images.length === 0">
+              <div class="text-center py-32">
+                <i class="fas fa-image text-6xl text-slate-200 mb-4"></i>
+                <p class="text-slate-400 font-bold text-sm uppercase tracking-widest">
+                  No Images
+                </p>
+              </div>
+            </template>
+          </div>
+
+          <!-- Image Thumbnails -->
+          <template
+            x-if="viewData.images && viewData.images.length > 1"
+          >
+            <div class="flex gap-3 mt-6 overflow-x-auto pb-2">
+              <template x-for="(img, index) in viewData.images" :key="index">
+                <button
+                  @click="activeImageIndex = index"
+                  class="flex-shrink-0 w-20 h-20 rounded-xl overflow-hidden border-2 transition-all"
+                  :class="activeImageIndex === index ? 'border-primary-600 shadow-lg' : 'border-slate-200 opacity-60 hover:opacity-100'"
+                >
+                  <img :src="img" class="w-full h-full object-cover" />
+                </button>
+              </template>
+            </div>
+          </template>
 
               <div class="text-center">
                 <span
-                  class="text-[10px] font-mono font-bold text-gray-300 tracking-wider"
+                  class="text-[9px] font-mono font-bold text-slate-300 tracking-wider uppercase"
                   x-text="'ID: ' + viewData.productID"
                 ></span>
               </div>
@@ -874,27 +954,27 @@
         </div>
 
         <!-- Sticky Footer Actions -->
-        <div class="p-8 border-t border-gray-50 bg-gray-50/10 backdrop-blur-sm">
+        <div class="p-6 border-t border-slate-200 bg-slate-50">
           <div class="flex items-center justify-between gap-4">
             <div class="flex items-center gap-3">
               <button
                 @click="generateAd(viewData._id)"
                 :disabled="generatingAd"
-                class="px-8 py-4 bg-[#0F172A] text-white text-sm font-bold rounded-2xl hover:bg-black transition-all flex items-center disabled:opacity-50"
+                class="px-6 py-3 bg-slate-900 text-white text-[10px] font-black uppercase tracking-wider rounded-xl hover:bg-primary-600 transition-all flex items-center disabled:opacity-50 active:scale-95"
               >
                 <i
                   :class="generatingAd ? 'fas fa-spinner fa-spin' : 'fas fa-pencil-alt'"
-                  class="mr-3"
+                  class="mr-2"
                 ></i>
                 <span
-                  x-text="generatingAd ? 'Generating...' : 'Generate Marketing Copy'"
+                  x-text="generatingAd ? 'Generating...' : 'AI Copy'"
                 ></span>
               </button>
 
               <button
-                @click="showQRModal = true"
-                class="p-4 bg-gray-100 text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded-2xl transition-all"
-                title="Share Assets"
+                @click.stop="showQRModal = true"
+                class="p-3 bg-slate-100 text-slate-600 hover:text-primary-600 hover:bg-primary-50 rounded-xl transition-all"
+                title="QR Code"
               >
                 <i class="fas fa-qrcode"></i>
               </button>
@@ -903,15 +983,15 @@
             <div class="flex items-center gap-3">
               <button
                 @click="editProductFromView()"
-                class="px-8 py-4 bg-white border border-gray-200 text-gray-900 text-sm font-bold rounded-2xl hover:bg-gray-50 transition-all"
+                class="px-6 py-3 bg-white border border-slate-200 text-slate-900 text-[10px] font-black uppercase tracking-wider rounded-xl hover:bg-slate-50 transition-all active:scale-95"
               >
                 Edit
               </button>
               <button
                 @click="closeViewModal()"
-                class="px-10 py-4 bg-gray-100/50 text-gray-400 text-sm font-bold rounded-2xl hover:bg-gray-200 transition-all"
+                class="px-8 py-3 bg-slate-100 text-slate-500 text-[10px] font-black uppercase tracking-wider rounded-xl hover:bg-slate-200 transition-all active:scale-95"
               >
-                Dismiss
+                Close
               </button>
             </div>
           </div>
@@ -919,68 +999,106 @@
       </div>
     </div>
 
-    <!-- QR Action Overlay Modal -->
+    <!-- QR Code Modal (Sharp Minimal) -->
     <div
       x-show="showQRModal"
-      x-transition:enter="transition ease-out duration-300"
+      x-transition:enter="transition ease-out duration-200"
       x-transition:enter-start="opacity-0"
       x-transition:enter-end="opacity-100"
-      x-transition:leave="transition ease-in duration-200"
-      x-transition:leave-start="opacity-100"
-      x-transition:leave-end="opacity-0"
-      class="fixed inset-0 bg-gray-900/60 backdrop-blur-md z-[100] flex items-center justify-center p-4"
+      class="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-60 px-4"
       @click.self="showQRModal = false"
-      style="display: none"
     >
       <div
         x-show="showQRModal"
-        x-transition:enter="transition ease-out duration-500 transform"
-        x-transition:enter-start="opacity-0 scale-95 translate-y-10"
-        x-transition:enter-end="opacity-100 scale-100 translate-y-0"
-        x-transition:leave="transition ease-in duration-300 transform"
-        x-transition:leave-start="opacity-100 scale-100 translate-y-0"
-        x-transition:leave-end="opacity-0 scale-95 translate-y-10"
-        class="bg-white rounded-[40px] shadow-2xl max-w-md w-full p-12 text-center space-y-10 relative overflow-hidden"
+        x-transition:enter="transition ease-out duration-200 transform"
+        x-transition:enter-start="opacity-0 scale-95"
+        x-transition:enter-end="opacity-100 scale-100"
+        x-transition:leave="transition ease-in duration-150 transform"
+        x-transition:leave-start="opacity-100 scale-100"
+        x-transition:leave-end="opacity-0 scale-95"
+        class="bg-white rounded-[24px] shadow-2xl max-w-md w-full p-8 text-center space-y-8 relative border border-slate-200"
       >
         <button
           @click="showQRModal = false"
-          class="absolute top-6 right-6 text-gray-400 hover:text-gray-900 transition-colors"
+          class="absolute top-4 right-4 w-8 h-8 flex items-center justify-center text-slate-400 hover:text-slate-900 hover:bg-slate-100 rounded-lg transition-all"
         >
-          <i class="fas fa-times text-xl"></i>
+          <i class="fas fa-times text-sm"></i>
         </button>
 
-        <div class="space-y-2">
-          <h3 class="text-2xl font-bold text-gray-900">Digital Identity</h3>
-          <p class="text-sm text-gray-500 font-medium">
-            Verified product asset on Universal Shelf
+        <div class="space-y-1">
+          <h3 class="text-xl font-bold text-slate-900 uppercase tracking-tight">Product QR Code</h3>
+          <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest">
+            Scan to view on shelf
           </p>
         </div>
 
+        <!-- QR Code Display or Missing Message -->
         <div
-          class="bg-gray-50 p-8 rounded-[40px] border border-gray-100/50 shadow-inner flex items-center justify-center"
+          class="bg-slate-50 p-8 rounded-xl border border-slate-200 flex items-center justify-center"
         >
-          <img
-            :src="viewData.qrCode"
-            class="w-48 h-48 select-none pointer-events-none filter brightness-[1.02]"
-          />
+          <template x-if="viewData.qrCode">
+            <img
+              :src="viewData.qrCode"
+              class="w-48 h-48 select-none"
+            />
+          </template>
+          <template x-if="!viewData.qrCode">
+            <div class="text-center py-12 px-6 space-y-3">
+              <i class="fas fa-exclamation-triangle text-4xl text-amber-400"></i>
+              <p class="text-sm font-bold text-slate-700">Product ID Not Assigned</p>
+              <p class="text-xs text-slate-500">Edit the product to assign a Product ID first.</p>
+            </div>
+          </template>
         </div>
 
         <div class="flex flex-col gap-3">
           <button
+            x-show="viewData.qrCode"
             @click="downloadQR(viewData.qrCode, viewData.productID)"
-            class="w-full py-5 bg-blue-600 text-white text-xs font-black uppercase tracking-widest rounded-3xl hover:bg-blue-700 shadow-xl shadow-blue-100 transition-all flex items-center justify-center gap-3"
+            class="w-full py-3 bg-slate-900 text-white text-[10px] font-black uppercase tracking-widest rounded-xl hover:bg-slate-800 transition-all flex items-center justify-center gap-2 active:scale-95"
           >
-            <i class="fas fa-download"></i> Download QR
+            <i class="fas fa-download text-xs"></i> Download QR
           </button>
           <a
+            x-show="viewData.shelfUrl"
             :href="viewData.shelfUrl"
             target="_blank"
-            class="w-full py-5 bg-gray-900 text-white text-xs font-black uppercase tracking-widest rounded-3xl hover:bg-black transition-all flex items-center justify-center gap-3"
+            class="w-full py-3 bg-primary-600 text-white text-[10px] font-black uppercase tracking-widest rounded-xl hover:bg-primary-700 shadow-lg shadow-primary-200 transition-all flex items-center justify-center gap-2 active:scale-95"
           >
-            <i class="fas fa-external-link-alt"></i> Open Shelf
+            <i class="fas fa-external-link-alt text-xs"></i> Go to Shelf
+          </a>
+          <a
+            x-show="!viewData.qrCode"
+            :href="`/products/edit/${viewData._id}`"
+            class="w-full py-3 bg-primary-600 text-white text-[10px] font-black uppercase tracking-widest rounded-xl hover:bg-primary-700 shadow-lg shadow-primary-200 transition-all flex items-center justify-center gap-2 active:scale-95"
+          >
+            <i class="fas fa-edit text-xs"></i> Edit Product
           </a>
         </div>
       </div>
+    </div>
+
+    <!-- Image Expand Modal -->
+    <div
+      x-show="expandedImage"
+      x-transition:enter="transition ease-out duration-200"
+      x-transition:enter-start="opacity-0"
+      x-transition:enter-end="opacity-100"
+      class="fixed inset-0 bg-black/95 flex items-center justify-center z-[70] p-4"
+      style="margin: 0 !important;"
+      @click="expandedImage = null"
+    >
+      <button
+        @click="expandedImage = null"
+        class="absolute top-6 right-6 w-14 h-14 flex items-center justify-center text-white/80 hover:text-white hover:bg-white/10 rounded-xl transition-all z-[71]"
+      >
+        <i class="fas fa-times text-2xl"></i>
+      </button>
+      <img
+        :src="expandedImage"
+        class="max-w-full max-h-full object-contain"
+        @click.stop
+      />
     </div>
 
     <!-- AI Generated Ads Modal -->

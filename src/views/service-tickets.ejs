@@ -1,465 +1,357 @@
-<div x-data="serviceTicketsData" x-init="init()" class="min-h-screen bg-[#f9fafb] pb-20">
-    <!-- Premium Header -->
-    <div class="sticky top-0 z-50 bg-white/70 backdrop-blur-xl border-b border-gray-100 mb-12">
-        <div class="max-w-[1600px] mx-auto px-8 py-10">
-            <div class="flex flex-col md:flex-row md:items-end justify-between gap-8">
-                <div class="animate__animated animate__fadeIn">
-                    <div class="flex items-center gap-3 mb-4">
-                        <span
-                            class="px-3 py-1 bg-amber-50 text-amber-600 text-[10px] font-bold rounded-full tracking-wider uppercase">Operations</span>
-                        <div class="w-1 h-1 rounded-full bg-gray-300"></div>
-                        <span class="text-[10px] font-bold text-gray-400 uppercase tracking-widest"
-                            x-text="`${pagination.total} Active Tickets`"></span>
+<div x-data="serviceTicketsData" x-init="init()" class="space-y-6">
+    
+    <!-- Header with Gradient Card -->
+    <div class="bg-gradient-to-br from-primary-600 to-primary-700 rounded-xl p-6 shadow-lg">
+        <div class="flex items-center justify-between">
+            <div class="text-white">
+                <div class="flex items-center gap-3 mb-2">
+                    <div class="w-10 h-10 bg-white/20 rounded-lg flex items-center justify-center backdrop-blur-sm">
+                        <i class="fas fa-wrench text-white text-lg"></i>
                     </div>
-                    <h1 class="text-4xl md:text-5xl font-bold text-gray-900 tracking-tighter mb-2">Service Tickets</h1>
-                    <p class="text-gray-400 text-lg font-medium">Coordinate repairs, diagnostics and technical
-                        fulfillment</p>
-                </div>
-
-                <div class="flex items-center gap-3 animate__animated animate__fadeIn">
-                    <a href="/service-tickets/add"
-                        class="bg-gray-900 hover:bg-black text-white px-8 py-4 rounded-[20px] font-bold shadow-xl shadow-gray-200 transition-all active:scale-95 flex items-center gap-3">
-                        <i class="fas fa-plus text-xs"></i>
-                        <span>New Intake</span>
-                    </a>
+                    <div>
+                        <h1 class="text-2xl font-bold">Repairs</h1>
+                        <p class="text-primary-100 text-sm" x-text="`${pagination.total} active tickets`"></p>
+                    </div>
                 </div>
             </div>
-
-            <!-- Integrated Filters -->
-            <div class="mt-12 flex flex-col md:flex-row items-center gap-4">
-                <div class="relative flex-1 group">
-                    <i
-                        class="fas fa-search absolute left-5 top-1/2 -translate-y-1/2 text-gray-300 group-focus-within:text-blue-500 transition-colors"></i>
-                    <input type="text" x-model="filters.search" @input.debounce.300ms="loadTickets()"
-                        placeholder="Search by Tag # or Device details..."
-                        class="w-full pl-14 pr-6 py-4 bg-gray-50/50 border border-gray-100 rounded-[22px] focus:ring-4 focus:ring-blue-50 focus:bg-white focus:border-blue-200 outline-none transition-all font-medium text-gray-900 placeholder:text-gray-400">
-                </div>
-
-                <div
-                    class="flex items-center gap-3 bg-gray-50/50 p-1.5 rounded-[24px] border border-gray-100 overflow-x-auto no-scrollbar max-w-[500px]">
-                    <template
-                        x-for="status in ['All', 'Pending', 'In Progress', 'Completed', 'Delivered', 'Cancelled', 'Reopened']"
-                        :key="status">
-                        <button @click="filters.status = status; loadTickets()"
-                            :class="filters.status === status ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-400 hover:text-gray-600'"
-                            class="px-5 py-2.5 rounded-[18px] text-[11px] font-bold uppercase tracking-widest transition-all whitespace-nowrap"
-                            x-text="status">
-                        </button>
-                    </template>
-                </div>
-
-                <div class="flex items-center gap-2 bg-gray-50/50 p-1.5 rounded-[24px] border border-gray-100">
-                    <button @click="viewMode = 'list'"
-                        :class="viewMode === 'list' ? 'bg-white text-blue-600 shadow-sm' : 'text-gray-400'"
-                        class="w-11 h-11 rounded-[18px] flex items-center justify-center transition-all">
-                        <i class="fas fa-list text-sm"></i>
-                    </button>
-                    <button @click="viewMode = 'grid'"
-                        :class="viewMode === 'grid' ? 'bg-white text-blue-600 shadow-sm' : 'text-gray-400'"
-                        class="w-11 h-11 rounded-[18px] flex items-center justify-center transition-all">
-                        <i class="fas fa-th-large text-sm"></i>
-                    </button>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <div class="max-w-[1600px] mx-auto px-8">
-        <!-- Loading Stream -->
-        <div x-show="loading" class="flex flex-col items-center justify-center py-32 animate__animated animate__fadeIn">
-            <div class="w-16 h-16 border-4 border-gray-100 border-t-blue-600 rounded-full animate-spin mb-6"></div>
-            <p class="text-[10px] font-bold text-gray-400 uppercase tracking-[0.2em]">Synchronizing Operations</p>
-        </div>
-
-        <!-- Empty State -->
-        <div x-show="!loading && tickets.length === 0"
-            class="flex flex-col items-center justify-center py-40 animate__animated animate__fadeIn">
-            <div
-                class="w-24 h-24 bg-gray-50 rounded-[40px] flex items-center justify-center mb-8 border border-gray-100">
-                <i class="fas fa-ticket-alt text-gray-200 text-3xl"></i>
-            </div>
-            <h3 class="text-2xl font-bold text-gray-900 mb-2">Queue is clear</h3>
-            <p class="text-gray-400 font-medium mb-10">No service tickets matched your current parameters</p>
             <a href="/service-tickets/add"
-                class="px-8 py-4 bg-gray-900 text-white rounded-2xl font-bold transition-all active:scale-95">
-                Register New Ticket
+                class="bg-white text-primary-600 px-5 py-2.5 rounded-lg font-semibold shadow-lg hover:shadow-xl transition-all flex items-center gap-2 hover:scale-105">
+                <i class="fas fa-plus text-sm"></i>
+                <span>New Ticket</span>
             </a>
         </div>
+    </div>
 
-        <!-- Tickets Display -->
-        <div x-show="!loading && tickets.length > 0">
-            <!-- Grid View -->
-            <div x-show="viewMode === 'grid'" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                <template x-for="ticket in tickets" :key="ticket._id">
-                    <div
-                        class="group bg-white border border-gray-100 rounded-[40px] p-8 shadow-sm hover:shadow-2xl hover:shadow-gray-200/50 transition-all duration-500 animate__animated animate__fadeInUp">
-                        <div class="flex items-start justify-between mb-8">
-                            <div class="flex flex-col gap-1">
-                                <span class="text-[10px] font-bold text-gray-400 uppercase tracking-[0.2em]"
-                                    x-text="`#${ticket.ticketNumber}`"></span>
-                                <h3 class="text-xl font-bold text-gray-900 tracking-tight truncate max-w-[200px]"
-                                    x-text="ticket.customer?.name || 'Anonymous'"></h3>
-                            </div>
-                            <span
-                                class="px-3 py-1 rounded-full text-[9px] font-bold uppercase tracking-widest flex items-center gap-2"
+    <!-- Filters -->
+    <div class="bg-white border border-slate-200 rounded-xl p-5 shadow-sm space-y-4">
+        <div class="flex gap-3">
+            <div class="flex-1 relative group">
+                <i class="fas fa-search absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-primary-500 transition-colors"></i>
+                <input type="text" x-model="filters.search" @input.debounce.300ms="loadTickets()"
+                    placeholder="Search tickets..."
+                    class="w-full pl-11 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-lg focus:ring-2 focus:ring-primary-100 focus:bg-white focus:border-primary-300 outline-none transition-all text-sm">
+            </div>
+            <div class="flex items-center gap-2 bg-slate-100 p-1.5 rounded-lg">
+                <button @click="viewMode = 'grid'"
+                    :class="viewMode === 'grid' ? 'bg-white text-primary-600 shadow-sm' : 'text-slate-500'"
+                    class="w-10 h-10 rounded-md flex items-center justify-center transition-all hover:text-primary-600">
+                    <i class="fas fa-th"></i>
+                </button>
+                <button @click="viewMode = 'list'"
+                    :class="viewMode === 'list' ? 'bg-white text-primary-600 shadow-sm' : 'text-slate-500'"
+                    class="w-10 h-10 rounded-md flex items-center justify-center transition-all hover:text-primary-600">
+                    <i class="fas fa-list"></i>
+                </button>
+            </div>
+        </div>
+
+        <div class="flex items-center gap-2 overflow-x-auto pb-1">
+            <template x-for="status in ['All', 'Pending', 'In Progress', 'Completed', 'Delivered', 'Cancelled']" :key="status">
+                <button @click="filters.status = status; loadTickets()"
+                    :class="filters.status === status ? 'bg-primary-600 text-white shadow-md' : 'bg-slate-50 text-slate-600 hover:bg-slate-100'"
+                    class="px-4 py-2 rounded-lg text-xs font-semibold transition-all whitespace-nowrap"
+                    x-text="status">
+                </button>
+            </template>
+        </div>
+    </div>
+
+    <!-- Loading -->
+    <div x-show="loading" class="flex flex-col items-center justify-center py-20">
+        <div class="w-12 h-12 border-4 border-slate-200 border-t-primary-600 rounded-full animate-spin mb-4"></div>
+        <p class="text-sm text-slate-500 font-medium">Loading tickets...</p>
+    </div>
+
+    <!-- Empty State -->
+    <div x-show="!loading && tickets.length === 0" class="bg-gradient-to-br from-slate-50 to-white border border-slate-200 rounded-xl p-16 text-center shadow-sm">
+        <div class="w-16 h-16 bg-gradient-to-br from-primary-100 to-primary-50 rounded-xl flex items-center justify-center mx-auto mb-4">
+            <i class="fas fa-wrench text-primary-600 text-2xl"></i>
+        </div>
+        <h3 class="text-lg font-bold text-slate-900 mb-2">No Tickets Found</h3>
+        <p class="text-sm text-slate-500 mb-6">Start by creating your first repair ticket</p>
+        <a href="/service-tickets/add"
+            class="inline-flex items-center gap-2 px-6 py-3 bg-primary-600 text-white rounded-lg font-semibold shadow-lg hover:shadow-xl hover:bg-primary-700 transition-all hover:scale-105">
+            <i class="fas fa-plus"></i>
+            <span>Create Ticket</span>
+        </a>
+    </div>
+
+    <!-- Content -->
+    <div x-show="!loading && tickets.length > 0">
+        
+        <!-- Grid View -->
+        <div x-show="viewMode === 'grid'" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
+            <template x-for="ticket in tickets" :key="ticket._id">
+                <div class="bg-white border border-slate-200 rounded-xl p-6 shadow-sm hover:shadow-lg hover:border-primary-200 transition-all group cursor-pointer">
+                    <div class="flex items-start justify-between mb-4">
+                        <div class="flex items-center gap-3">
+                            <div class="w-10 h-10 rounded-lg flex items-center justify-center transition-all"
                                 :class="{
-                                'bg-amber-100 text-amber-600': ticket.status === 'Pending',
-                                'bg-blue-100 text-blue-600': ticket.status === 'In Progress',
-                                'bg-green-100 text-green-600': ticket.status === 'Completed',
-                                'bg-gray-900 text-white': ticket.status === 'Delivered',
-                                'bg-red-100 text-red-600': ticket.status === 'Cancelled',
-                                'bg-purple-100 text-purple-600': ticket.status === 'Reopened'
-                            }">
-                                <i :class="{
-                                    'fas fa-clock': ticket.status === 'Pending',
-                                    'fas fa-spinner fa-spin': ticket.status === 'In Progress',
-                                    'fas fa-check-circle': ticket.status === 'Completed',
-                                    'fas fa-box-open': ticket.status === 'Delivered',
-                                    'fas fa-times-circle': ticket.status === 'Cancelled',
-                                    'fas fa-redo-alt': ticket.status === 'Reopened'
-                                }" class="text-[8px]"></i>
-                                <span x-text="ticket.status"></span>
-                            </span>
-                        </div>
-
-                        <div class="mb-8">
-                            <p class="text-sm font-bold text-gray-600 leading-relaxed line-clamp-2 min-h-[40px]"
-                                x-text="ticket.deviceDetails"></p>
-                        </div>
-
-                        <div class="flex items-center gap-3 mb-8">
-                            <div class="flex -space-x-2">
-                                <div
-                                    class="w-8 h-8 rounded-full border-2 border-white bg-gray-100 flex items-center justify-center text-[10px] font-bold text-gray-400">
-                                    <i class="fas fa-wrench"></i>
-                                </div>
+                                    'bg-amber-100 text-amber-600': ticket.status === 'Pending',
+                                    'bg-blue-100 text-blue-600': ticket.status === 'In Progress',
+                                    'bg-emerald-100 text-emerald-600': ticket.status === 'Completed',
+                                    'bg-slate-900 text-white': ticket.status === 'Delivered',
+                                    'bg-red-100 text-red-600': ticket.status === 'Cancelled'
+                                }">
+                                <i class="fas fa-wrench text-sm"></i>
                             </div>
-                            <span class="text-[11px] font-bold text-gray-400"
-                                x-text="getTechnicianName(ticket.assignedTechnician)"></span>
+                            <div>
+                                <p class="text-xs text-slate-500 font-medium" x-text="'#' + ticket.ticketNumber"></p>
+                                <h3 class="text-sm font-bold text-slate-900" x-text="ticket.customer?.name || 'Customer'"></h3>
+                            </div>
                         </div>
+                        <span class="px-2.5 py-1 rounded-lg text-[10px] font-bold uppercase"
+                            :class="{
+                                'bg-amber-100 text-amber-700': ticket.status === 'Pending',
+                                'bg-blue-100 text-blue-700': ticket.status === 'In Progress',
+                                'bg-emerald-100 text-emerald-700': ticket.status === 'Completed',
+                                'bg-slate-900 text-white': ticket.status === 'Delivered',
+                                'bg-red-100 text-red-700': ticket.status === 'Cancelled'
+                            }" x-text="ticket.status"></span>
+                    </div>
 
-                        <div class="flex items-center justify-between pt-6 border-t border-gray-50 mt-auto">
-                            <div class="flex flex-col">
-                                <span
-                                    class="text-[9px] font-bold text-gray-300 uppercase tracking-widest">Received</span>
-                                <span class="text-[11px] font-bold text-gray-900"
-                                    x-text="new Date(ticket.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })"></span>
-                            </div>
-                            <div class="flex gap-2">
-                                <a :href="`/service-tickets/${ticket._id}`"
-                                    class="w-10 h-10 rounded-xl bg-gray-50 hover:bg-white hover:shadow-md text-gray-400 hover:text-blue-600 flex items-center justify-center transition-all active:scale-95">
-                                    <i class="fas fa-eye text-xs"></i>
-                                </a>
-                                <button @click="editTicket(ticket)"
-                                    class="w-10 h-10 rounded-xl bg-gray-50 hover:bg-white hover:shadow-md text-gray-400 hover:text-gray-900 transition-all active:scale-95">
-                                    <i class="fas fa-edit text-xs"></i>
-                                </button>
-                            </div>
+                    <p class="text-sm text-slate-600 mb-4 line-clamp-2 min-h-[40px]" x-text="ticket.deviceDetails"></p>
+
+                    <div class="flex items-center justify-between pt-4 border-t border-slate-100">
+                        <div class="flex items-center gap-2 text-xs text-slate-500">
+                            <i class="fas fa-calendar text-slate-400"></i>
+                            <span x-text="new Date(ticket.createdAt).toLocaleDateString('en-IN', { month: 'short', day: 'numeric' })"></span>
+                        </div>
+                        <div class="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                            <a :href="`/service-tickets/${ticket._id}`"
+                                class="w-8 h-8 rounded-lg bg-primary-50 hover:bg-primary-100 text-primary-600 flex items-center justify-center transition-all">
+                                <i class="fas fa-eye text-xs"></i>
+                            </a>
+                            <button @click="editTicket(ticket)"
+                                class="w-8 h-8 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-600 flex items-center justify-center transition-all">
+                                <i class="fas fa-edit text-xs"></i>
+                            </button>
                         </div>
                     </div>
-                </template>
-            </div>
+                </div>
+            </template>
+        </div>
 
-            <!-- List View -->
-            <div x-show="viewMode === 'list'"
-                class="bg-white border border-gray-100 rounded-[40px] overflow-hidden shadow-sm">
-                <table class="w-full text-left">
-                    <thead>
-                        <tr class="bg-gray-50/50">
-                            <th
-                                class="px-8 py-5 text-[10px] font-bold text-gray-400 uppercase tracking-widest whitespace-nowrap">
-                                Service Tag No</th>
-                            <th
-                                class="px-8 py-5 text-[10px] font-bold text-gray-400 uppercase tracking-widest whitespace-nowrap">
-                                Client</th>
-                            <th
-                                class="px-8 py-5 text-[10px] font-bold text-gray-400 uppercase tracking-widest whitespace-nowrap">
-                                Status</th>
-                            <th
-                                class="px-8 py-5 text-[10px] font-bold text-gray-400 uppercase tracking-widest whitespace-nowrap text-right">
-                                Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody class="divide-y divide-gray-50">
-                        <template x-for="ticket in tickets" :key="ticket._id">
-                            <tr class="group hover:bg-gray-50/50 transition-colors">
-                                <td class="px-8 py-5">
-                                    <div class="flex items-center gap-4">
-                                        <div class="text-sm font-bold text-gray-900" x-text="`#${ticket.ticketNumber}`">
-                                        </div>
-                                        <div>
-                                            <p class="text-sm font-bold text-gray-900 truncate max-w-[200px]"
-                                                x-text="ticket.deviceDetails"></p>
-                                            <p class="text-[10px] font-bold text-gray-400 uppercase tracking-widest"
-                                                x-text="new Date(ticket.createdAt).toLocaleDateString()"></p>
-                                        </div>
-                                    </div>
-                                </td>
-                                <td class="px-8 py-5">
-                                    <p class="text-sm font-bold text-gray-900"
-                                        x-text="ticket.customer?.name || 'Anonymous'"></p>
-                                    <p class="text-[10px] font-bold text-gray-400"
-                                        x-text="ticket.customer?.phone || 'No Contact'"></p>
-                                </td>
-                                <td class="px-8 py-5">
-                                    <span
-                                        class="px-3 py-1 rounded-full text-[9px] font-bold uppercase tracking-widest flex items-center gap-2 w-fit"
+        <!-- List View -->
+        <div x-show="viewMode === 'list'" class="bg-white border border-slate-200 rounded-xl overflow-hidden shadow-sm">
+            <table class="w-full">
+                <thead>
+                    <tr class="bg-gradient-to-r from-slate-50 to-slate-100/50 border-b border-slate-200">
+                        <th class="px-6 py-4 text-left text-xs font-bold text-slate-600 uppercase tracking-wider">Ticket</th>
+                        <th class="px-6 py-4 text-left text-xs font-bold text-slate-600 uppercase tracking-wider">Customer</th>
+                        <th class="px-6 py-4 text-left text-xs font-bold text-slate-600 uppercase tracking-wider hidden lg:table-cell">Device</th>
+                        <th class="px-6 py-4 text-left text-xs font-bold text-slate-600 uppercase tracking-wider">Status</th>
+                        <th class="px-6 py-4 text-right text-xs font-bold text-slate-600 uppercase tracking-wider">Actions</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100">
+                    <template x-for="ticket in tickets" :key="ticket._id">
+                        <tr class="hover:bg-slate-50 transition-colors group">
+                            <td class="px-6 py-4">
+                                <div class="flex items-center gap-3">
+                                    <div class="w-8 h-8 rounded-lg flex items-center justify-center"
                                         :class="{
-                                        'bg-amber-100 text-amber-600': ticket.status === 'Pending',
-                                        'bg-blue-100 text-blue-600': ticket.status === 'In Progress',
-                                        'bg-green-100 text-green-600': ticket.status === 'Completed',
-                                        'bg-gray-900 text-white': ticket.status === 'Delivered',
-                                        'bg-red-100 text-red-600': ticket.status === 'Cancelled',
-                                        'bg-purple-100 text-purple-600': ticket.status === 'Reopened'
-                                    }">
-                                        <i :class="{
-                                            'fas fa-clock': ticket.status === 'Pending',
-                                            'fas fa-spinner fa-spin': ticket.status === 'In Progress',
-                                            'fas fa-check-circle': ticket.status === 'Completed',
-                                            'fas fa-box-open': ticket.status === 'Delivered',
-                                            'fas fa-times-circle': ticket.status === 'Cancelled',
-                                            'fas fa-redo-alt': ticket.status === 'Reopened'
-                                        }" class="text-[8px]"></i>
-                                        <span x-text="ticket.status"></span>
-                                    </span>
-                                </td>
-                                <td class="px-8 py-5 text-right">
-                                    <div
-                                        class="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-all duration-300">
-                                        <a :href="`/service-tickets/${ticket._id}`"
-                                            class="w-8 h-8 rounded-lg bg-white border border-gray-100 flex items-center justify-center text-gray-400 hover:text-blue-600 hover:border-blue-100 transition-all">
-                                            <i class="fas fa-eye text-[10px]"></i>
-                                        </a>
-                                        <button @click="editTicket(ticket)"
-                                            class="w-8 h-8 rounded-lg bg-white border border-gray-100 flex items-center justify-center text-gray-400 hover:text-gray-900 hover:border-gray-200 transition-all">
-                                            <i class="fas fa-edit text-[10px]"></i>
-                                        </button>
+                                            'bg-amber-100 text-amber-600': ticket.status === 'Pending',
+                                            'bg-blue-100 text-blue-600': ticket.status === 'In Progress',
+                                            'bg-emerald-100 text-emerald-600': ticket.status === 'Completed',
+                                            'bg-slate-900 text-white': ticket.status === 'Delivered',
+                                            'bg-red-100 text-red-600': ticket.status === 'Cancelled'
+                                        }">
+                                        <i class="fas fa-wrench text-xs"></i>
                                     </div>
-                                </td>
-                            </tr>
-                        </template>
-                    </tbody>
-                </table>
-            </div>
+                                    <div>
+                                        <p class="text-sm font-bold text-slate-900" x-text="'#' + ticket.ticketNumber"></p>
+                                        <p class="text-xs text-slate-500" x-text="new Date(ticket.createdAt).toLocaleDateString('en-IN')"></p>
+                                    </div>
+                                </div>
+                            </td>
+                            <td class="px-6 py-4">
+                                <p class="text-sm font-semibold text-slate-900" x-text="ticket.customer?.name || 'Customer'"></p>
+                                <p class="text-xs text-slate-500" x-text="ticket.customer?.phone || '-'"></p>
+                            </td>
+                            <td class="px-6 py-4 hidden lg:table-cell">
+                                <p class="text-sm text-slate-600 truncate max-w-md" x-text="ticket.deviceDetails"></p>
+                            </td>
+                            <td class="px-6 py-4">
+                                <span class="px-3 py-1.5 rounded-lg text-[10px] font-bold uppercase inline-flex items-center gap-1.5"
+                                    :class="{
+                                        'bg-amber-100 text-amber-700': ticket.status === 'Pending',
+                                        'bg-blue-100 text-blue-700': ticket.status === 'In Progress',
+                                        'bg-emerald-100 text-emerald-700': ticket.status === 'Completed',
+                                        'bg-slate-900 text-white': ticket.status === 'Delivered',
+                                        'bg-red-100 text-red-700': ticket.status === 'Cancelled'
+                                    }">
+                                    <div class="w-1.5 h-1.5 rounded-full bg-current"></div>
+                                    <span x-text="ticket.status"></span>
+                                </span>
+                            </td>
+                            <td class="px-6 py-4 text-right">
+                                <div class="flex items-center justify-end gap-2">
+                                    <a :href="`/service-tickets/${ticket._id}`"
+                                        class="w-8 h-8 rounded-lg bg-primary-50 hover:bg-primary-100 text-primary-600 flex items-center justify-center transition-all">
+                                        <i class="fas fa-eye text-xs"></i>
+                                    </a>
+                                    <button @click="editTicket(ticket)"
+                                        class="w-8 h-8 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-600 flex items-center justify-center transition-all">
+                                        <i class="fas fa-edit text-xs"></i>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                    </template>
+                </tbody>
+            </table>
+        </div>
 
-            <!-- Apple-Style Pagination -->
-            <div x-show="pagination.total > 0" class="mt-12">
-                <div
-                    class="flex flex-col md:flex-row items-center justify-between bg-white border border-gray-100 rounded-[32px] px-8 py-6 shadow-sm gap-6">
-                    <div class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">
-                        Case <span class="text-gray-900 font-black"
-                            x-text="(pagination.page - 1) * pagination.limit + 1"></span>
-                        to <span class="text-gray-900 font-black"
-                            x-text="Math.min(pagination.page * pagination.limit, pagination.total)"></span>
-                        of <span class="text-gray-900 font-black" x-text="pagination.total"></span> total
-                    </div>
-                    <div class="flex items-center gap-3">
-                        <button @click="changePage(pagination.page - 1)" :disabled="pagination.page === 1"
-                            class="px-6 py-3 bg-gray-50 border border-transparent text-[11px] font-bold uppercase tracking-widest text-gray-500 rounded-2xl hover:bg-gray-100 disabled:opacity-30 disabled:cursor-not-allowed transition-all">
-                            Prev
-                        </button>
-                        <button @click="changePage(pagination.page + 1)"
-                            :disabled="pagination.page * pagination.limit >= pagination.total"
-                            class="px-8 py-3 bg-gray-900 border border-transparent text-[11px] font-bold uppercase tracking-widest text-white rounded-2xl hover:bg-black disabled:opacity-30 disabled:cursor-not-allowed shadow-xl shadow-gray-200 transition-all">
-                            Next Queue
-                        </button>
-                    </div>
+        <!-- Pagination -->
+        <div x-show="pagination.total > 0" class="bg-white border border-slate-200 rounded-xl px-6 py-4 shadow-sm">
+            <div class="flex items-center justify-between">
+                <p class="text-sm text-slate-600">
+                    <span class="font-bold text-slate-900" x-text="(pagination.page - 1) * pagination.limit + 1"></span>-<span class="font-bold text-slate-900" x-text="Math.min(pagination.page * pagination.limit, pagination.total)"></span>
+                    of <span class="font-bold text-slate-900" x-text="pagination.total"></span> tickets
+                </p>
+                <div class="flex gap-2">
+                    <button @click="changePage(pagination.page - 1)" :disabled="pagination.page === 1"
+                        class="px-5 py-2.5 bg-slate-100 text-slate-700 rounded-lg text-sm font-semibold hover:bg-slate-200 disabled:opacity-40 disabled:cursor-not-allowed transition-all">
+                        Previous
+                    </button>
+                    <button @click="changePage(pagination.page + 1)" :disabled="pagination.page * pagination.limit >= pagination.total"
+                        class="px-5 py-2.5 bg-primary-600 text-white rounded-lg text-sm font-semibold hover:bg-primary-700 shadow-md disabled:opacity-40 disabled:cursor-not-allowed transition-all">
+                        Next
+                    </button>
                 </div>
             </div>
         </div>
     </div>
 
-
-
-    <!-- Redesigned Add/Edit Modal (Metadata Recalibration) -->
-    <div x-show="showModal" x-transition:enter="transition ease-out duration-300" x-transition:enter-start="opacity-0"
-        x-transition:enter-end="opacity-100" x-transition:leave="transition ease-in duration-200"
+    <!-- Modal -->
+    <div x-show="showModal" x-transition:enter="transition ease-out duration-200" x-transition:enter-start="opacity-0"
+        x-transition:enter-end="opacity-100" x-transition:leave="transition ease-in duration-150"
         x-transition:leave-start="opacity-100" x-transition:leave-end="opacity-0"
-        class="fixed inset-0 bg-gray-900/60 backdrop-blur-xl z-[60] flex items-center justify-center p-4"
+        class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center p-4"
         @click.self="closeModal()" style="display: none;">
 
-        <div x-show="showModal" x-transition:enter="transition ease-out duration-500 transform"
-            x-transition:enter-start="opacity-0 translate-y-12 scale-95"
-            x-transition:enter-end="opacity-100 translate-y-0 scale-100"
-            class="relative bg-white rounded-[40px] shadow-2xl w-full max-w-5xl overflow-hidden flex flex-col transform transition-all">
+        <div x-show="showModal" x-transition:enter="transition ease-out duration-200 transform"
+            x-transition:enter-start="opacity-0 scale-95" x-transition:enter-end="opacity-100 scale-100"
+            class="bg-white rounded-xl shadow-2xl w-full max-w-3xl max-h-[85vh] overflow-hidden flex flex-col">
 
-            <!-- Modal Header -->
-            <div class="px-8 py-6 border-b border-gray-100 flex items-center justify-between">
-                <div>
-                    <div class="flex items-center gap-2 mb-1">
-                        <span class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Management</span>
+            <div class="px-6 py-5 border-b border-slate-200 flex items-center justify-between bg-gradient-to-r from-slate-50 to-white">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 bg-primary-100 rounded-lg flex items-center justify-center">
+                        <i class="fas fa-wrench text-primary-600"></i>
                     </div>
-                    <h3 class="text-2xl font-bold text-gray-900"
-                        x-text="editMode ? 'Update Ticket' : 'New Service Ticket'"></h3>
+                    <h3 class="text-lg font-bold text-slate-900" x-text="editMode ? 'Edit Ticket' : 'New Ticket'"></h3>
                 </div>
-                <button @click="closeModal()" class="p-2 text-gray-400 hover:text-gray-900 transition-colors">
+                <button @click="closeModal()" class="text-slate-400 hover:text-slate-600 transition-colors">
                     <i class="fas fa-times text-xl"></i>
                 </button>
             </div>
 
-            <div class="p-8 overflow-y-auto max-h-[75vh] flex-1">
-                <div class="grid grid-cols-1 lg:grid-cols-2 gap-x-12 gap-y-8">
-                    <!-- Left Section: Primary Info -->
-                    <div class="space-y-8">
-                        <!-- Client Identity (Live Search) -->
-                        <div>
-                            <label
-                                class="block text-[11px] font-bold text-gray-400 uppercase tracking-widest mb-3 ml-1">Client
-                                Identity</label>
-                            <div class="relative" x-data="{ searchQuery: '', showResults: false }">
-                                <!-- Selected Customer Display -->
-                                <div x-show="selectedCustomer"
-                                    class="flex items-center justify-between p-4 bg-blue-50/50 border border-blue-100 rounded-2xl group transition-all">
-                                    <div class="flex items-center gap-3">
-                                        <div
-                                            class="w-10 h-10 rounded-full bg-blue-500 flex items-center justify-center text-white font-bold">
-                                            <span x-text="selectedCustomer?.name?.charAt(0)"></span>
-                                        </div>
-                                        <div>
-                                            <p class="text-sm font-bold text-gray-900" x-text="selectedCustomer?.name">
-                                            </p>
-                                            <p class="text-xs text-gray-500" x-text="selectedCustomer?.phone"></p>
-                                        </div>
+            <div class="p-6 overflow-y-auto flex-1">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+                    <div class="md:col-span-2">
+                        <label class="block text-xs font-bold text-slate-700 mb-2 uppercase tracking-wider">Customer</label>
+                        <div x-data="{ searchQuery: '', showResults: false }">
+                            <div x-show="selectedCustomer" class="flex items-center justify-between p-4 bg-gradient-to-r from-primary-50 to-primary-100/50 border border-primary-200 rounded-lg">
+                                <div class="flex items-center gap-3">
+                                    <div class="w-10 h-10 rounded-full bg-primary-600 flex items-center justify-center text-white font-bold shadow-md">
+                                        <span x-text="selectedCustomer?.name?.charAt(0)"></span>
                                     </div>
-                                    <button @click="clearCustomerSelection()"
-                                        class="p-2 text-gray-400 hover:text-red-500 transition-colors opacity-0 group-hover:opacity-100">
-                                        <i class="fas fa-times-circle"></i>
-                                    </button>
+                                    <div>
+                                        <p class="text-sm font-bold text-slate-900" x-text="selectedCustomer?.name"></p>
+                                        <p class="text-xs text-slate-600" x-text="selectedCustomer?.phone"></p>
+                                    </div>
                                 </div>
+                                <button @click="clearCustomerSelection()" class="text-slate-400 hover:text-red-500 transition-colors">
+                                    <i class="fas fa-times"></i>
+                                </button>
+                            </div>
 
-                                <!-- Search Input -->
-                                <div x-show="!selectedCustomer" class="relative group">
-                                    <i
-                                        class="fas fa-search absolute left-4 top-1/2 -translate-y-1/2 text-gray-300 group-focus-within:text-blue-500 transition-colors"></i>
-                                    <input type="text" x-model="searchQuery" @input="searchContactsInModal(searchQuery)"
-                                        @focus="showResults = true" placeholder="Search client by name or phone..."
-                                        class="w-full pl-11 pr-4 py-4 bg-gray-50 border border-gray-100 rounded-2xl focus:ring-4 focus:ring-blue-100 focus:border-blue-400 outline-none transition-all text-sm">
-                                </div>
-
-                                <!-- Search Results Dropdown -->
-                                <div x-show="showResults && searchResults.length > 0 && !selectedCustomer"
-                                    @click.away="showResults = false"
-                                    class="mt-2 bg-white rounded-2xl shadow-xl border border-gray-100 z-50 overflow-hidden py-1 animate__animated animate__fadeIn">
+                            <div x-show="!selectedCustomer" class="relative">
+                                <i class="fas fa-search absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"></i>
+                                <input type="text" x-model="searchQuery" @input="searchContactsInModal(searchQuery)"
+                                    @focus="showResults = true" placeholder="Search customer..."
+                                    class="w-full pl-11 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-lg focus:ring-2 focus:ring-primary-100 focus:border-primary-300 outline-none transition-all">
+                                
+                                <div x-show="showResults && searchResults.length > 0" @click.away="showResults = false"
+                                    class="absolute top-full left-0 right-0 mt-2 bg-white rounded-lg shadow-xl border border-slate-200 overflow-hidden z-10 max-h-48 overflow-y-auto">
                                     <template x-for="contact in searchResults" :key="contact._id">
                                         <div @click="selectCustomerInModal(contact); showResults = false"
-                                            class="px-4 py-3 hover:bg-gray-50 cursor-pointer flex items-center justify-between group transition-colors">
-                                            <div class="flex items-center gap-3">
-                                                <div
-                                                    class="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center text-gray-400 text-xs font-bold group-hover:bg-blue-100 group-hover:text-blue-600">
-                                                    <span x-text="contact.name.charAt(0)"></span>
-                                                </div>
-                                                <div>
-                                                    <p class="text-sm font-bold text-gray-900" x-text="contact.name">
-                                                    </p>
-                                                    <p class="text-[10px] text-gray-400" x-text="contact.phone"></p>
-                                                </div>
+                                            class="px-4 py-3 hover:bg-primary-50 cursor-pointer flex items-center gap-3 transition-colors">
+                                            <div class="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-slate-600 text-xs font-bold">
+                                                <span x-text="contact.name.charAt(0)"></span>
                                             </div>
-                                            <i
-                                                class="fas fa-plus text-[10px] text-gray-300 group-hover:text-blue-500"></i>
+                                            <div>
+                                                <p class="text-sm font-semibold text-slate-900" x-text="contact.name"></p>
+                                                <p class="text-xs text-slate-500" x-text="contact.phone"></p>
+                                            </div>
                                         </div>
                                     </template>
                                 </div>
                             </div>
-                        </div>
-
-                        <!-- Device Details -->
-                        <div>
-                            <label
-                                class="block text-[11px] font-bold text-gray-400 uppercase tracking-widest mb-3 ml-1">Device
-                                Details</label>
-                            <textarea x-model="formData.deviceDetails"
-                                placeholder="Specify hardware model, serial number and diagnostic findings..."
-                                class="w-full px-5 py-4 bg-gray-50 border border-gray-100 rounded-2xl focus:ring-4 focus:ring-blue-100 focus:border-blue-400 outline-none transition-all text-sm min-h-[200px] resize-none"></textarea>
                         </div>
                     </div>
 
-                    <!-- Right Section: Metadata & Status -->
-                    <div class="space-y-8">
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            <!-- Date Received -->
-                            <div class="md:col-span-1">
-                                <label
-                                    class="block text-[11px] font-bold text-gray-400 uppercase tracking-widest mb-3 ml-1">Date
-                                    Received</label>
-                                <div class="relative group">
-                                    <i
-                                        class="fas fa-calendar absolute left-4 top-1/2 -translate-y-1/2 text-gray-300 group-focus-within:text-blue-500 transition-colors"></i>
-                                    <input type="date" x-model="formData.receivedDate"
-                                        class="w-full pl-11 pr-4 py-4 bg-gray-50 border border-gray-100 rounded-2xl focus:ring-4 focus:ring-blue-100 focus:border-blue-400 outline-none transition-all text-sm">
-                                </div>
-                            </div>
+                    <div class="md:col-span-2">
+                        <label class="block text-xs font-bold text-slate-700 mb-2 uppercase tracking-wider">Device Details</label>
+                        <textarea x-model="formData.deviceDetails" placeholder="Device model, issue description..."
+                            class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-lg focus:ring-2 focus:ring-primary-100 focus:border-primary-300 outline-none transition-all min-h-[90px] resize-none"></textarea>
+                    </div>
 
-                            <!-- Ticket Status -->
-                            <div class="md:col-span-1">
-                                <label
-                                    class="block text-[11px] font-bold text-gray-400 uppercase tracking-widest mb-3 ml-1">Ticket
-                                    Status</label>
-                                <select x-model="formData.status"
-                                    class="w-full px-5 py-4 bg-gray-50 border border-gray-100 rounded-2xl focus:ring-4 focus:ring-blue-100 focus:border-blue-400 outline-none transition-all text-sm appearance-none cursor-pointer">
-                                    <option value="Pending">Pending</option>
-                                    <option value="In Progress">In Progress</option>
-                                    <option value="Completed">Completed</option>
-                                    <option value="Delivered">Delivered</option>
-                                    <option value="Cancelled">Cancelled</option>
-                                    <option value="Reopened">Reopened</option>
-                                </select>
-                            </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 mb-2 uppercase tracking-wider">Date Received</label>
+                        <input type="date" x-model="formData.receivedDate"
+                            class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-lg focus:ring-2 focus:ring-primary-100 focus:border-primary-300 outline-none transition-all">
+                    </div>
 
-                            <!-- Technician -->
-                            <div class="md:col-span-1">
-                                <label
-                                    class="block text-[11px] font-bold text-gray-400 uppercase tracking-widest mb-3 ml-1">Assigned
-                                    Technician</label>
-                                <select x-model="formData.assignedTechnician"
-                                    class="w-full px-5 py-4 bg-gray-50 border border-gray-100 rounded-2xl focus:ring-4 focus:ring-blue-100 focus:border-blue-400 outline-none transition-all text-sm appearance-none cursor-pointer">
-                                    <option value="">Allocation Queue...</option>
-                                    <template x-for="tech in technicians" :key="tech._id">
-                                        <option :value="tech._id || tech" x-text="tech.name || tech"></option>
-                                    </template>
-                                </select>
-                            </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 mb-2 uppercase tracking-wider">Status</label>
+                        <select x-model="formData.status"
+                            class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-lg focus:ring-2 focus:ring-primary-100 focus:border-primary-300 outline-none transition-all">
+                            <option value="Pending">Pending</option>
+                            <option value="In Progress">In Progress</option>
+                            <option value="Completed">Completed</option>
+                            <option value="Delivered">Delivered</option>
+                            <option value="Cancelled">Cancelled</option>
+                        </select>
+                    </div>
 
-                            <!-- Service Charge -->
-                            <div class="md:col-span-1">
-                                <label
-                                    class="block text-[11px] font-bold text-gray-400 uppercase tracking-widest mb-3 ml-1">Service
-                                    Charge</label>
-                                <div class="relative group">
-                                    <span
-                                        class="absolute left-5 top-1/2 -translate-y-1/2 text-gray-400 text-sm font-bold">₹</span>
-                                    <input type="number" x-model="formData.serviceCharge"
-                                        class="w-full pl-10 pr-5 py-4 bg-gray-50 border border-gray-100 rounded-2xl focus:ring-4 focus:ring-blue-100 focus:border-blue-400 outline-none transition-all text-sm font-bold">
-                                </div>
-                            </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 mb-2 uppercase tracking-wider">Technician</label>
+                        <select x-model="formData.assignedTechnician"
+                            class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-lg focus:ring-2 focus:ring-primary-100 focus:border-primary-300 outline-none transition-all">
+                            <option value="">Not assigned</option>
+                            <template x-for="tech in technicians" :key="tech._id">
+                                <option :value="tech._id || tech" x-text="tech.name || tech"></option>
+                            </template>
+                        </select>
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 mb-2 uppercase tracking-wider">Service Charge</label>
+                        <div class="relative">
+                            <span class="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 font-bold">₹</span>
+                            <input type="number" x-model="formData.serviceCharge"
+                                class="w-full pl-9 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-lg focus:ring-2 focus:ring-primary-100 focus:border-primary-300 outline-none transition-all font-semibold">
                         </div>
+                    </div>
 
-                        <!-- Internal Notes -->
-                        <div>
-                            <label
-                                class="block text-[11px] font-bold text-gray-400 uppercase tracking-widest mb-3 ml-1">Internal
-                                Notes</label>
-                            <textarea x-model="formData.notes" placeholder="Private notes..."
-                                class="w-full px-5 py-4 bg-gray-50 border border-gray-100 rounded-2xl focus:ring-4 focus:ring-blue-100 focus:border-blue-400 outline-none transition-all text-sm min-h-[100px] resize-none"></textarea>
-                        </div>
+                    <div class="md:col-span-2">
+                        <label class="block text-xs font-bold text-slate-700 mb-2 uppercase tracking-wider">Notes</label>
+                        <textarea x-model="formData.notes" placeholder="Internal notes..."
+                            class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-lg focus:ring-2 focus:ring-primary-100 focus:border-primary-300 outline-none transition-all min-h-[70px] resize-none"></textarea>
                     </div>
                 </div>
             </div>
 
-
-            <!-- Sticky Actions -->
-            <div class="p-8 bg-gray-50/50 border-t border-gray-100 flex items-center justify-between gap-4">
+            <div class="px-6 py-4 bg-slate-50 border-t border-slate-200 flex items-center justify-end gap-3">
                 <button @click="closeModal()"
-                    class="px-8 py-4 text-gray-500 text-sm font-bold hover:text-gray-900 transition-colors">
+                    class="px-6 py-2.5 text-slate-600 hover:text-slate-900 font-semibold transition-colors">
                     Cancel
                 </button>
                 <button @click="saveTicket()" :disabled="saving"
-                    class="flex-1 max-w-[240px] px-8 py-4 bg-gray-900 text-white text-sm font-bold rounded-2xl hover:bg-blue-600 shadow-xl shadow-gray-200 transition-all active:scale-95 disabled:opacity-50 flex items-center justify-center gap-3">
-                    <template x-if="!saving">
-                        <i :class="editMode ? 'fas fa-save' : 'fas fa-plus'"></i>
-                    </template>
-                    <template x-if="saving">
-                        <i class="fas fa-spinner fa-spin"></i>
-                    </template>
+                    class="px-6 py-2.5 bg-primary-600 text-white rounded-lg font-semibold hover:bg-primary-700 shadow-lg hover:shadow-xl transition-all disabled:opacity-50 flex items-center gap-2">
+                    <i :class="saving ? 'fas fa-spinner fa-spin' : (editMode ? 'fas fa-save' : 'fas fa-plus')"></i>
                     <span x-text="editMode ? 'Save Changes' : 'Create Ticket'"></span>
                 </button>
             </div>

@@ -8,6 +8,7 @@ import serviceTicketRoutes from "./routes/serviceTicketRoutes";
 import shopSettingsRoutes from "./routes/shopSettingsRoutes";
 import statisticsRoutes from "./routes/statisticsRoutes";
 import { getPublicShelf } from "./controllers/shelfController";
+import pkg from "../package.json";
 
 dotenv.config();
 
@@ -17,6 +18,12 @@ const app: Application = express();
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(express.static(path.join(__dirname, "../public")));
+
+// Set version in locals for all views
+app.use((req: Request, res: Response, next: NextFunction) => {
+  res.locals.version = pkg.version;
+  next();
+});
 
 // Request logger
 app.use(requestLogger);

@@ -71,14 +71,20 @@ export const getProductById = async (req: Request, res: Response) => {
       return sendError(res, "Product not found", 404);
     }
 
-    // Generate shelf data
-    const serverUrl = process.env.SERVER_URL || `${req.protocol}://${req.get("host")}`;
-    const shelfUrl = `${serverUrl}/product/${product.productID}`;
-    const qrCode = await QRCode.toDataURL(shelfUrl);
-
     const productObj = product.toObject();
-    (productObj as any).shelfUrl = shelfUrl;
-    (productObj as any).qrCode = qrCode;
+
+    // Generate shelf data only if productID exists
+    if (product.productID) {
+      const serverUrl = process.env.SERVER_URL || `${req.protocol}://${req.get("host")}`;
+      const shelfUrl = `${serverUrl}/product/${product.productID}`;
+      const qrCode = await QRCode.toDataURL(shelfUrl);
+      (productObj as any).shelfUrl = shelfUrl;
+      (productObj as any).qrCode = qrCode;
+    } else {
+      // Product doesn't have a productID yet
+      (productObj as any).shelfUrl = null;
+      (productObj as any).qrCode = null;
+    }
 
     // Transform images to full URLs
     if (productObj.images) {

@@ -41,114 +41,89 @@ function accountingData() {
             _id: '',
             accountId: '',
             amount: '',
-            transactionType: 'Credit', // Credit = Took, Debit = Paid
+            transactionType: 'Credit', // Credit = Took (Receivable/Cr.), Debit = Paid (Payable/Dr.)
             date: new Date().toISOString().split('T')[0],
             tagId: '',
             description: '',
             reference: ''
         },
-        loading: false,
 
         async init() {
-            await this.loadSummary();
-            await this.loadAccounts();
-            await this.loadContacts();
-            await this.loadTags();
+            this.loading = true;
+            try {
+                await Promise.all([
+                    this.loadSummary(),
+                    this.loadAccounts(),
+                    this.loadContacts(),
+                    this.loadTags()
+                ]);
+            } finally {
+                this.loading = false;
+            }
         },
 
+        // Computed
         get filteredAccounts() {
             if (!this.searchQuery) return this.accounts;
             const q = this.searchQuery.toLowerCase();
             return this.accounts.filter(a =>
                 a.accountName.toLowerCase().includes(q) ||
-                a.contact?.name.toLowerCase().includes(q)
+                (a.contact?.name || '').toLowerCase().includes(q)
             );
         },
 
+        get isTxValid() {
+            return this.newTx.accountId && this.newTx.amount > 0;
+        },
+
+        // API Methods
         async loadSummary() {
-            try {
-                const res = await window.api.get('/accounting/summary');
-                this.summary = res.data;
-            } catch (error) {
-                console.error('Error loading summary:', error);
-            }
+            const res = await window.api.get('/accounting/summary');
+            console.log("[Accounting] Summary Loaded:", res.data);
+            this.summary = res.data;
         },
 
         async loadAccounts() {
-            try {
-                const res = await window.api.get('/accounting/accounts');
-                this.accounts = res.data;
-            } catch (error) {
-                console.error('Error loading accounts:', error);
-            }
+            const res = await window.api.get('/accounting/accounts');
+            this.accounts = res.data;
         },
 
         async loadContacts() {
-            try {
-                const res = await window.api.get('/contacts');
-                this.contacts = res.data;
-            } catch (error) {
-                console.error('Error loading contacts:', error);
-            }
+            const res = await window.api.get('/contacts');
+            this.contacts = res.data;
         },
 
         async loadTags() {
-            try {
-                const res = await window.api.get('/accounting/tags');
-                this.tags = res.data;
-            } catch (error) {
-                console.error('Error loading tags:', error);
-            }
+            const res = await window.api.get('/accounting/tags');
+            this.tags = res.data;
         },
 
         async createTag() {
+            if (!this.newTag.name) return;
             try {
                 await window.api.post('/accounting/tags', this.newTag);
-                window.showNotification('Tag created', 'success');
+                window.showNotification('Classification updated', 'success');
                 this.newTag = { name: '', color: '#6366f1' };
                 await this.loadTags();
             } catch (error) {
-                window.showNotification('Failed to create tag', 'error');
+                window.showNotification('Failed to save category', 'error');
             }
         },
 
         async deleteTag(tagId) {
-            if (!confirm('Delete this tag? It will be removed from all transactions.')) return;
+            if (!confirm('Permanent deletion of this category?')) return;
             try {
                 await window.api.delete(`/accounting/tags/${tagId}`);
-                window.showNotification('Tag removed', 'success');
+                window.showNotification('Category removed', 'success');
                 await this.loadTags();
             } catch (error) {
-                window.showNotification('Failed to delete tag', 'error');
-            }
-        },
-
-        async confirmDeleteAccount() {
-            if (!this.selectedAccount) return;
-
-            const hasBalance = this.selectedAccount.totalBalance !== 0;
-            const msg = hasBalance
-                ? `WARNING: This ledger has a balance of ₹${this.formatNumber(this.selectedAccount.totalBalance)}. Deleting it will purge all its transaction history. Are you sure?`
-                : 'Delete this ledger and all its transaction history?';
-
-            if (confirm(msg)) {
-                try {
-                    await window.api.delete(`/accounting/accounts/${this.selectedAccount._id}`);
-                    window.showNotification('Ledger deleted successfully', 'success');
-                    this.selectedAccount = null;
-                    await this.loadAccounts();
-                    await this.loadSummary();
-                } catch (error) {
-                    window.showNotification('Failed to delete ledger', 'error');
-                }
+                window.showNotification('Failed to remove category', 'error');
             }
         },
 
         async selectAccount(acc) {
             this.selectedAccount = acc;
             this.newTx.accountId = acc._id;
-            // Clear filters when switching accounts or keep them? User might want to compare same period.
-            // Let's keep filters but refresh ledger.
             await this.loadLedger(acc._id);
         },
 
@@ -165,27 +140,44 @@ function accountingData() {
                 this.ledgerTransactions = res.data.transactions;
                 this.periodStats = res.data.periodStats;
             } catch (error) {
-                console.error('Error loading ledger:', error);
+                console.error('Ledger error:', error);
             }
         },
 
         openAddAccountModal() {
+            this.editMode.account = false;
+            this.newAccount = { _id: '', contactId: '', accountType: 'Payable', accountName: '' };
             this.modals.addAccount = true;
         },
 
         openAddTransactionModal() {
+            this.editMode.transaction = false;
+            // Retain selected account if present
+            const currentAcc = this.selectedAccount?._id || '';
+            this.newTx = {
+                _id: '',
+                accountId: currentAcc,
+                amount: '',
+                transactionType: 'Credit',
+                date: new Date().toISOString().split('T')[0],
+                tagId: '',
+                description: '',
+                reference: ''
+            };
             this.modals.addTransaction = true;
         },
 
         async createAccount() {
             try {
+                this.loading = true;
                 await window.api.post('/accounting/get-account', this.newAccount);
-                window.showNotification('Khatabook entry created', 'success');
+                window.showNotification('Ledger entry established', 'success');
                 this.modals.addAccount = false;
                 await this.loadAccounts();
-                this.newAccount = { _id: '', contactId: '', accountType: 'Payable', accountName: '' };
             } catch (error) {
-                window.showNotification('Failed to create entry', 'error');
+                window.showNotification('Operation failed', 'error');
+            } finally {
+                this.loading = false;
             }
         },
 
@@ -197,21 +189,23 @@ function accountingData() {
                 accountType: acc.accountType,
                 accountName: acc.accountName
             };
-            this.modals.editAccount = true;
+            this.modals.addAccount = true;
         },
 
         async updateAccountSettings() {
             try {
+                this.loading = true;
                 await window.api.put(`/accounting/accounts/${this.newAccount._id}`, this.newAccount);
-                window.showNotification('Account updated', 'success');
-                this.modals.editAccount = false;
+                window.showNotification('Ledger master updated', 'success');
+                this.modals.addAccount = false;
                 await this.loadAccounts();
                 if (this.selectedAccount?._id === this.newAccount._id) {
-                    this.selectedAccount.accountName = this.newAccount.accountName;
-                    this.selectedAccount.accountType = this.newAccount.accountType;
+                    this.selectedAccount = { ...this.selectedAccount, ...this.newAccount };
                 }
             } catch (error) {
-                window.showNotification('Failed to update account', 'error');
+                window.showNotification('Update aborted', 'error');
+            } finally {
+                this.loading = false;
             }
         },
 
@@ -231,19 +225,18 @@ function accountingData() {
         },
 
         async deleteTransaction(txId) {
-            if (!confirm('Delete this transaction? The account balance will be adjusted.')) return;
+            if (!confirm('Permanent deletion will adjust balance. Proceed?')) return;
             try {
                 await window.api.delete(`/accounting/transaction/${txId}`);
-                window.showNotification('Transaction deleted');
+                window.showNotification('Voucher purged');
                 await this.refreshAllData();
             } catch (error) {
-                window.showNotification('Failed to delete transaction', 'error');
+                window.showNotification('Purge failed', 'error');
             }
         },
 
         async refreshAllData() {
-            await this.loadSummary();
-            await this.loadAccounts();
+            await Promise.all([this.loadSummary(), this.loadAccounts()]);
             if (this.selectedAccount) {
                 await this.loadLedger(this.selectedAccount._id);
                 const updated = this.accounts.find(a => a._id === this.selectedAccount._id);
@@ -252,49 +245,44 @@ function accountingData() {
         },
 
         async saveTransaction() {
+            if (!this.isTxValid) return;
             try {
                 this.loading = true;
                 if (this.editMode.transaction) {
                     await window.api.put(`/accounting/transaction/${this.newTx._id}`, this.newTx);
-                    window.showNotification('Transaction updated', 'success');
+                    window.showNotification('Voucher revised', 'success');
                 } else {
                     await window.api.post('/accounting/transaction', this.newTx);
-                    window.showNotification('Voucher posted to ledger', 'success');
+                    window.showNotification('Voucher posted', 'success');
                 }
 
                 this.modals.addTransaction = false;
-                this.editMode.transaction = false;
                 await this.refreshAllData();
-
-                // Reset form
-                const lastAccId = this.newTx.accountId;
-                this.newTx = {
-                    _id: '',
-                    accountId: lastAccId,
-                    amount: '',
-                    transactionType: 'Credit',
-                    tagId: '',
-                    date: new Date().toISOString().split('T')[0],
-                    description: '',
-                    reference: ''
-                };
             } catch (error) {
-                window.showNotification('Failed to save transaction', 'error');
+                window.showNotification('Posting failed', 'error');
             } finally {
                 this.loading = false;
             }
         },
 
-        getContextAccount() {
-            if (!this.newTx.accountId) return null;
-            return this.accounts.find(a => a._id === this.newTx.accountId);
+        async confirmDeleteAccount() {
+            if (!this.selectedAccount) return;
+            const msg = `CRITICAL: Deleting this ledger will permanently purge all related transaction history. Proceed?`;
+            if (confirm(msg)) {
+                try {
+                    await window.api.delete(`/accounting/accounts/${this.selectedAccount._id}`);
+                    window.showNotification('Ledger master purged', 'success');
+                    this.selectedAccount = null;
+                    await this.loadAccounts();
+                    await this.loadSummary();
+                } catch (error) {
+                    window.showNotification('Action failed', 'error');
+                }
+            }
         },
 
         formatNumber(num) {
-            return new Intl.NumberFormat('en-IN', {
-                minimumFractionDigits: 0,
-                maximumFractionDigits: 0
-            }).format(num || 0);
+            return new Intl.NumberFormat('en-IN').format(num || 0);
         },
 
         formatDate(dateStr) {

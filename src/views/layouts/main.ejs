@@ -12,10 +12,10 @@
   <link rel="icon" type="image/svg+xml"
     href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 576 512'><path fill='%23007aff' d='M259.3 17.8L194 150.2 47.9 171.5c-26.2 3.8-36.7 36.1-17.7 54.6l105.7 103-25 145.5c-4.5 26.3 23.2 46 46.4 33.7L288 439.6l130.7 68.7c23.2 12.2 50.9-7.4 46.4-33.7l-25-145.5 105.7-103c19-18.5 8.5-50.8-17.7-54.6L382 150.2 316.7 17.8c-11.7-23.6-45.6-23.9-57.4 0z'/></svg>">
 
-  <!-- Google Fonts: Inter (Apple-like) -->
+  <!-- Google Fonts: Outfit -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
 
   <!-- Tailwind CSS -->
   <script src="https://cdn.tailwindcss.com"></script>
@@ -45,38 +45,30 @@
       theme: {
         extend: {
           fontFamily: {
-            sans: ['Inter', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'Helvetica Neue', 'Arial', 'sans-serif'],
+            sans: ['Outfit', 'Inter', 'sans-serif'],
           },
           colors: {
             primary: {
-              50: "#f2f8ff",
-              100: "#e6f1ff",
-              200: "#cce4ff",
-              300: "#99c9ff",
-              400: "#66adff",
-              500: "#007aff", // Apple Blue
-              600: "#0062cc",
-              700: "#004999",
-              800: "#003166",
-              900: "#001833",
+              50: "#f5f3ff",
+              100: "#ede9fe",
+              200: "#ddd6fe",
+              300: "#c4b5fd",
+              400: "#a78bfa",
+              500: "#7c3aed", // Vibrant Purple
+              600: "#6d28d9", // Deep Purple
+              700: "#5b21b6",
+              800: "#4c1d95",
+              900: "#2e1065",
             },
-            gray: {
-              50: "#f9fafb", // Apple background gray
-              100: "#f3f4f6",
-              200: "#e5e7eb",
-              300: "#d1d5db",
-              400: "#9ca3af",
-              500: "#6b7280",
-              600: "#4b5563",
-              700: "#374151",
-              800: "#1f2937",
-              900: "#111827",
+            surface: {
+              white: "#FFFFFF",
+              soft: "#F9F8FF",
+              muted: "#F3F0FF",
             }
           },
           boxShadow: {
-            'ios': '0 4px 20px -5px rgba(0, 0, 0, 0.05)',
-            'ios-hover': '0 10px 25px -5px rgba(0, 0, 0, 0.1)',
-            'glass': '0 8px 32px 0 rgba(31, 38, 135, 0.07)',
+            'purple': '0 10px 30px -10px rgba(109, 40, 217, 0.1)',
+            'glass': '0 8px 32px 0 rgba(109, 40, 217, 0.05)',
           },
           animation: {
             "slide-up": "slideUp 0.4s cubic-bezier(0.16, 1, 0.3, 1)",
@@ -210,175 +202,304 @@
   </style>
 </head>
 
-<body class="bg-gray-50 min-h-screen text-gray-900 font-sans selection:bg-primary-100 selection:text-primary-700"
+<body class="bg-white min-h-screen text-gray-900 font-sans selection:bg-primary-100 selection:text-primary-700"
   x-data="appData" x-cloak>
 
   <!-- Desktop Layout -->
-  <div class="flex h-screen overflow-hidden">
+  <div class="flex h-screen bg-slate-50/50">
 
     <!-- Sidebar (Desktop) -->
     <aside
-      class="hidden md:flex flex-col m-6 mr-0 rounded-[32px] bg-white border border-gray-100 shadow-sm relative overflow-hidden sidebar-transition"
-      :class="isSidebarCollapsed ? 'w-20' : 'w-72'">
+      class="hidden md:flex flex-col bg-white border-r border-slate-200 sidebar-transition flex-shrink-0 transition-all duration-300"
+      :class="isSidebarCollapsed ? 'w-20' : 'w-64'">
 
       <!-- Sidebar Header -->
-      <div class="p-8 pb-4">
-        <div class="flex items-center space-x-3 group cursor-pointer" @click="toggleSidebar()">
+      <div class="py-8 border-b border-slate-100/50 transition-all duration-300"
+        :class="isSidebarCollapsed ? 'px-4' : 'px-6'">
+        <div class="flex items-center gap-3 cursor-pointer" @click="toggleSidebar()">
           <div
-            class="w-11 h-11 rounded-2xl bg-gray-900 flex items-center justify-center text-white shadow-lg transition-transform group-hover:scale-105 active:scale-95 flex-shrink-0">
-            <i class="fas fa-star text-lg"></i>
+            class="w-10 h-10 rounded-lg bg-primary-600 flex items-center justify-center text-white shadow-sm flex-shrink-0">
+            <i class="fas fa-shop text-sm"></i>
           </div>
-          <div class="flex flex-col transition-all duration-500 overflow-hidden"
+          <div class="flex flex-col transition-all duration-300 overflow-hidden"
             :class="isSidebarCollapsed ? 'w-0 opacity-0' : 'w-auto opacity-100'">
-            <span class="text-xl font-bold tracking-tight text-gray-900 leading-none">Astr</span>
-            <span class="text-[9px] font-bold text-gray-400 uppercase tracking-widest mt-1">Management</span>
+            <span class="text-xl font-bold tracking-tight text-slate-900 leading-none whitespace-nowrap">Astr</span>
+            <span class="text-[9px] font-bold text-primary-500 uppercase tracking-widest mt-1 whitespace-nowrap">Shop Manager v<%= version %></span>
           </div>
         </div>
       </div>
 
-      <!-- Navigation Matrix -->
-      <nav class="flex-1 px-4 py-8 space-y-4 overflow-y-auto custom-scrollbar overflow-x-hidden">
+      <!-- Navigation -->
+      <nav class="flex-1 px-3 py-6 space-y-1 overflow-y-auto custom-scrollbar">
         <template x-for="group in menuGroups" :key="group.title">
-          <div class="space-y-1">
-            <!-- Category Header / Toggle -->
-            <div class="relative group/tooltip">
-              <button @click="toggleGroup(group.title)"
-                class="w-full flex items-center justify-between px-5 py-2 group/header hover:bg-gray-50/50 rounded-xl transition-all overflow-hidden"
-                :class="isSidebarCollapsed ? 'justify-center' : ''">
-                <!-- Collapsed Icon -->
-                <i x-show="isSidebarCollapsed" :class="group.icon"
-                  class="text-xs text-gray-300 group-hover/header:text-gray-600 transition-all"></i>
-
-                <span
-                  class="text-[10px] font-bold text-gray-400 uppercase tracking-[0.2em] group-hover/header:text-gray-600 transition-all duration-500 whitespace-nowrap"
-                  x-text="group.title"
-                  :class="isSidebarCollapsed ? 'w-0 opacity-0 pointer-events-none' : 'w-auto opacity-100'"></span>
-                <i class="fas fa-chevron-right text-[10px] text-gray-300 transition-all duration-500" :class="[
-                    expandedGroups.includes(group.title) ? 'rotate-90 text-gray-400' : '',
-                    isSidebarCollapsed ? 'w-0 opacity-0' : 'w-auto opacity-100'
-                  ]"></i>
-              </button>
-
-              <!-- Tooltip for Collapsed Category -->
-              <div x-show="isSidebarCollapsed"
-                class="absolute left-full ml-4 px-3 py-1 bg-gray-900 text-white text-[10px] font-bold uppercase tracking-widest rounded-md opacity-0 group-hover/tooltip:opacity-100 pointer-events-none transition-all z-50 whitespace-nowrap">
-                <span x-text="group.title"></span>
-              </div>
-            </div>
-
-            <!-- Group Items -->
-            <div x-show="expandedGroups.includes(group.title) || isSidebarCollapsed" x-collapse class="space-y-1 pt-1">
+          <div class="mb-6">
+            <div x-show="!isSidebarCollapsed" class="px-4 mb-2 text-[10px] font-bold text-slate-400 uppercase tracking-widest" x-text="group.title"></div>
+            <div class="space-y-1">
               <template x-for="item in group.items" :key="item.href">
-                <div class="relative group/tooltip">
-                  <!-- Active/Allowed Link -->
-                  <template x-if="hasPermission(item.permission)">
-                    <a :href="item.href"
-                      class="flex items-center px-5 py-3 rounded-2xl transition-all duration-300 group/link relative overflow-hidden"
-                      :class="[
-                        isActive(item.href) ? 'bg-gray-50 text-gray-900 shadow-sm' : 'text-gray-400 hover:text-gray-900 hover:bg-gray-50/50',
-                        isSidebarCollapsed ? 'justify-center space-x-0' : 'space-x-3'
-                      ]">
-
-                      <div class="w-8 flex justify-center transition-all duration-300 flex-shrink-0"
-                        :class="isActive(item.href) ? 'text-gray-900 scale-110' : 'text-gray-300 group-hover/link:text-gray-600 group-hover/link:scale-110'">
-                        <i :class="item.icon" class="text-base"></i>
-                      </div>
-                      <span
-                        class="text-sm font-semibold tracking-tight transition-all duration-500 whitespace-nowrap overflow-hidden"
-                        x-text="item.label" :class="isSidebarCollapsed ? 'w-0 opacity-0' : 'w-auto opacity-100'"></span>
-
-                      <!-- Subtle Pulse Indicator for active -->
-                      <div x-show="isActive(item.href)"
-                        class="absolute rounded-full bg-gray-900 shadow-sm transition-all duration-500"
-                        :class="isSidebarCollapsed ? 'inset-0 bg-gray-900/5' : 'right-4 w-1.5 h-1.5'">
-                      </div>
-                    </a>
-                  </template>
-
-                  <!-- Unauthorized/Disabled Placeholder -->
-                  <template x-if="!hasPermission(item.permission)">
-                    <div
-                      class="flex items-center px-5 py-3 rounded-2xl transition-all duration-300 relative overflow-hidden opacity-40 cursor-not-allowed group/unauthorized"
-                      :class="isSidebarCollapsed ? 'justify-center space-x-0' : 'space-x-3'">
-                      <div class="w-8 flex justify-center flex-shrink-0 text-gray-300">
-                        <i :class="item.icon" class="text-base"></i>
-                      </div>
-                      <span class="text-sm font-semibold tracking-tight text-gray-300 whitespace-nowrap overflow-hidden"
-                        x-text="item.label" :class="isSidebarCollapsed ? 'w-0 opacity-0' : 'w-auto opacity-100'"></span>
-
-                      <!-- Unauthorized Tip -->
-                      <div x-show="!isSidebarCollapsed"
-                        class="absolute right-4 text-[8px] font-black uppercase tracking-widest text-red-400">
-                        Locked
-                      </div>
+                <template x-if="hasPermission(item.permission)">
+                  <a :href="item.href"
+                    class="flex items-center px-4 py-2.5 rounded-lg transition-all group relative overflow-hidden"
+                    :class="[
+                      isActive(item.href) ? 'bg-primary-50 text-primary-700' : 'text-slate-500 hover:bg-slate-50 hover:text-slate-900',
+                      isSidebarCollapsed ? 'justify-center px-2' : ''
+                    ]">
+                    <div class="w-6 flex justify-center flex-shrink-0" :class="isActive(item.href) ? 'text-primary-600' : 'text-slate-400 group-hover:text-slate-600'">
+                      <i :class="item.icon" class="text-sm"></i>
                     </div>
-                  </template>
-
-                  <!-- Tooltip for All (showing Unauthorized for locked ones) -->
-                  <div x-show="isSidebarCollapsed"
-                    class="absolute left-full ml-4 px-3 py-1 bg-gray-900 text-white text-[10px] font-bold uppercase tracking-widest rounded-md opacity-0 group-hover/tooltip:opacity-100 pointer-events-none transition-all z-50 whitespace-nowrap">
-                    <span x-text="item.label"></span>
-                    <span x-show="!hasPermission(item.permission)" class="text-red-400 ml-1">(Unauthorized)</span>
-                  </div>
-                </div>
+                    <span x-show="!isSidebarCollapsed" class="ml-3 text-sm font-medium tracking-tight" x-text="item.label"></span>
+                    <div x-show="isActive(item.href) && !isSidebarCollapsed" class="absolute right-0 top-1/2 -translate-y-1/2 w-1 h-4 bg-primary-600 rounded-l-full"></div>
+                  </a>
+                </template>
               </template>
             </div>
           </div>
         </template>
       </nav>
 
-      <!-- User Node -->
-      <div class="p-6">
-        <div
-          class="p-4 rounded-[24px] bg-gray-50/50 border border-gray-100 flex items-center justify-between group hover:bg-white hover:shadow-xl hover:shadow-gray-100 transition-all cursor-pointer">
-          <div class="flex items-center space-x-3 overflow-hidden">
-            <div
-              class="w-10 h-10 rounded-full bg-white border border-gray-100 flex-shrink-0 flex items-center justify-center text-gray-900 font-bold shadow-sm group-hover:bg-gray-900 group-hover:text-white transition-all">
-              <span x-text="user?.name?.charAt(0) || 'U'"></span>
-            </div>
-            <div class="flex-1 min-w-0">
-              <p class="text-xs font-bold text-gray-900 truncate" x-text="user?.name || 'User'"></p>
-              <p class="text-[10px] font-bold text-gray-400 truncate mt-0.5" x-text="user?.email || 'Unauthorized'"></p>
-            </div>
-          </div>
-          <button @click.stop="logout()"
-            class="w-8 h-8 rounded-full flex items-center justify-center text-gray-300 hover:text-red-500 hover:bg-red-50 transition-all">
-            <i class="fas fa-power-off text-sm"></i>
-          </button>
-        </div>
+      <!-- Sidebar Footer -->
+      <div class="p-4 border-t border-slate-100">
+        <button @click="logout()"
+          class="w-full flex items-center p-3 rounded-lg text-slate-500 hover:bg-red-50 hover:text-red-600 transition-all"
+          :class="isSidebarCollapsed ? 'justify-center px-2' : ''">
+          <i class="fas fa-power-off text-sm"></i>
+          <span x-show="!isSidebarCollapsed" class="ml-3 text-sm font-medium">Log Out</span>
+        </button>
       </div>
     </aside>
 
     <!-- Main Content Area -->
-    <div class="flex-1 flex flex-col h-full overflow-hidden relative">
-
-      <!-- Mobile Header -->
-      <header
-        class="md:hidden bg-white/70 backdrop-blur-xl border-b border-gray-100 sticky top-0 z-30 px-6 py-4 flex items-center justify-between">
-        <button @click="sidebarOpen = true"
-          class="w-11 h-11 rounded-[14px] bg-gray-50 border border-gray-100 flex items-center justify-center text-gray-900 active:scale-90 transition-all">
-          <i class="fas fa-bars-staggered text-sm"></i>
-        </button>
-        <div class="flex items-center gap-2.5">
-          <div
-            class="w-9 h-9 rounded-[12px] bg-gray-900 flex items-center justify-center text-white shadow-lg shadow-gray-200">
-            <i class="fas fa-star text-xs"></i>
+    <div class="flex-1 flex flex-col h-full overflow-hidden">
+      
+      <!-- Top Header (Desktop & Mobile) -->
+      <header class="h-16 bg-white border-b border-slate-200 flex items-center justify-between px-6 flex-shrink-0 z-20">
+        <!-- Search -->
+        <div class="relative flex-1 max-w-md hidden md:block" @click.away="showSearchDropdown = false">
+          <div class="flex items-center bg-slate-50 rounded-lg px-4 py-2 border border-slate-100 group focus-within:bg-white focus-within:border-primary-200 focus-within:shadow-sm transition-all">
+            <i class="fas fa-search text-slate-400 text-sm group-focus-within:text-primary-500" x-show="!isSearching"></i>
+            <i class="fas fa-circle-notch fa-spin text-primary-500 text-sm" x-show="isSearching" style="display: none;"></i>
+            
+            <input type="text" 
+              id="globalSearchInput"
+              x-model="searchQuery"
+              @input="executeSearch()"
+              @focus="showSearchDropdown = true"
+              @keydown.escape="showSearchDropdown = false"
+              placeholder="Search anything..." 
+              class="ml-3 bg-transparent border-none outline-none text-sm text-slate-900 w-full placeholder:text-slate-400">
+            
+            <div class="flex items-center gap-1 px-2 py-1 bg-slate-100 rounded border border-slate-200 text-[10px] font-black text-slate-400 uppercase tracking-tighter" x-show="!searchQuery">
+              <span class="text-[8px]">⌘</span>K
+            </div>
           </div>
-          <div>
-            <span class="text-xl font-bold text-gray-900 tracking-tight block leading-none">Astr</span>
-            <span class="text-[9px] font-bold text-gray-400 uppercase tracking-widest mt-1">Management</span>
+
+          <!-- Search Dropdown Overlay -->
+          <div x-show="showSearchDropdown && (searchQuery.length >= 2)" 
+               x-transition:enter="transition ease-out duration-200"
+               x-transition:enter-start="opacity-0 translate-y-4"
+               x-transition:enter-end="opacity-100 translate-y-0"
+               class="absolute top-full left-0 right-0 mt-2 bg-white border border-slate-200 rounded-xl shadow-2xl overflow-hidden z-[100]"
+               style="display: none;">
+            
+            <div class="max-h-[480px] overflow-y-auto custom-scrollbar p-2 space-y-4">
+              
+              <!-- Tickets Section -->
+              <template x-if="searchResults.tickets.length > 0">
+                <div>
+                  <div class="px-3 py-1 text-[9px] font-black text-slate-400 uppercase tracking-widest bg-slate-50/50 rounded-lg mb-1">Tickets</div>
+                  <div class="space-y-0.5">
+                    <template x-for="item in searchResults.tickets" :key="item.id">
+                      <a :href="item.url" class="flex items-start gap-3 p-3 rounded-lg hover:bg-primary-50 group transition-all">
+                        <div class="w-8 h-8 rounded bg-amber-50 text-amber-600 flex items-center justify-center flex-shrink-0">
+                          <i class="fas fa-wrench text-xs"></i>
+                        </div>
+                        <div class="min-w-0">
+                          <p class="text-sm font-bold text-slate-900 truncate group-hover:text-primary-700" x-text="item.title"></p>
+                          <p class="text-[10px] font-medium text-slate-400 truncate" x-text="item.subtitle"></p>
+                        </div>
+                      </a>
+                    </template>
+                  </div>
+                </div>
+              </template>
+
+              <!-- Contacts Section -->
+              <template x-if="searchResults.contacts.length > 0">
+                <div>
+                  <div class="px-3 py-1 text-[9px] font-black text-slate-400 uppercase tracking-widest bg-slate-50/50 rounded-lg mb-1">Contacts</div>
+                  <div class="space-y-0.5">
+                    <template x-for="item in searchResults.contacts" :key="item.id">
+                      <a :href="item.url" class="flex items-start gap-3 p-3 rounded-lg hover:bg-primary-50 group transition-all">
+                        <div class="w-8 h-8 rounded bg-blue-50 text-blue-600 flex items-center justify-center flex-shrink-0">
+                          <i class="fas fa-address-book text-xs"></i>
+                        </div>
+                        <div class="min-w-0">
+                          <p class="text-sm font-bold text-slate-900 truncate group-hover:text-primary-700" x-text="item.title"></p>
+                          <p class="text-[10px] font-medium text-slate-400 truncate" x-text="item.subtitle"></p>
+                        </div>
+                      </a>
+                    </template>
+                  </div>
+                </div>
+              </template>
+
+              <!-- Products Section -->
+              <template x-if="searchResults.products.length > 0">
+                <div>
+                  <div class="px-3 py-1 text-[9px] font-black text-slate-400 uppercase tracking-widest bg-slate-50/50 rounded-lg mb-1">Products</div>
+                  <div class="space-y-0.5">
+                    <template x-for="item in searchResults.products" :key="item.id">
+                      <a :href="item.url" class="flex items-start gap-3 p-3 rounded-lg hover:bg-primary-50 group transition-all">
+                        <div class="w-8 h-8 rounded bg-purple-50 text-purple-600 flex items-center justify-center flex-shrink-0">
+                          <i class="fas fa-box text-xs"></i>
+                        </div>
+                        <div class="min-w-0">
+                          <p class="text-sm font-bold text-slate-900 truncate group-hover:text-primary-700" x-text="item.title"></p>
+                          <p class="text-[10px] font-medium text-slate-400 truncate" x-text="item.subtitle"></p>
+                        </div>
+                        <template x-if="item.isSold">
+                          <span class="ml-auto px-2 py-0.5 bg-rose-100 text-rose-600 text-[8px] font-black uppercase rounded">Sold</span>
+                        </template>
+                      </a>
+                    </template>
+                  </div>
+                </div>
+              </template>
+
+              <!-- Leads Section -->
+              <template x-if="searchResults.leads && searchResults.leads.length > 0">
+                <div>
+                  <div class="px-3 py-1 text-[9px] font-black text-slate-400 uppercase tracking-widest bg-slate-50/50 rounded-lg mb-1">Leads</div>
+                  <div class="space-y-0.5">
+                    <template x-for="item in searchResults.leads" :key="item.id">
+                      <a :href="item.url" class="flex items-start gap-3 p-3 rounded-lg hover:bg-primary-50 group transition-all">
+                        <div class="w-8 h-8 rounded bg-emerald-50 text-emerald-600 flex items-center justify-center flex-shrink-0">
+                          <i class="fas fa-bullseye text-xs"></i>
+                        </div>
+                        <div class="min-w-0">
+                          <p class="text-sm font-bold text-slate-900 truncate group-hover:text-primary-700" x-text="item.title"></p>
+                          <p class="text-[10px] font-medium text-slate-400 truncate" x-text="item.subtitle"></p>
+                        </div>
+                        <span :class="{
+                          'bg-slate-100 text-slate-600': item.status === 'New',
+                          'bg-primary-50 text-primary-600': item.status === 'Contacted' || item.status === 'Qualified',
+                          'bg-amber-50 text-amber-600': item.status === 'Negotiation',
+                          'bg-emerald-50 text-emerald-600': item.status === 'Closed Won',
+                          'bg-rose-50 text-rose-600': item.status === 'Closed Lost',
+                        }" class="ml-auto px-2 py-0.5 text-[8px] font-black uppercase rounded" x-text="item.status"></span>
+                      </a>
+                    </template>
+                  </div>
+                </div>
+              </template>
+
+              <!-- Empty State -->
+              <div x-show="!isSearching && searchResults.tickets.length === 0 && searchResults.contacts.length === 0 && searchResults.products.length === 0 && (!searchResults.leads || searchResults.leads.length === 0)" 
+                   class="p-8 text-center" style="display: none;">
+                <div class="w-12 h-12 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-3">
+                  <i class="fas fa-search text-slate-200"></i>
+                </div>
+                <p class="text-xs font-bold text-slate-400 uppercase tracking-widest">No results found for "<span x-text="searchQuery"></span>"</p>
+              </div>
+
+            </div>
+            
+            <div class="p-3 bg-slate-50 border-t border-slate-100 flex items-center justify-between">
+              <div class="flex items-center gap-3">
+                <div class="flex items-center gap-1 text-[9px] font-bold text-slate-400">
+                  <span class="px-1.5 py-0.5 bg-white border border-slate-200 rounded">ESC</span> to close
+                </div>
+              </div>
+              <div class="text-[9px] font-black text-primary-500 uppercase tracking-widest">Global Search Control</div>
+            </div>
           </div>
         </div>
-        <div class="w-11 flex justify-end">
-          <div
-            class="w-9 h-9 rounded-full bg-blue-50 border border-blue-100 flex items-center justify-center text-blue-600 font-bold text-[10px]"
-            x-text="user?.name?.charAt(0) || 'U'"></div>
+        
+        <!-- Mobile Toggle (Mobile Only) -->
+        <button @click="sidebarOpen = true" class="md:hidden w-10 h-10 rounded-lg bg-slate-50 border border-slate-100 flex items-center justify-center text-slate-600 transition-all">
+          <i class="fas fa-bars-staggered text-sm"></i>
+        </button>
+
+        <!-- Right Side: User & Notifications -->
+        <div class="flex items-center gap-4">
+          <!-- Notification Dropdown -->
+          <div class="relative" @click.away="showNotificationsDropdown = false">
+            <button @click="showNotificationsDropdown = !showNotificationsDropdown" 
+                    class="relative w-10 h-10 rounded-lg hover:bg-slate-50 text-slate-400 hover:text-slate-600 transition-all">
+              <i class="fas fa-bell text-sm"></i>
+              <span x-show="unreadCount > 0" 
+                    class="absolute top-2.5 right-2.5 w-1.5 h-1.5 bg-primary-500 rounded-full border border-white"></span>
+            </button>
+
+            <!-- Notifications Dropdown Overlay -->
+            <div x-show="showNotificationsDropdown" 
+                 x-transition:enter="transition ease-out duration-200"
+                 x-transition:enter-start="opacity-0 scale-95 translate-y-2"
+                 x-transition:enter-end="opacity-100 scale-100 translate-y-0"
+                 class="absolute right-0 mt-2 w-80 bg-white border border-slate-200 rounded-xl shadow-2xl z-[100] overflow-hidden" 
+                 style="display: none;">
+              
+              <div class="p-4 border-b border-slate-100 flex items-center justify-between">
+                <div>
+                  <h3 class="text-xs font-black text-slate-900 uppercase tracking-widest">Notifications</h3>
+                  <p class="text-[9px] font-bold text-slate-400 uppercase tracking-tighter mt-0.5" x-text="unreadCount + ' UNREAD'"></p>
+                </div>
+                <button @click="markAllAsRead()" class="text-[9px] font-black text-primary-600 uppercase tracking-widest hover:text-primary-700">Mark all as read</button>
+              </div>
+
+              <div class="max-h-80 overflow-y-auto custom-scrollbar">
+                <template x-if="notifications.length === 0">
+                  <div class="p-8 text-center">
+                    <i class="fas fa-bell-slash text-slate-200 text-2xl mb-2"></i>
+                    <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">No notifications</p>
+                  </div>
+                </template>
+                <template x-for="notif in notifications" :key="notif.id">
+                  <div class="p-4 border-b border-slate-50 hover:bg-slate-50 transition-colors cursor-pointer group"
+                       :class="{'bg-primary-50/20': !notif.read}">
+                    <div class="flex gap-3">
+                      <div :class="{
+                        'bg-blue-50 text-blue-600': notif.type === 'info',
+                        'bg-emerald-50 text-emerald-600': notif.type === 'success',
+                        'bg-amber-50 text-amber-600': notif.type === 'warning',
+                        'bg-rose-50 text-rose-600': notif.type === 'error'
+                      }" class="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0">
+                        <i :class="notif.icon" class="text-xs"></i>
+                      </div>
+                      <div class="flex-1 min-w-0">
+                        <div class="flex items-center justify-between mb-0.5">
+                          <p class="text-[11px] font-bold text-slate-900 truncate" x-text="notif.title"></p>
+                          <span class="text-[8px] font-black text-slate-400 uppercase tracking-tighter" x-text="notif.time"></span>
+                        </div>
+                        <p class="text-[10px] text-slate-500 line-clamp-2 leading-relaxed" x-text="notif.message"></p>
+                      </div>
+                    </div>
+                  </div>
+                </template>
+              </div>
+
+              <div class="p-3 bg-slate-50 border-t border-slate-100 text-center">
+                <a href="#" class="text-[9px] font-black text-slate-400 uppercase tracking-widest hover:text-slate-600 transition-all">View All Activity Log</a>
+              </div>
+            </div>
+          </div>
+
+          <div class="h-6 w-px bg-slate-100"></div>
+          <div class="flex items-center gap-3 pl-1">
+            <div class="text-right hidden sm:block">
+              <p class="text-sm font-bold text-slate-900 leading-none" x-text="user?.name || 'User'"></p>
+              <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1" x-text="user?.position || 'Admin'"></p>
+            </div>
+            <div class="w-10 h-10 rounded-lg bg-primary-50 border border-primary-100 flex items-center justify-center text-primary-600 font-bold text-sm shadow-sm">
+              <span x-text="user?.name?.charAt(0) || 'U'"></span>
+            </div>
+            <i class="fas fa-chevron-down text-[10px] text-slate-300"></i>
+          </div>
         </div>
       </header>
 
       <!-- Content Scroll Area -->
-      <main class="flex-1 overflow-y-auto overflow-x-hidden p-4 md:p-8 pb-24 md:pb-8">
-        <div class="max-w-7xl mx-auto w-full">
+      <main class="flex-1 overflow-y-auto bg-slate-50/30 p-4 md:p-8 pb-24 md:pb-8 custom-scrollbar">
+        <div class="max-w-[1600px] mx-auto w-full">
           <%- body %>
         </div>
       </main>
@@ -388,12 +509,12 @@
         class="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-white/80 backdrop-blur-xl border-t border-gray-100 px-6 py-3 flex items-center justify-between safe-area-bottom">
         <template x-for="item in allNavItems.filter(i => hasPermission(i.permission)).slice(0, 4)" :key="item.href">
           <a :href="item.href" class="flex flex-col items-center gap-1 transition-all"
-            :class="isActive(item.href) ? 'text-gray-900' : 'text-gray-400'">
+            :class="isActive(item.href) ? 'text-primary-700' : 'text-gray-400'">
             <div class="w-10 h-10 rounded-xl flex items-center justify-center transition-all"
-              :class="isActive(item.href) ? 'bg-gray-900 text-white shadow-lg shadow-gray-200 scale-110' : 'bg-transparent'">
+              :class="isActive(item.href) ? 'bg-primary-600 text-white shadow-purple scale-110' : 'bg-transparent'">
               <i :class="item.icon" class="text-xs"></i>
             </div>
-            <span class="text-[9px] font-bold uppercase tracking-widest" x-text="item.label"></span>
+            <span class="text-[9px] font-bold uppercase tracking-widest" x-text="item.label.split(' ')[0]"></span>
           </a>
         </template>
         <button @click="sidebarOpen = true" class="flex flex-col items-center gap-1 text-gray-400">
@@ -425,12 +546,12 @@
         <div class="flex items-center justify-between">
           <div class="px-8 flex items-center gap-3">
             <div
-              class="w-12 h-12 rounded-[18px] bg-gray-900 flex items-center justify-center text-white shadow-xl shadow-gray-200">
-              <i class="fas fa-star text-lg"></i>
+              class="w-12 h-12 rounded-[18px] bg-primary-600 flex items-center justify-center text-white shadow-purple">
+              <i class="fas fa-shop text-lg"></i>
             </div>
             <div>
-              <span class="text-2xl font-bold text-gray-900 tracking-tight block">Astr</span>
-              <span class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Management v2.0</span>
+              <span class="text-2xl font-extrabold text-primary-600 tracking-tight block">Astr</span>
+              <span class="text-[10px] font-bold text-primary-300 uppercase tracking-widest">Shop Manager v<%= version %></span>
             </div>
           </div>
           <button @click="sidebarOpen = false"
@@ -457,9 +578,9 @@
                 <template x-if="hasPermission(item.permission)">
                   <a :href="item.href"
                     class="flex items-center gap-4 px-6 py-3.5 rounded-[22px] transition-all duration-300 group"
-                    :class="isActive(item.href) ? 'bg-gray-900 text-white shadow-xl shadow-gray-200' : 'text-gray-400 hover:bg-gray-50 hover:text-gray-900'">
+                    :class="isActive(item.href) ? 'bg-primary-600 text-white shadow-royal' : 'text-gray-400 hover:bg-primary-50 hover:text-primary-700'">
                     <div class="w-10 h-10 rounded-xl flex items-center justify-center transition-colors"
-                      :class="isActive(item.href) ? 'bg-white/10 text-white' : 'bg-gray-100 text-gray-400 group-hover:bg-white'">
+                      :class="isActive(item.href) ? 'bg-white/10 text-white' : 'bg-primary-50/50 text-primary-300 group-hover:bg-white'">
                       <i :class="item.icon" class="text-xs"></i>
                     </div>
                     <span x-text="item.label" class="text-[11px] font-bold uppercase tracking-widest"></span>
@@ -619,44 +740,68 @@
     document.addEventListener('alpine:init', () => {
       Alpine.data('appData', () => ({
         sidebarOpen: false,
+        
+        // Global Search State
+        searchQuery: '',
+        searchResults: { tickets: [], contacts: [], products: [] },
+        isSearching: false,
+        showSearchDropdown: false,
+        searchDebounce: null,
+
+        // Notifications
+        showNotificationsDropdown: false,
+        notifications: [
+          { id: 1, title: 'New Ticket Assigned', message: 'Lead #LT6W2Q was converted to Ticket #TAG-9921', time: '2M AGO', type: 'info', icon: 'fas fa-ticket-alt', read: false },
+          { id: 2, title: 'Payment Confirmed', message: 'Payment for TAG #9281 confirmed by Accountant', time: '1H AGO', type: 'success', icon: 'fas fa-check-circle', read: false },
+          { id: 3, title: 'Low Stock Alert', message: 'Samsung Galaxy S23 Ultra is below threshold (2 left)', time: '3H AGO', type: 'warning', icon: 'fas fa-exclamation-triangle', read: true },
+          { id: 4, title: 'New System Lead', message: 'Inquiry received for iPhone 15 Pro via Website', time: '5H AGO', type: 'info', icon: 'fas fa-bullseye', read: true }
+        ],
+
+        get unreadCount() {
+          return this.notifications.filter(n => !n.read).length;
+        },
+
+        markAllAsRead() {
+          this.notifications.forEach(n => n.read = true);
+        },
         menuGroups: [
           {
             title: 'General',
-            icon: 'fas fa-grid-2',
+            icon: 'fas fa-th-large',
             items: [
-              { label: 'Dashboard', href: '/dashboard', icon: 'fas fa-home' }
+              { label: 'Main Dashboard', href: '/dashboard', icon: 'fas fa-home' }
             ]
           },
           {
-            title: 'Operations',
-            icon: 'fas fa-briefcase',
+            title: 'Repairs & Bills',
+            icon: 'fas fa-tools',
             items: [
-              { label: 'Tickets', href: '/service-tickets', icon: 'fas fa-ticket', permission: 'tickets:read' },
-              { label: 'Accounting', href: '/accounting', icon: 'fas fa-indian-rupee-sign', permission: 'accounting:read' }
+              { label: 'New Repairs', href: '/service-tickets', icon: 'fas fa-wrench', permission: 'tickets:read' },
+              { label: 'Shop Accounts', href: '/accounting', icon: 'fas fa-indian-rupee-sign', permission: 'accounting:read' }
             ]
           },
           {
-            title: 'Inventory',
-            icon: 'fas fa-warehouse',
+            title: 'Shop Stock',
+            icon: 'fas fa-boxes-stacked',
             items: [
-              { label: 'Products', href: '/products', icon: 'fas fa-box', permission: 'products:read' },
-              { label: 'Categories', href: '/categories', icon: 'fas fa-tags', permission: 'products:read' }
+              { label: 'All Items', href: '/products', icon: 'fas fa-box-open', permission: 'products:read' },
+              { label: 'Item Groups', href: '/categories', icon: 'fas fa-layer-group', permission: 'products:read' }
             ]
           },
           {
-            title: 'Sales & CRM',
-            icon: 'fas fa-handshake',
+            title: 'Party & Sales',
+            icon: 'fas fa-user-group',
             items: [
-              { label: 'Leads', href: '/leads', icon: 'fas fa-bullseye', permission: 'leads:read' },
-              { label: 'Contacts', href: '/contacts', icon: 'fas fa-address-book', permission: 'contacts:read' }
+              { label: 'New Deals', href: '/leads', icon: 'fas fa-star', permission: 'leads:read' },
+              { label: 'Party List', href: '/contacts', icon: 'fas fa-address-book', permission: 'contacts:read' }
             ]
           },
           {
-            title: 'System',
-            icon: 'fas fa-sliders-h',
+            title: 'My Shop',
+            icon: 'fas fa-gear',
             items: [
-              { label: 'Team', href: '/team', icon: 'fas fa-users-gear', permission: 'settings:manage' },
-              { label: 'Settings', href: '/settings', icon: 'fas fa-cog', permission: 'settings:manage' }
+              { label: 'My Workers', href: '/team', icon: 'fas fa-users-gear', permission: 'settings:manage' },
+              { label: 'Shop Settings', href: '/settings', icon: 'fas fa-sliders-h', permission: 'settings:manage' }
             ]
           }
         ],
@@ -680,6 +825,23 @@
 
           // Check for unauthorized access
           this.checkPagePermission();
+
+          // Global Keyboard Listener for Search
+          window.addEventListener('keydown', (e) => {
+            // '/' or 'Cmd+K' / 'Ctrl+K'
+            if ((e.key === '/' && e.target.tagName !== 'INPUT' && e.target.tagName !== 'TEXTAREA') || 
+                ((e.metaKey || e.ctrlKey) && e.key === 'k')) {
+              e.preventDefault();
+              const searchInput = document.getElementById('globalSearchInput');
+              if (searchInput) {
+                searchInput.focus();
+                this.showSearchDropdown = true;
+              }
+            }
+            if (e.key === 'Escape') {
+              this.showSearchDropdown = false;
+            }
+          });
         },
 
         checkPagePermission() {
@@ -758,6 +920,30 @@
         },
         onConfirm() {
           this.$store.app.onConfirm();
+        },
+
+        // Global Search Logic
+        async executeSearch() {
+          if (!this.searchQuery || this.searchQuery.length < 2) {
+            this.searchResults = { tickets: [], contacts: [], products: [] };
+            this.showSearchDropdown = false;
+            return;
+          }
+
+          this.isSearching = true;
+          this.showSearchDropdown = true;
+
+          clearTimeout(this.searchDebounce);
+          this.searchDebounce = setTimeout(async () => {
+            try {
+              const response = await this.api(`/search/global?q=${encodeURIComponent(this.searchQuery)}`);
+              this.searchResults = response.data;
+            } catch (error) {
+              console.error('Search error:', error);
+            } finally {
+              this.isSearching = false;
+            }
+          }, 300);
         }
       }));
     });

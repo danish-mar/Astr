@@ -10,7 +10,7 @@
             filters: {
                 search: '',
                 category: '',
-                isSold: null,
+                isSold: localStorage.getItem('inventoryAvailabilityFilter') ? JSON.parse(localStorage.getItem('inventoryAvailabilityFilter')) : null,
                 minPrice: '',
                 maxPrice: '',
                 specs: {}
@@ -18,9 +18,19 @@
             availableFilters: {},
             showViewModal: false,
             showQRModal: false,
+            showProductModal: false,
             activeImageIndex: 0,
+            expandedImage: null,
             viewData: {},
+            newProduct: {},
+            editMode: false,
             showFilters: true,
+            stockSummary: {
+                totalItems: 0,
+                available: 0,
+                sold: 0,
+                totalValue: 0
+            },
 
             // Pagination
             pagination: {
@@ -82,6 +92,14 @@
                     this.loadCategories(),
                     this.loadContacts()
                 ]);
+
+                // Deep linking: Open product modal if ID is in URL or Hash
+                const urlParams = new URLSearchParams(window.location.search);
+                const productId = urlParams.get('id') || urlParams.get('productId') || window.location.hash.replace('#', '');
+                
+                if (productId && productId.length >= 24) {
+                    this.viewProduct({ _id: productId });
+                }
             },
 
 
@@ -119,6 +137,7 @@
                         this.pagination.page = response.pagination.page;
                     }
 
+                    this.calculateStockSummary();
                     this.loadFilters();
                 } catch (error) {
                     console.error('Error loading products:', error);
@@ -262,6 +281,22 @@
                 this.viewData = {};
             },
 
+            expandImage(imageUrl) {
+                this.expandedImage = imageUrl;
+                this.showViewModal = false; // Close detail modal when expanding image
+            },
+
+            async showQROnly(productId) {
+                try {
+                    const response = await window.api.get(`/products/${productId}`);
+                    this.viewData = response.data;
+                    this.showQRModal = true;
+                } catch (error) {
+                    console.error('Error loading product for QR:', error);
+                    window.showNotification('Error loading QR code', 'error');
+                }
+            },
+
             downloadQR(dataUrl, productID) {
                 if (!dataUrl) return;
                 const link = document.createElement('a');
@@ -271,6 +306,42 @@
                 link.click();
                 document.body.removeChild(link);
                 window.showNotification('Artifact QR Downloaded', 'success');
+            },
+
+            formatNumber(num) {
+                return new Intl.NumberFormat('en-IN').format(num || 0);
+            },
+
+            calculateStockSummary() {
+                this.stockSummary.totalItems = this.products.length;
+                this.stockSummary.available = this.products.filter(p => !p.isSold).length;
+                this.stockSummary.sold = this.products.filter(p => p.isSold).length;
+                this.stockSummary.totalValue = this.products.reduce((sum, p) => sum + (Number(p.price) || 0), 0);
+            },
+
+            setAvailabilityFilter(value) {
+                this.filters.isSold = value;
+                localStorage.setItem('inventoryAvailabilityFilter', JSON.stringify(value));
+                this.resetAndLoad();
+            },
+
+            openProductModal() {
+                this.editMode = false;
+                this.newProduct = {
+                    name: '',
+                    price: '',
+                    category: '',
+                    source: '',
+                    isSold: false,
+                    specifications: {},
+                    tags: []
+                };
+                this.showProductModal = true;
+            },
+
+            closeProductModal() {
+                this.showProductModal = false;
+                this.newProduct = {};
             },
 
             formatSpecifications(specs, template) {

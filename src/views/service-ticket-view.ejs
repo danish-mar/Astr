@@ -1,107 +1,99 @@
-<div x-data="serviceTicketViewData" x-init="init()" class="min-h-screen bg-[#f9fafb] pb-20">
-    <!-- Premium Header -->
-    <div class="sticky top-0 z-50 bg-white/70 backdrop-blur-xl border-b border-gray-100 mb-12">
-        <div class="max-w-[1200px] mx-auto px-8 py-8">
-            <div class="flex flex-col md:flex-row md:items-center justify-between gap-6">
+<div x-data="serviceTicketViewData" x-init="init()" class="min-h-screen bg-slate-50 pb-20">
+    <!-- SHARP MINIMAL HEADER -->
+    <div class="fixed top-0 left-0 right-0 z-[60] bg-white border-b border-slate-200">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex flex-col md:flex-row md:items-center justify-between py-6 gap-4">
                 <!-- Left: Title & Status -->
                 <div class="flex items-center gap-6">
                     <a href="/service-tickets"
-                        class="w-12 h-12 rounded-2xl bg-gray-50 border border-gray-100 flex items-center justify-center text-gray-400 hover:text-gray-900 hover:bg-white hover:shadow-sm transition-all group">
+                        class="w-10 h-10 rounded-lg bg-slate-50 border border-slate-200 flex items-center justify-center text-slate-400 hover:text-slate-900 hover:bg-white hover:shadow-sm transition-all group">
                         <i class="fas fa-arrow-left text-sm group-hover:-translate-x-1 transition-transform"></i>
                     </a>
-                    <div class="animate__animated animate__fadeIn">
+                    <div>
                         <div class="flex items-center gap-3 mb-1">
                             <span
-                                class="px-2.5 py-1 rounded-lg text-[10px] font-black uppercase tracking-widest shadow-md"
+                                class="px-3 py-1 rounded-lg text-[9px] font-black uppercase tracking-widest shadow-sm"
                                 :class="{
                                 'bg-amber-500 text-white': ticket?.status === 'Pending',
                                 'bg-blue-500 text-white': ticket?.status === 'In Progress',
                                 'bg-green-500 text-white': ticket?.status === 'Completed',
-                                'bg-gray-900 text-white': ticket?.status === 'Delivered',
-                                'bg-red-500 text-white': ticket?.status === 'Cancelled',
+                                'bg-slate-900 text-white': ticket?.status === 'Delivered',
+                                'bg-rose-500 text-white': ticket?.status === 'Cancelled',
                                 'bg-purple-600 text-white': ticket?.status === 'Reopened'
                             }" x-text="ticket?.status || 'Loading'"></span>
-                            <div class="w-1.5 h-1.5 rounded-full bg-gray-200"></div>
+                            <div class="w-1.5 h-1.5 rounded-full bg-slate-200"></div>
                             <span
-                                class="text-xs font-black text-blue-600 uppercase tracking-[0.2em] bg-blue-50 px-3 py-1 rounded-full"
+                                class="text-[9px] font-black text-primary-600 uppercase tracking-widest bg-primary-50 px-3 py-1 rounded-lg"
                                 x-text="`TAG #${ticket?.ticketNumber || '...'}`"></span>
                         </div>
-                        <h1 class="text-4xl font-black text-gray-900 tracking-tighter"
+                        <h1 class="text-3xl font-bold text-slate-900 tracking-tight uppercase"
                             x-text="ticket?.customer?.name || 'Service Report'"></h1>
                     </div>
                 </div>
 
                 <!-- Right: Actions -->
-                <div class="flex items-center gap-3 animate__animated animate__fadeIn">
+                <div class="flex items-center gap-3">
                     <button @click="window.print()"
-                        class="px-6 py-3.5 bg-white border border-gray-100 text-gray-900 rounded-2xl text-[11px] font-bold uppercase tracking-widest shadow-sm hover:shadow-xl hover:shadow-gray-200/50 transition-all active:scale-95 flex items-center gap-3">
+                        class="px-6 py-3 bg-white border border-slate-200 text-slate-900 rounded-xl text-[9px] font-black uppercase tracking-widest shadow-sm hover:shadow-lg transition-all active:scale-95 flex items-center gap-2">
                         <i class="fas fa-print opacity-50"></i>
-                        <span>Print Report</span>
+                        <span>Print</span>
                     </button>
                     <button @click="editTicket()"
-                        class="px-8 py-3.5 bg-gray-900 text-white rounded-2xl text-[11px] font-bold uppercase tracking-widest shadow-xl shadow-gray-200 hover:bg-black transition-all active:scale-95 flex items-center gap-3">
-                        <i class="fas fa-pen-nib text-[10px]"></i>
-                        <span>Modify Record</span>
+                        class="px-8 py-3 bg-slate-900 text-white rounded-xl text-[9px] font-black uppercase tracking-widest shadow-lg hover:bg-slate-800 transition-all active:scale-95 flex items-center gap-2">
+                        <i class="fas fa-pen text-[10px]"></i>
+                        <span>Edit</span>
                     </button>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Content: Focused View -->
-    <div class="max-w-[1200px] mx-auto px-8">
-        <div x-show="loading" class="flex flex-col items-center justify-center py-32 animate__animated animate__fadeIn">
-            <div class="w-16 h-16 border-4 border-gray-100 border-t-blue-600 rounded-full animate-spin mb-6"></div>
-            <p class="text-[10px] font-bold text-gray-400 uppercase tracking-[0.2em]">Retrieving Record</p>
+    <!-- Content -->
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-32">
+        <div x-show="loading" class="flex flex-col items-center justify-center py-32">
+            <div class="w-16 h-16 border-4 border-slate-100 border-t-primary-600 rounded-full animate-spin mb-6"></div>
+            <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest">Loading Ticket</p>
         </div>
 
-        <div x-show="!loading && ticket" class="grid grid-cols-1 lg:grid-cols-3 gap-10">
+        <div x-show="!loading && ticket" class="grid grid-cols-1 lg:grid-cols-3 gap-8">
             <!-- Main Column: Details -->
-            <div class="lg:col-span-2 space-y-10">
+            <div class="lg:col-span-2 space-y-8">
                 <!-- Device & Issue -->
-                <div
-                    class="bg-white border border-gray-100 rounded-[40px] p-10 shadow-sm animate__animated animate__fadeInUp">
-                    <div class="flex items-center gap-3 mb-10">
-                        <div class="w-12 h-12 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center">
+                <div class="bg-white border border-slate-200 rounded-[24px] p-6 shadow-sm">
+                    <div class="flex items-center gap-3 mb-6 pb-4 border-b border-slate-100">
+                        <div class="w-10 h-10 rounded-lg bg-primary-50 text-primary-600 flex items-center justify-center">
                             <i class="fas fa-laptop-medical"></i>
                         </div>
-                        <h2 class="text-xl font-bold text-gray-900 tracking-tight">Technical Specification</h2>
+                        <h2 class="text-lg font-bold text-slate-900 tracking-tight uppercase">Device Details</h2>
                     </div>
 
-                    <div class="space-y-8">
+                    <div class="space-y-6">
                         <div>
-                            <label
-                                class="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-3 ml-1">Device
-                                Identification</label>
-                            <p class="text-2xl font-bold text-gray-900 leading-tight" x-text="ticket?.deviceDetails">
-                            </p>
+                            <label class="block text-[9px] font-black text-slate-400 uppercase tracking-widest mb-3">Device Identification</label>
+                            <p class="text-xl font-bold text-slate-900 leading-tight" x-text="ticket?.deviceDetails"></p>
                         </div>
 
-                        <div class="pt-8 border-t border-gray-50">
-                            <label
-                                class="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-3 ml-1">Service
-                                Notes</label>
+                        <div class="pt-6 border-t border-slate-100">
+                            <label class="block text-[9px] font-black text-slate-400 uppercase tracking-widest mb-3">Service Notes</label>
                             <div class="prose prose-sm max-w-none">
-                                <p class="text-lg text-gray-600 leading-relaxed italic"
+                                <p class="text-base text-slate-600 leading-relaxed italic"
                                     x-text="ticket?.notes || 'No notes documented for this service record.'"></p>
                             </div>
                         </div>
                     </div>
                 </div>
 
-                <!-- Waterfall Logs / Activity -->
-                <div class="bg-white border border-gray-100 rounded-[40px] p-10 shadow-sm animate__animated animate__fadeInUp"
-                    style="animation-delay: 0.1s">
-                    <div class="flex items-center justify-between mb-10">
+                <!-- Activity Log -->
+                <div class="bg-white border border-slate-200 rounded-[24px] p-6 shadow-sm">
+                    <div class="flex items-center justify-between mb-6 pb-4 border-b border-slate-100">
                         <div class="flex items-center gap-3">
-                            <div
-                                class="w-12 h-12 rounded-2xl bg-amber-50 text-amber-600 flex items-center justify-center">
+                            <div class="w-10 h-10 rounded-lg bg-amber-50 text-amber-600 flex items-center justify-center">
                                 <i class="fas fa-stream"></i>
                             </div>
-                            <h2 class="text-xl font-bold text-gray-900 tracking-tight">Activity Log</h2>
+                            <h2 class="text-lg font-bold text-slate-900 tracking-tight uppercase">Activity Log</h2>
                         </div>
                         <span
-                            class="px-4 py-1.5 bg-gray-50 rounded-full text-[10px] font-black text-gray-400 uppercase tracking-widest"
+                            class="px-4 py-1.5 bg-slate-50 rounded-lg text-[9px] font-black text-slate-400 uppercase tracking-widest"
                             x-text="`${ticket?.logs?.length || 0} Events`"></span>
                     </div>
 
@@ -110,13 +102,13 @@
                             <div class="flex group">
                                 <!-- Line and Dot -->
                                 <div class="flex flex-col items-center mr-6">
-                                    <div class="w-10 h-10 rounded-2xl border-2 border-gray-50 bg-white flex items-center justify-center z-10 transition-all duration-500 group-hover:scale-110 group-hover:border-blue-100"
+                                    <div class="w-10 h-10 rounded-lg border-2 border-slate-100 bg-white flex items-center justify-center z-10 transition-all duration-300 group-hover:scale-110 group-hover:border-primary-100"
                                         :class="{
                                             'text-amber-500': log.status === 'Pending',
                                             'text-blue-500': log.status === 'In Progress',
                                             'text-green-500': log.status === 'Completed',
-                                            'text-gray-900': log.status === 'Delivered',
-                                            'text-red-500': log.status === 'Cancelled',
+                                            'text-slate-900': log.status === 'Delivered',
+                                            'text-rose-500': log.status === 'Cancelled',
                                             'text-purple-600': log.status === 'Reopened'
                                         }">
                                         <i class="fas text-[10px]" :class="{
@@ -131,22 +123,21 @@
                                     </div>
                                     <!-- Connecting Line -->
                                     <div x-show="index < (ticket?.logs?.length - 1)"
-                                        class="w-[2px] h-full bg-gray-50 -mt-1 group-hover:bg-blue-50 transition-colors">
+                                        class="w-[2px] h-full bg-slate-100 -mt-1 group-hover:bg-primary-100 transition-colors">
                                     </div>
                                 </div>
                                 <!-- Content Card -->
-                                <div class="pb-10 flex-1">
+                                <div class="pb-8 flex-1">
                                     <div
-                                        class="bg-gray-50/30 rounded-3xl p-6 border border-transparent group-hover:border-gray-100 group-hover:bg-white group-hover:shadow-xl group-hover:shadow-gray-100/50 transition-all duration-500">
-                                        <div
-                                            class="flex flex-col md:flex-row md:items-center justify-between gap-2 mb-2">
-                                            <h4 class="font-black text-gray-900 text-sm tracking-tight"
+                                        class="bg-slate-50 rounded-xl p-5 border border-transparent group-hover:border-slate-200 group-hover:bg-white group-hover:shadow-lg transition-all duration-300">
+                                        <div class="flex flex-col md:flex-row md:items-center justify-between gap-2 mb-2">
+                                            <h4 class="font-black text-slate-900 text-sm tracking-tight"
                                                 x-text="log.label"></h4>
                                             <span
-                                                class="text-[10px] font-bold text-gray-300 uppercase tracking-widest whitespace-nowrap"
+                                                class="text-[9px] font-black text-slate-300 uppercase tracking-widest whitespace-nowrap"
                                                 x-text="formatDate(log.timestamp)"></span>
                                         </div>
-                                        <p x-show="log.note" class="text-xs text-gray-500 leading-relaxed italic"
+                                        <p x-show="log.note" class="text-xs text-slate-500 leading-relaxed italic"
                                             x-text="log.note"></p>
                                     </div>
                                 </div>
@@ -156,88 +147,83 @@
                         <!-- Fallback if no logs -->
                         <div x-show="!ticket?.logs || ticket?.logs?.length === 0"
                             class="flex items-center gap-6 py-10 opacity-30">
-                            <div
-                                class="w-10 h-10 rounded-2xl border-2 border-gray-100 bg-white flex items-center justify-center">
+                            <div class="w-10 h-10 rounded-lg border-2 border-slate-100 bg-white flex items-center justify-center">
                                 <i class="fas fa-history text-xs"></i>
                             </div>
-                            <p class="text-[10px] font-black uppercase tracking-widest">Awaiting system generation...
-                            </p>
+                            <p class="text-[9px] font-black uppercase tracking-widest">No activity yet...</p>
                         </div>
                     </div>
                 </div>
             </div>
 
             <!-- Sidebar Column: Summary & Finance -->
-            <div class="space-y-10">
+            <div class="space-y-8">
                 <!-- Customer Card -->
-                <div class="bg-gray-900 rounded-[40px] p-10 shadow-xl relative overflow-hidden animate__animated animate__fadeInUp"
-                    style="animation-delay: 0.2s">
+                <div class="bg-slate-900 rounded-[24px] p-8 shadow-xl relative overflow-hidden">
                     <div class="absolute top-0 right-0 p-8">
-                        <i class="fas fa-user-shield text-gray-800 text-4xl opacity-20"></i>
+                        <i class="fas fa-user-shield text-slate-800 text-4xl opacity-20"></i>
                     </div>
-                    <label class="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-2 block">Client
-                        Integrity</label>
+                    <label class="text-[9px] font-black text-slate-500 uppercase tracking-widest mb-2 block">Customer</label>
                     <h3 class="text-2xl font-bold text-white mb-6 uppercase tracking-tight"
                         x-text="ticket?.customer?.name"></h3>
 
                     <div class="space-y-4">
-                        <div class="bg-white/5 backdrop-blur-md rounded-2xl p-4 border border-white/10">
-                            <span class="text-[9px] font-bold text-gray-500 uppercase block mb-1">Communication</span>
-                            <span class="text-sm font-bold text-gray-200" x-text="ticket?.customer?.phone"></span>
+                        <div class="bg-white/5 backdrop-blur-md rounded-xl p-4 border border-white/10">
+                            <span class="text-[9px] font-black text-slate-500 uppercase block mb-1">Phone</span>
+                            <span class="text-sm font-bold text-slate-200" x-text="ticket?.customer?.phone"></span>
                         </div>
-                        <div class="bg-white/5 backdrop-blur-md rounded-2xl p-4 border border-white/10"
+                        <div class="bg-white/5 backdrop-blur-md rounded-xl p-4 border border-white/10"
                             x-show="ticket?.customer?.companyName">
-                            <span class="text-[9px] font-bold text-gray-500 uppercase block mb-1">Registry Name</span>
-                            <span class="text-sm font-bold text-gray-200" x-text="ticket?.customer?.companyName"></span>
+                            <span class="text-[9px] font-black text-slate-500 uppercase block mb-1">Company</span>
+                            <span class="text-sm font-bold text-slate-200" x-text="ticket?.customer?.companyName"></span>
                         </div>
                     </div>
 
                     <a :href="`/contacts?id=${ticket?.customer?._id}`"
-                        class="mt-8 flex items-center justify-center w-full py-4 bg-white/10 hover:bg-white/20 text-white text-[10px] font-bold uppercase tracking-widest rounded-2xl transition-all border border-white/5">
-                        View Directory Profile
+                        class="mt-8 flex items-center justify-center w-full py-4 bg-white/10 hover:bg-white/20 text-white text-[9px] font-black uppercase tracking-widest rounded-xl transition-all border border-white/5">
+                        View Profile
                     </a>
                 </div>
 
                 <!-- Financial Ledger -->
-                <div class="bg-white border border-gray-100 rounded-[40px] p-10 shadow-sm animate__animated animate__fadeInUp"
-                    style="animation-delay: 0.3s">
-                    <div class="flex items-center gap-3 mb-8">
-                        <div class="w-12 h-12 rounded-2xl bg-green-50 text-green-600 flex items-center justify-center">
+                <div class="bg-white border border-slate-200 rounded-[24px] p-6 shadow-sm">
+                    <div class="flex items-center gap-3 mb-6 pb-4 border-b border-slate-100">
+                        <div class="w-10 h-10 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center">
                             <i class="fas fa-wallet text-sm"></i>
                         </div>
-                        <h2 class="text-xl font-bold text-gray-900 tracking-tight">Ledger</h2>
+                        <h2 class="text-lg font-bold text-slate-900 tracking-tight uppercase">Ledger</h2>
                     </div>
 
-                    <div class="space-y-6">
+                    <div class="space-y-5">
                         <div class="flex items-center justify-between">
-                            <span class="text-sm font-medium text-gray-400">Basic Service Fee</span>
-                            <span class="text-lg font-bold text-gray-900"
+                            <span class="text-sm font-medium text-slate-400">Service Fee</span>
+                            <span class="text-lg font-bold text-slate-900"
                                 x-text="`₹${Number(ticket?.serviceCharge || 0).toLocaleString('en-IN')}`"></span>
                         </div>
-                        <div class="flex items-center justify-between pb-6 border-b border-gray-50">
-                            <span class="text-sm font-medium text-gray-400">Additional Surcharge</span>
-                            <span class="text-lg font-bold text-gray-900">₹0</span>
+                        <div class="flex items-center justify-between pb-5 border-b border-slate-100">
+                            <span class="text-sm font-medium text-slate-400">Additional</span>
+                            <span class="text-lg font-bold text-slate-900">₹0</span>
                         </div>
                         <div class="flex items-center justify-between pt-2">
-                            <span class="text-base font-bold text-gray-900 tracking-tight">Total Value</span>
-                            <span class="text-3xl font-extrabold text-blue-600 tracking-tighter"
+                            <span class="text-base font-bold text-slate-900 tracking-tight uppercase">Total</span>
+                            <span class="text-3xl font-extrabold text-primary-600 tracking-tighter"
                                 x-text="`₹${Number(ticket?.serviceCharge || 0).toLocaleString('en-IN')}`"></span>
                         </div>
                     </div>
 
-                    <div class="mt-10 p-5 bg-gray-50 rounded-[28px] border border-gray-100">
+                    <div class="mt-8 p-5 bg-slate-50 rounded-xl border border-slate-200">
                         <div class="flex items-start gap-4">
-                            <i class="fas fa-info-circle text-gray-300 mt-1"></i>
-                            <p class="text-[11px] font-bold text-gray-400 leading-relaxed uppercase tracking-widest">
-                                Pricing indicated reflects current diagnostic assessment.</p>
+                            <i class="fas fa-info-circle text-slate-300 mt-1"></i>
+                            <p class="text-[10px] font-bold text-slate-400 leading-relaxed uppercase tracking-widest">
+                                Pricing reflects current assessment</p>
                         </div>
                     </div>
 
                     <!-- Payment Action -->
                     <button @click="settlePayment()"
-                        class="mt-6 w-full py-5 bg-green-500 hover:bg-green-600 text-white rounded-[28px] text-[11px] font-black uppercase tracking-[0.2em] shadow-xl shadow-green-100 transition-all active:scale-95 flex items-center justify-center gap-3 group">
+                        class="mt-6 w-full py-4 bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl text-[9px] font-black uppercase tracking-widest shadow-lg shadow-emerald-100 transition-all active:scale-95 flex items-center justify-center gap-2 group">
                         <i class="fas fa-check-circle group-hover:scale-125 transition-transform"></i>
-                        <span>Confirm Local Payment</span>
+                        <span>Confirm Payment</span>
                     </button>
                 </div>
             </div>

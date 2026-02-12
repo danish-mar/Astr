@@ -11,6 +11,7 @@ import leadRoutes from "../leadRoutes";
 import expenditureRoutes from "../expenditureRoutes";
 import accountingRoutes from "../accountingRoutes";
 import attendanceRoutes from "../attendanceRoutes";
+import searchRoutes from "../searchRoutes";
 
 
 const router = Router();
@@ -28,6 +29,7 @@ router.use("/leads", leadRoutes);
 router.use("/expenditures", expenditureRoutes);
 router.use("/accounting", accountingRoutes);
 router.use("/attendance", attendanceRoutes);
+router.use("/search", searchRoutes);
 
 
 export default router;

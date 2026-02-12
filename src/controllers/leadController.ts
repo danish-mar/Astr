@@ -11,6 +11,7 @@ export const getAllLeads = async (req: Request, res: Response) => {
             customer,
             product,
             search,
+            date,
             page = 1,
             limit = 10,
         } = req.query;
@@ -35,6 +36,17 @@ export const getAllLeads = async (req: Request, res: Response) => {
                 { notes: { $regex: search, $options: "i" } },
                 { source: { $regex: search, $options: "i" } },
             ];
+        }
+
+        // Filter by specific date
+        if (date) {
+            const filterDate = new Date(date as string);
+            const startOfDay = new Date(filterDate.setHours(0, 0, 0, 0));
+            const endOfDay = new Date(filterDate.setHours(23, 59, 59, 999));
+            filter.createdAt = {
+                $gte: startOfDay,
+                $lte: endOfDay,
+            };
         }
 
         const pageNum = parseInt(page as string);

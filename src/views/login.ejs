@@ -9,7 +9,7 @@
   <!-- Google Fonts: Inter -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
 
   <!-- Tailwind CSS -->
   <script src="https://cdn.tailwindcss.com"></script>
@@ -38,151 +38,127 @@
           },
           colors: {
             primary: {
-              50: "#f2f8ff",
-              100: "#e6f1ff",
-              200: "#cce4ff",
-              300: "#99c9ff",
-              400: "#66adff",
-              500: "#007aff", // Apple Blue
-              600: "#0062cc",
-              700: "#004999",
-              800: "#003166",
-              900: "#001833",
+              50: "#f5f3ff",
+              100: "#ede9fe",
+              200: "#ddd6fe",
+              300: "#c4b5fd",
+              400: "#a78bfa",
+              500: "#8b5cf6",
+              600: "#7c3aed",
+              700: "#6d28d9",
+              800: "#5b21b6",
+              900: "#4c1d95",
             },
-            gray: {
-              50: "#f9fafb",
-              100: "#f3f4f6",
-              200: "#e5e7eb",
-              300: "#d1d5db",
-              400: "#9ca3af",
-              500: "#6b7280",
-              600: "#4b5563",
-              700: "#374151",
-              800: "#1f2937",
-              900: "#111827",
+            slate: {
+              50: "#f8fafc",
+              100: "#f1f5f9",
+              200: "#e2e8f0",
+              300: "#cbd5e1",
+              400: "#94a3b8",
+              500: "#64748b",
+              600: "#475569",
+              700: "#334155",
+              800: "#1e293b",
+              900: "#0f172a",
             }
-          },
-          boxShadow: {
-            'ios': '0 4px 20px -5px rgba(0, 0, 0, 0.05)',
-            'glass': '0 8px 32px 0 rgba(31, 38, 135, 0.07)',
           }
         }
       }
     }
   </script>
-
-  <style>
-    .glass {
-      background: rgba(255, 255, 255, 0.75);
-      backdrop-filter: blur(20px);
-      -webkit-backdrop-filter: blur(20px);
-      border: 1px solid rgba(255, 255, 255, 0.5);
-    }
-  </style>
 </head>
 
-<body class="bg-[#f9fafb] min-h-screen flex items-center justify-center p-6 relative overflow-hidden font-sans">
+<body class="bg-slate-50 min-h-screen flex items-center justify-center p-6 font-sans">
 
-  <!-- Background Atmospheric Elements -->
+  <!-- Login Card -->
   <div
-    class="absolute -top-[20%] -left-[10%] w-[60%] h-[60%] bg-blue-100/40 rounded-full blur-[120px] animate__animated animate__pulse animate__infinite animate__slow">
-  </div>
-  <div
-    class="absolute -bottom-[20%] -right-[10%] w-[60%] h-[60%] bg-purple-100/40 rounded-full blur-[120px] animate__animated animate__pulse animate__infinite animate__slow"
-    style="animation-delay: 2s"></div>
+    class="w-full max-w-md bg-white border border-slate-200 rounded-[24px] shadow-2xl shadow-slate-200/50 p-10 md:p-12 relative z-10 animate__animated animate__fadeInUp">
 
-  <!-- Login Canvas -->
-  <div
-    class="w-full max-w-[480px] bg-white border border-gray-100 rounded-[48px] shadow-2xl shadow-gray-200/50 p-12 md:p-16 relative z-10 animate__animated animate__fadeInUp">
-
-    <!-- Premium Branding -->
-    <div class="text-center mb-12">
+    <!-- Branding -->
+    <div class="text-center mb-10">
       <div
-        class="w-20 h-20 bg-gray-900 rounded-[28px] flex items-center justify-center mx-auto mb-8 shadow-2xl shadow-gray-300 transform transition-transform hover:scale-110 duration-500">
-        <i class="fas fa-ghost text-3xl text-white"></i>
+        class="w-16 h-16 bg-slate-900 rounded-xl flex items-center justify-center mx-auto mb-6 shadow-lg shadow-slate-300 transform transition-transform hover:scale-110 duration-300">
+        <i class="fas fa-ghost text-2xl text-white"></i>
       </div>
       <div class="flex items-center justify-center gap-2 mb-3">
         <span
-          class="px-2.5 py-0.5 bg-gray-100 text-gray-500 text-[9px] font-black rounded-full tracking-widest uppercase">System
+          class="px-2.5 py-0.5 bg-slate-100 text-slate-500 text-[9px] font-black rounded-lg tracking-widest uppercase">System
           Alpha</span>
-        <div class="w-1 h-1 rounded-full bg-gray-300"></div>
-        <span class="text-[9px] font-black text-gray-400 uppercase tracking-widest">v2.4.0</span>
+        <div class="w-1 h-1 rounded-full bg-slate-300"></div>
+        <span class="text-[9px] font-black text-slate-400 uppercase tracking-widest">v<%= version %></span>
       </div>
-      <h1 class="text-4xl font-black text-gray-900 tracking-tighter mb-4">Astr Protocol</h1>
-      <p class="text-gray-400 font-medium text-lg leading-relaxed px-4">Authenticate your credentials to access the
-        operational bridge</p>
+      <h1 class="text-3xl font-bold text-slate-900 tracking-tight mb-3 uppercase">Astr Protocol</h1>
+      <p class="text-slate-400 font-medium text-sm leading-relaxed">Authenticate to access the system</p>
     </div>
 
     <!-- Authentication Form -->
-    <form id="loginForm" class="space-y-8" x-data="loginForm()" @submit.prevent="submit">
+    <form id="loginForm" class="space-y-6" x-data="loginForm()" @submit.prevent="submit">
 
       <div class="space-y-3">
-        <label for="username" class="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Personnel
-          Identifier</label>
+        <label for="username" class="text-[9px] font-black text-slate-400 uppercase tracking-widest">Username</label>
         <div class="relative group">
           <div
-            class="absolute inset-y-0 left-6 flex items-center pointer-events-none text-gray-300 group-focus-within:text-gray-900 transition-colors">
-            <i class="fas fa-fingerprint text-sm"></i>
+            class="absolute inset-y-0 left-4 flex items-center pointer-events-none text-slate-300 group-focus-within:text-slate-900 transition-colors">
+            <i class="fas fa-user text-sm"></i>
           </div>
           <input type="text" id="username" x-model="username" required
-            class="block w-full pl-14 pr-6 py-5 bg-gray-50 border border-transparent rounded-[24px] text-gray-900 font-bold placeholder-gray-300 focus:ring-4 focus:ring-blue-50 focus:bg-white focus:border-blue-100 outline-none transition-all duration-300"
-            placeholder="ID / Username">
+            class="block w-full pl-12 pr-4 py-3.5 bg-slate-50 border border-slate-200 rounded-xl text-slate-900 font-medium placeholder-slate-300 focus:ring-2 focus:ring-primary-200 focus:bg-white focus:border-primary-300 outline-none transition-all"
+            placeholder="Enter username">
         </div>
       </div>
 
       <div class="space-y-3">
-        <label for="password" class="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Access
-          Cipher</label>
+        <label for="password" class="text-[9px] font-black text-slate-400 uppercase tracking-widest">Password</label>
         <div class="relative group">
           <div
-            class="absolute inset-y-0 left-6 flex items-center pointer-events-none text-gray-300 group-focus-within:text-gray-900 transition-colors">
-            <i class="fas fa-shield-alt text-sm"></i>
+            class="absolute inset-y-0 left-4 flex items-center pointer-events-none text-slate-300 group-focus-within:text-slate-900 transition-colors">
+            <i class="fas fa-lock text-sm"></i>
           </div>
           <input type="password" id="password" x-model="password" required
-            class="block w-full pl-14 pr-6 py-5 bg-gray-50 border border-transparent rounded-[24px] text-gray-900 font-bold placeholder-gray-300 focus:ring-4 focus:ring-blue-50 focus:bg-white focus:border-blue-100 outline-none transition-all duration-300"
+            class="block w-full pl-12 pr-4 py-3.5 bg-slate-50 border border-slate-200 rounded-xl text-slate-900 font-medium placeholder-slate-300 focus:ring-2 focus:ring-primary-200 focus:bg-white focus:border-primary-300 outline-none transition-all"
             placeholder="••••••••">
         </div>
       </div>
 
       <div class="pt-4">
         <button type="submit"
-          class="w-full flex items-center justify-center gap-4 py-5 bg-gray-900 text-white rounded-[26px] text-xs font-black uppercase tracking-[0.2em] shadow-2xl shadow-gray-200 hover:bg-black active:scale-[0.97] disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-500"
+          class="w-full flex items-center justify-center gap-3 py-4 bg-slate-900 text-white rounded-xl text-[9px] font-black uppercase tracking-widest shadow-lg shadow-slate-200 hover:bg-slate-800 active:scale-[0.97] disabled:opacity-50 disabled:cursor-not-allowed transition-all"
           :disabled="loading">
-          <span x-show="!loading" class="flex items-center gap-3">
-            Initiate Sequence
+          <span x-show="!loading" class="flex items-center gap-2">
+            Sign In
             <i class="fas fa-arrow-right text-[10px] transition-transform group-hover:translate-x-1"></i>
           </span>
           <span x-show="loading" class="flex items-center">
-            <i class="fas fa-spinner fa-spin mr-3"></i>
+            <i class="fas fa-spinner fa-spin mr-2"></i>
             Verifying...
           </span>
         </button>
       </div>
     </form>
 
-    <!-- Dynamic Feedback -->
-    <div class="mt-12 text-center">
-      <p class="text-[11px] font-bold text-gray-400 tracking-wide">
-        Restricted access. In case of disruption,
+    <!-- Footer -->
+    <div class="mt-10 text-center">
+      <p class="text-[10px] font-bold text-slate-400 tracking-wide">
+        Restricted access. Contact
         <a href="#"
-          class="text-gray-900 underline hover:text-blue-600 transition-colors decoration-gray-200 underline-offset-4">contact
-          site command</a>
+          class="text-slate-900 underline hover:text-primary-600 transition-colors decoration-slate-200 underline-offset-4">support</a>
+        if needed
       </p>
     </div>
   </div>
 
-  <!-- Notifications Container (Local for Login) -->
+  <!-- Notifications Container -->
   <div class="fixed top-6 right-6 z-[100] space-y-3 pointer-events-none" x-data="{ notifications: [] }"
     @notification.window="notifications.push($event.detail); setTimeout(() => notifications.shift(), 3000)">
     <template x-for="notification in notifications" :key="notification.id">
       <div
-        class="pointer-events-auto min-w-[320px] max-w-sm glass bg-white/90 rounded-2xl shadow-ios p-4 flex items-start space-x-3 border border-white/50 animate__animated animate__fadeInRight">
+        class="pointer-events-auto min-w-[320px] max-w-sm bg-white rounded-xl shadow-lg border border-slate-200 p-4 flex items-start space-x-3 animate__animated animate__fadeInRight">
         <div class="flex-shrink-0 pt-0.5">
-          <i x-show="notification.type === 'success'" class="fas fa-check-circle text-green-500 text-xl"></i>
-          <i x-show="notification.type === 'error'" class="fas fa-exclamation-circle text-red-500 text-xl"></i>
+          <i x-show="notification.type === 'success'" class="fas fa-check-circle text-emerald-500 text-xl"></i>
+          <i x-show="notification.type === 'error'" class="fas fa-exclamation-circle text-rose-500 text-xl"></i>
         </div>
         <div class="flex-1">
-          <p class="text-sm font-medium text-gray-900" x-text="notification.message"></p>
+          <p class="text-sm font-medium text-slate-900" x-text="notification.message"></p>
         </div>
       </div>
     </template>

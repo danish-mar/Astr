@@ -55,30 +55,31 @@ document.addEventListener('alpine:init', () => {
             if (revenueCtx && this.charts.revenueTrend) {
                 const ctx = revenueCtx.getContext('2d');
 
-                // Create gradient
-                const gradient = ctx.createLinearGradient(0, 0, 0, 300);
-                gradient.addColorStop(0, 'rgba(0, 122, 255, 0.2)'); // Primary Blue
-                gradient.addColorStop(1, 'rgba(0, 122, 255, 0)');
+                // Create purple gradient
+                const gradient = ctx.createLinearGradient(0, 0, 0, 320);
+                gradient.addColorStop(0, 'rgba(109, 40, 217, 0.15)');
+                gradient.addColorStop(1, 'rgba(109, 40, 217, 0)');
 
                 new Chart(ctx, {
                     type: 'line',
                     data: {
                         labels: this.charts.revenueTrend.map(d => {
                             const date = new Date(d._id);
-                            return date.toLocaleDateString('en-US', { weekday: 'short' });
+                            return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
                         }),
                         datasets: [{
                             label: 'Revenue',
                             data: this.charts.revenueTrend.map(d => d.total),
-                            borderColor: '#007aff', // Primary Blue
+                            borderColor: '#6d28d9',
                             backgroundColor: gradient,
-                            borderWidth: 3,
-                            tension: 0.4, // Smooth curve
+                            borderWidth: 2.5,
+                            tension: 0.4,
                             pointBackgroundColor: '#ffffff',
-                            pointBorderColor: '#007aff',
+                            pointBorderColor: '#6d28d9',
                             pointBorderWidth: 2,
-                            pointRadius: 4,
-                            pointHoverRadius: 6,
+                            pointRadius: 5,
+                            pointHoverRadius: 7,
+                            pointHoverBorderWidth: 3,
                             fill: true
                         }]
                     },
@@ -90,14 +91,22 @@ document.addEventListener('alpine:init', () => {
                                 display: false
                             },
                             tooltip: {
-                                backgroundColor: 'rgba(255, 255, 255, 0.9)',
-                                titleColor: '#1f2937',
-                                bodyColor: '#4b5563',
-                                borderColor: 'rgba(0,0,0,0.05)',
+                                backgroundColor: '#ffffff',
+                                titleColor: '#1e293b',
+                                bodyColor: '#64748b',
+                                borderColor: '#e2e8f0',
                                 borderWidth: 1,
                                 padding: 12,
-                                cornerRadius: 12,
+                                cornerRadius: 8,
                                 displayColors: false,
+                                titleFont: {
+                                    size: 13,
+                                    weight: 'bold'
+                                },
+                                bodyFont: {
+                                    size: 14,
+                                    weight: 'bold'
+                                },
                                 callbacks: {
                                     label: function (context) {
                                         return '₹' + context.parsed.y.toLocaleString('en-IN');
@@ -108,18 +117,17 @@ document.addEventListener('alpine:init', () => {
                         scales: {
                             y: {
                                 beginAtZero: true,
-                                suggestedMax: 10,
                                 grid: {
-                                    color: 'rgba(0, 0, 0, 0.03)',
+                                    color: '#f1f5f9',
                                     drawBorder: false,
                                 },
                                 ticks: {
-                                    stepSize: 1, // Ensure whole numbers if values are low
                                     font: {
-                                        family: "'Inter', sans-serif",
-                                        size: 11
+                                        family: "'Outfit', sans-serif",
+                                        size: 12
                                     },
-                                    color: '#9ca3af',
+                                    color: '#94a3b8',
+                                    padding: 8,
                                     callback: function (value) {
                                         if (value >= 1000) return '₹' + (value / 1000) + 'k';
                                         return '₹' + value;
@@ -136,10 +144,11 @@ document.addEventListener('alpine:init', () => {
                                 },
                                 ticks: {
                                     font: {
-                                        family: "'Inter', sans-serif",
-                                        size: 11
+                                        family: "'Outfit', sans-serif",
+                                        size: 12
                                     },
-                                    color: '#9ca3af'
+                                    color: '#94a3b8',
+                                    padding: 8
                                 },
                                 border: {
                                     display: false

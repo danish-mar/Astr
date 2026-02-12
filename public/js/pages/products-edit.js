@@ -71,13 +71,6 @@
                     };
 
                     this.existingImages = product.images || [];
-                    // Pre-fill previews with existing images if they are URLs (our virtuals usually provide URLs)
-                    // But in the model we store keys. The controller could pass full URLs or we construct them.
-                    // For now, let's assume we can use the getImageUrl logic if we expose it or just use the keys if the proxy handles it.
-                    // Actually, let's use the full URLs if available from the backend virtuals.
-                    if (product.images) {
-                        this.imagePreviews = product.images.map(img => img.startsWith('http') ? img : `/api/v1/products/image/${img}`);
-                    }
 
                     // Trigger category template load
                     this.onCategoryChange();

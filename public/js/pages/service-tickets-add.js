@@ -94,7 +94,10 @@
 
             openQuickAddModal() {
                 this.showQuickAddModal = true;
-                this.quickCustomer = { name: '', phone: '' };
+                this.quickCustomer = { 
+                    name: this.searchQuery || '', 
+                    phone: '' 
+                };
                 this.showSearchResults = false;
             },
 
