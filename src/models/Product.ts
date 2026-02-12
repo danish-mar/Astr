@@ -109,17 +109,18 @@ productSchema.index({ category: 1, isSold: 1 });
 productSchema.index({ isSold: 1, createdAt: -1 });
 
 // 6. Pre-save hook to auto-generate productID if requested
-// 6. Pre-save hook to auto-generate productID if requested
 productSchema.pre("save", async function () {
-  // Only generate if productID is explicitly set to empty string or undefined but requested
-  if (this.isNew && this.productID === "") {
+  // Only generate if productID is not set (undefined, null, or empty string)
+  if (this.isNew && (!this.productID || this.productID.trim() === "")) {
     let isUnique = false;
     let newID = "";
+
+    const ProductModel = model("Product");
 
     // Keep generating until we get a unique ID
     while (!isUnique) {
       newID = generateProductID();
-      const existing = await model("Product").findOne({ productID: newID });
+      const existing = await ProductModel.findOne({ productID: newID });
       if (!existing) {
         isUnique = true;
       }

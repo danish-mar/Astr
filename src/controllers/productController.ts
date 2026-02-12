@@ -6,7 +6,7 @@ import csv from 'csv-parser';
 // import { Parser } from 'json2csv'; // Removed to use manual generation
 import { validateRequiredFields, isValidObjectId, buildProductFilter } from "../utils";
 import { generateUniqueProductID } from "../utils";
-import { getImageUrl } from "../utils/s3Service";
+import { getImageUrl, deleteImagesFromS3 } from "../utils/s3Service";
 import QRCode from "qrcode";
 
 
@@ -30,9 +30,20 @@ export const getAllProducts = async (req: Request, res: Response) => {
 
     const total = await Product.countDocuments(filter);
 
+    // Transform images to full URLs
+    const productsWithUrls = products.map(p => {
+      const productObj = p.toObject();
+      if (productObj.images) {
+        productObj.images = productObj.images
+          .map((img: string) => getImageUrl(img))
+          .filter((img: string | null): img is string => img !== null);
+      }
+      return productObj;
+    });
+
     return sendPaginated(
       res,
-      products,
+      productsWithUrls,
       pageNum,
       limitNum,
       total,
@@ -68,6 +79,13 @@ export const getProductById = async (req: Request, res: Response) => {
     const productObj = product.toObject();
     (productObj as any).shelfUrl = shelfUrl;
     (productObj as any).qrCode = qrCode;
+
+    // Transform images to full URLs
+    if (productObj.images) {
+      productObj.images = productObj.images
+        .map((img: string) => getImageUrl(img))
+        .filter((img: string | null): img is string => img !== null);
+    }
 
     return sendSuccess(res, productObj, "Product retrieved successfully");
   } catch (error) {
@@ -158,7 +176,14 @@ export const createProduct = async (req: Request, res: Response) => {
     // Populate before sending response
     await product.populate("category source");
 
-    return sendSuccess(res, product, "Product created successfully", 201);
+    const productObj = product.toObject();
+    if (productObj.images) {
+      productObj.images = productObj.images
+        .map((img: string) => getImageUrl(img))
+        .filter((img: string | null): img is string => img !== null);
+    }
+
+    return sendSuccess(res, productObj, "Product created successfully", 201);
   } catch (error) {
     return handleError(error, res);
   }
@@ -216,7 +241,14 @@ export const updateProduct = async (req: Request, res: Response) => {
 
     await product.populate("category source");
 
-    return sendSuccess(res, product, "Product updated successfully");
+    const productObj = product.toObject();
+    if (productObj.images) {
+      productObj.images = productObj.images
+        .map((img: string) => getImageUrl(img))
+        .filter((img: string | null): img is string => img !== null);
+    }
+
+    return sendSuccess(res, productObj, "Product updated successfully");
   } catch (error) {
     return handleError(error, res);
   }
@@ -231,11 +263,18 @@ export const deleteProduct = async (req: Request, res: Response) => {
       return sendError(res, "Invalid product ID", 400);
     }
 
-    const product = await Product.findByIdAndDelete(id);
+    const product = await Product.findById(id);
 
     if (!product) {
       return sendError(res, "Product not found", 404);
     }
+
+    // Delete images from S3 if any
+    if (product.images && product.images.length > 0) {
+      await deleteImagesFromS3(product.images);
+    }
+
+    await product.deleteOne();
 
     return sendSuccess(res, null, "Product deleted successfully");
   } catch (error) {
@@ -640,30 +679,36 @@ export const importProducts = async (req: Request, res: Response): Promise<void>
     .on('data', (data: any) => results.push(data))
     .on('end', async () => {
       try {
-        let importedCount = 0;
+        // 1. Collect all unique category and source names
+        const categoryNames = new Set<string>();
+        const sourceNames = new Set<string>();
+        results.forEach(row => {
+          if (row.Category) categoryNames.add(row.Category.trim());
+          if (row.Source) sourceNames.add(row.Source.trim());
+        });
+
+        // 2. Batch lookup categories and contacts
+        const [categories, contacts] = await Promise.all([
+          Category.find({ name: { $in: Array.from(categoryNames).map(n => new RegExp('^' + n + '$', 'i')) } }),
+          Contact.find({ name: { $in: Array.from(sourceNames).map(n => new RegExp('^' + n + '$', 'i')) } })
+        ]);
+
+        // 3. Create lookup maps
+        const categoryMap = new Map(categories.map(c => [c.name.toLowerCase(), c._id]));
+        const contactMap = new Map(contacts.map(c => [c.name.toLowerCase(), c._id]));
+
+        // 4. Prepare products data
+        const productsToCreate: any[] = [];
         const errors: string[] = [];
 
-        for (const row of results) {
+        results.forEach((row, index) => {
           try {
-            // Find Category
-            let categoryId;
-            if (row.Category) {
-              const cat = await Category.findOne({ name: new RegExp('^' + row.Category + '$', 'i') });
-              if (cat) categoryId = cat._id;
-            }
+            const categoryId = categoryMap.get((row.Category || '').trim().toLowerCase());
+            const sourceId = contactMap.get((row.Source || '').trim().toLowerCase());
 
-            // Find Source (Contact)
-            let sourceId;
-            if (row.Source) {
-              const source = await Contact.findOne({ name: new RegExp('^' + row.Source + '$', 'i') });
-              if (source) sourceId = source._id;
-            }
-            // If explicit Source not found, maybe try a default or fail?
-            // Validation will fail if sourceId is undefined.
+            if (!categoryId) throw new Error(`Category "${row.Category}" not found`);
+            if (!sourceId) throw new Error(`Source "${row.Source}" not found`);
 
-            // Auto-create/Fallback logic could go here if requested, but for now we'll let validation catch it if missing.
-
-            // Parse Specs
             const specifications: any = {};
             Object.keys(row).forEach(key => {
               if (key.startsWith('Spec: ')) {
@@ -672,8 +717,7 @@ export const importProducts = async (req: Request, res: Response): Promise<void>
               }
             });
 
-            // Parse common fields
-            const productData = {
+            productsToCreate.push({
               name: row.Name,
               price: parseFloat(row.Price) || 0,
               stock: parseInt(row.Stock) || 0,
@@ -681,13 +725,17 @@ export const importProducts = async (req: Request, res: Response): Promise<void>
               category: categoryId,
               source: sourceId,
               specifications: specifications
-            };
-
-            await Product.create(productData);
-            importedCount++;
+            });
           } catch (rowError: any) {
-            errors.push(`Row "${row.Name}": ${rowError.message}`);
+            errors.push(`Row ${index + 1} ("${row.Name || 'Unknown'}"): ${rowError.message}`);
           }
+        });
+
+        // 5. Batch create products
+        let importedCount = 0;
+        if (productsToCreate.length > 0) {
+          const createdProducts = await Product.create(productsToCreate);
+          importedCount = createdProducts.length;
         }
 
         // Clean up
@@ -839,5 +887,40 @@ export const exportProductsToExcel = async (req: Request, res: Response): Promis
   } catch (error) {
     console.error('Excel Export error:', error);
     res.status(500).json({ message: "Error exporting to Excel", error });
+  }
+};
+
+// Get public product list for RAG model (Redacted, No Pagination)
+export const getPublicProducts = async (req: Request, res: Response) => {
+  try {
+    const filter = buildProductFilter(req.query);
+    // AI RAG usually needs all available inventory
+    if (filter.isSold === undefined) filter.isSold = false;
+
+    // Use select to redact sensitive information (source, notes)
+    // We fetch all matching products without skip/limit for RAG feeding
+    const products = await Product.find(filter)
+      .select("-source -notes")
+      .populate("category", "name")
+      .sort({ createdAt: -1 });
+
+    // Transform images to full URLs
+    const productsWithUrls = products.map(p => {
+      const productObj = p.toObject();
+      if (productObj.images) {
+        productObj.images = productObj.images
+          .map((img: string) => getImageUrl(img))
+          .filter((img: string | null): img is string => img !== null);
+      }
+      return productObj;
+    });
+
+    return sendSuccess(
+      res,
+      productsWithUrls,
+      "Public products for RAG retrieved successfully"
+    );
+  } catch (error) {
+    return handleError(error, res);
   }
 };

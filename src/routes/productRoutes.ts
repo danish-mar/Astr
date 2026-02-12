@@ -13,7 +13,8 @@ import {
   exportProducts,
   exportProductsToExcel,
   previewImport,
-  importProducts
+  importProducts,
+  getPublicProducts
 } from "../controllers/productController";
 
 import multer from "multer";
@@ -56,6 +57,7 @@ router.post("/import", authenticate, requirePermission("products:write"), (req, 
 router.get("/filters", authenticate, requirePermission("products:read"), getFilters);
 router.get("/", authenticate, requirePermission("products:read"), getAllProducts);
 router.get("/stats", authenticate, requirePermission("products:read"), getProductStats);
+router.get("/public", getPublicProducts);
 router.get("/product-id/:productId", authenticate, requirePermission("products:read"), getProductByProductID);
 router.get("/:id", authenticate, requirePermission("products:read"), validateObjectId("id"), getProductById);
 
