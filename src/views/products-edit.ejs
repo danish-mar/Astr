@@ -84,7 +84,11 @@
                                     <div
                                         class="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 font-bold text-sm">
                                         ₹</div>
-                                    <input type="number" x-model="formData.price" required min="0" placeholder="0.00"
+                                    <input type="text" 
+                                        x-model="formattedPrice" 
+                                        @input="updatePrice($event.target.value)"
+                                        required 
+                                        placeholder="0"
                                         class="block w-full pl-8 pr-4 py-3 bg-white border border-slate-200 rounded-xl text-slate-900 text-sm font-bold focus:bg-slate-50 focus:border-primary-400 focus:ring-4 focus:ring-primary-100 outline-none transition-all placeholder:text-slate-300">
                                 </div>
                             </div>
@@ -208,10 +212,30 @@
 
                                 <div class="relative">
                                     <template x-if="field.fieldType === 'text' || field.fieldType === 'number'">
-                                        <input :type="field.fieldType"
-                                            x-model="formData.specifications[field.fieldName]"
-                                            :required="field.required"
-                                            class="block w-full px-4 py-3 bg-white border border-slate-200 rounded-xl text-slate-900 text-sm font-bold focus:bg-slate-50 focus:border-primary-400 focus:ring-4 focus:ring-primary-100 outline-none transition-all">
+                                        <div class="relative">
+                                            <!-- Ghost text suggestion overlay showing completion in gray -->
+                                            <div class="absolute inset-0 pointer-events-none flex items-center px-4 py-3">
+                                                <template x-if="currentSuggestion[field.fieldName]">
+                                                    <div class="text-sm font-bold flex">
+                                                        <!-- Typed portion (invisible, just for spacing) -->
+                                                        <span class="opacity-0" x-text="formData.specifications[field.fieldName] || ''"></span>
+                                                        <!-- Suggestion continuation (gray) -->
+                                                        <span class="text-slate-400" 
+                                                              x-text="currentSuggestion[field.fieldName].slice((formData.specifications[field.fieldName] || '').length)"></span>
+                                                    </div>
+                                                </template>
+                                            </div>
+                                            <!-- Actual input -->
+                                            <input :type="field.fieldType"
+                                                x-model="formData.specifications[field.fieldName]"
+                                                :required="field.required"
+                                                :placeholder="'Enter ' + field.fieldName.toLowerCase()"
+                                                @focus="loadSpecSuggestions(field.fieldName)"
+                                                @input="updateSuggestion(field.fieldName, $event.target.value)"
+                                                @keydown="acceptSuggestion(field.fieldName, $event)"
+                                                @keydown.right="acceptSuggestionPartial(field.fieldName, $event)"
+                                                class="relative bg-transparent block w-full px-4 py-3 border border-slate-200 rounded-xl text-slate-900 text-sm font-bold focus:bg-slate-50 focus:border-primary-400 focus:ring-4 focus:ring-primary-100 outline-none transition-all">
+                                        </div>
                                     </template>
 
                                     <template x-if="field.fieldType === 'textarea'">

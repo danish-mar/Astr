@@ -14,7 +14,8 @@ import {
   exportProductsToExcel,
   previewImport,
   importProducts,
-  getPublicProducts
+  getPublicProducts,
+  getSpecSuggestions
 } from "../controllers/productController";
 
 import multer from "multer";
@@ -55,6 +56,7 @@ router.post("/import", authenticate, requirePermission("products:write"), (req, 
 
 // Public/authenticated routes
 router.get("/filters", authenticate, requirePermission("products:read"), getFilters);
+router.get("/spec-suggestions/:categoryId/:fieldName", authenticate, requirePermission("products:read"), getSpecSuggestions);
 router.get("/", authenticate, requirePermission("products:read"), getAllProducts);
 router.get("/stats", authenticate, requirePermission("products:read"), getProductStats);
 router.get("/public", getPublicProducts);

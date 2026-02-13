@@ -27,9 +27,104 @@
                 notes: '',
                 productID: ''
             },
+            specSuggestions: {}, // Store suggestions per field: { fieldName: [values...] }
+            currentSuggestion: {}, // Current inline suggestion per field
+            formattedPrice: '', // Display formatted price
+            lastShiftTime: 0, // Track last Shift key press for double-tap detection
 
             get token() {
                 return window.api.token;
+            },
+
+            updatePrice(value) {
+                // Remove all non-digit characters
+                const numericValue = value.replace(/[^0-9]/g, '');
+                
+                // Store numeric value for backend
+                this.formData.price = numericValue ? parseInt(numericValue) : '';
+                
+                // Format for display with Indian number system
+                if (numericValue) {
+                    this.formattedPrice = new Intl.NumberFormat('en-IN').format(parseInt(numericValue));
+                } else {
+                    this.formattedPrice = '';
+                }
+            },
+
+            async loadSpecSuggestions(fieldName) {
+                // Only load if we have a category selected and haven't loaded this field yet
+                if (!this.formData.category || this.specSuggestions[fieldName]) {
+                    return;
+                }
+
+                try {
+                    const response = await window.api.get(
+                        `/products/spec-suggestions/${this.formData.category}/${encodeURIComponent(fieldName)}`
+                    );
+                    this.specSuggestions[fieldName] = response.data || [];
+                } catch (error) {
+                    console.error(`Error loading suggestions for ${fieldName}:`, error);
+                    this.specSuggestions[fieldName] = [];
+                }
+            },
+
+            updateSuggestion(fieldName, value) {
+                if (!value || !this.specSuggestions[fieldName]) {
+                    this.currentSuggestion[fieldName] = '';
+                    return;
+                }
+
+                // Find first suggestion that starts with the current value (case-insensitive)
+                const match = this.specSuggestions[fieldName].find(s => 
+                    s.toLowerCase().startsWith(value.toLowerCase())
+                );
+
+                if (match && match.toLowerCase() !== value.toLowerCase()) {
+                    // Show the full suggestion with the typed part
+                    this.currentSuggestion[fieldName] = value + match.slice(value.length);
+                } else {
+                    this.currentSuggestion[fieldName] = '';
+                }
+            },
+
+            acceptSuggestion(fieldName, event) {
+                // Accept full suggestion with Shift+Shift (double tap)
+                if (event.key === 'Shift') {
+                    const now = Date.now();
+                    if (now - this.lastShiftTime < 300 && this.currentSuggestion[fieldName]) {
+                        // Double Shift detected within 300ms
+                        event.preventDefault();
+                        this.formData.specifications[fieldName] = this.currentSuggestion[fieldName];
+                        this.currentSuggestion[fieldName] = '';
+                        this.lastShiftTime = 0; // Reset
+                    } else {
+                        this.lastShiftTime = now;
+                    }
+                }
+            },
+
+            acceptSuggestionPartial(fieldName, event) {
+                // Accept word-by-word with Right Arrow (only at end of input)
+                const input = event.target;
+                if (input.selectionStart === input.value.length && this.currentSuggestion[fieldName]) {
+                    event.preventDefault();
+                    const currentValue = this.formData.specifications[fieldName] || '';
+                    const suggestion = this.currentSuggestion[fieldName];
+                    
+                    // Find next word boundary
+                    const remainingText = suggestion.slice(currentValue.length);
+                    const nextSpace = remainingText.indexOf(' ');
+                    
+                    if (nextSpace !== -1) {
+                        // Accept up to next space
+                        this.formData.specifications[fieldName] = suggestion.slice(0, currentValue.length + nextSpace + 1);
+                    } else {
+                        // Accept entire suggestion
+                        this.formData.specifications[fieldName] = suggestion;
+                    }
+                    
+                    this.updateSuggestion(fieldName, this.formData.specifications[fieldName]);
+                }
             },
 
             async init() {
@@ -72,6 +167,11 @@
 
                     this.existingImages = product.images || [];
 
+                    // Initialize formatted price for display
+                    if (product.price) {
+                        this.formattedPrice = new Intl.NumberFormat('en-IN').format(product.price);
+                    }
+
                     // Trigger category template load
                     this.onCategoryChange();
                     this.loading = false;
@@ -86,6 +186,8 @@
             onCategoryChange() {
                 const category = this.categories.find(c => c._id === this.formData.category);
                 this.selectedCategoryTemplate = category?.specificationsTemplate || [];
+                // Clear suggestions when category changes
+                this.specSuggestions = {};
                 // In edit mode, we DO NOT reset specifications when loading initial data
                 // Only if user manually changes category, we might consider it, but let's keep data valid for now
                 // Actually, if we change category manually, we *should* clear specs usually.
@@ -100,7 +202,7 @@
 
             hasLinkedFields(fieldName) {
                 const field = this.selectedCategoryTemplate.find(f => f.fieldName === fieldName);
-                if (!field) return false;
+                if (!field || !field.options) return false;
 
                 const selectedValue = this.formData.specifications[fieldName];
                 if (!selectedValue) return false;
@@ -111,7 +213,7 @@
 
             getLinkedFields(fieldName) {
                 const field = this.selectedCategoryTemplate.find(f => f.fieldName === fieldName);
-                if (!field) return [];
+                if (!field || !field.options) return [];
 
                 const selectedValue = this.formData.specifications[fieldName];
                 const option = field.options.find(o => this.getOptionValue(o) === selectedValue);

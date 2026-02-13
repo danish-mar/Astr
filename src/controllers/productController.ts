@@ -930,3 +930,52 @@ export const getPublicProducts = async (req: Request, res: Response) => {
     return handleError(error, res);
   }
 };
+
+/**
+ * Get specification suggestions for autocomplete
+ * Returns unique values for a given field in a category, sorted by frequency
+ */
+export const getSpecSuggestions = async (req: Request, res: Response) => {
+  try {
+    const { categoryId, fieldName } = req.params;
+
+    if (!isValidObjectId(categoryId)) {
+      return sendError(res, "Invalid category ID", 400);
+    }
+
+    if (!fieldName || fieldName.trim() === '') {
+      return sendError(res, "Field name is required", 400);
+    }
+
+    // Find all products in this category
+    const products = await Product.find({ category: categoryId })
+      .select(`specifications.${fieldName}`)
+      .lean();
+
+    // Extract values and count frequency
+    const valueCounts = new Map<string, number>();
+    
+    products.forEach(product => {
+      // When using .lean(), Mongoose Maps become plain objects
+      const specs = product.specifications as any;
+      const value = specs?.[fieldName];
+      if (value && typeof value === 'string' && value.trim() !== '') {
+        const trimmedValue = value.trim();
+        valueCounts.set(trimmedValue, (valueCounts.get(trimmedValue) || 0) + 1);
+      }
+    });
+
+    // Sort by frequency (most common first) and convert to array
+    const suggestions = Array.from(valueCounts.entries())
+      .sort((a, b) => b[1] - a[1]) // Sort by count descending
+      .map(([value]) => value); // Extract just the values
+
+    return sendSuccess(
+      res,
+      suggestions,
+      `Found ${suggestions.length} suggestions for ${fieldName}`
+    );
+  } catch (error) {
+    return handleError(error, res);
+  }
+};
