@@ -9,7 +9,7 @@
             viewMode: 'grid',
             filters: {
                 search: '',
-                category: '',
+                category: localStorage.getItem('inventoryCategoryFilter') || '',
                 isSold: localStorage.getItem('inventoryAvailabilityFilter') ? JSON.parse(localStorage.getItem('inventoryAvailabilityFilter')) : null,
                 minPrice: '',
                 maxPrice: '',
@@ -87,9 +87,11 @@
                     return;
                 }
 
+                // Load categories FIRST so the dropdown has options to match filters.category
+                await this.loadCategories();
+                
                 await Promise.all([
                     this.loadProducts(),
-                    this.loadCategories(),
                     this.loadContacts()
                 ]);
 
@@ -100,6 +102,11 @@
                 if (productId && productId.length >= 24) {
                     this.viewProduct({ _id: productId });
                 }
+
+                // Sync category to localStorage whenever it changes
+                this.$watch('filters.category', (val) => {
+                    localStorage.setItem('inventoryCategoryFilter', val || '');
+                });
             },
 
 
@@ -211,6 +218,9 @@
             // Reset to page 1 when filters change
             resetAndLoad() {
                 this.pagination.page = 1;
+                if (this.filters.category !== undefined) {
+                    localStorage.setItem('inventoryCategoryFilter', this.filters.category);
+                }
                 this.loadProducts();
             },
 
@@ -283,7 +293,23 @@
 
             expandImage(imageUrl) {
                 this.expandedImage = imageUrl;
-                this.showViewModal = false; // Close detail modal when expanding image
+                // Keep showViewModal true so it stays open in the background
+            },
+
+            nextExpandedImage() {
+                if (!this.viewData.images || this.viewData.images.length <= 1) return;
+                let index = this.viewData.images.indexOf(this.expandedImage);
+                index = (index + 1) % this.viewData.images.length;
+                this.expandedImage = this.viewData.images[index];
+                this.activeImageIndex = index; // Keep carousel in sync
+            },
+
+            prevExpandedImage() {
+                if (!this.viewData.images || this.viewData.images.length <= 1) return;
+                let index = this.viewData.images.indexOf(this.expandedImage);
+                index = (index - 1 + this.viewData.images.length) % this.viewData.images.length;
+                this.expandedImage = this.viewData.images[index];
+                this.activeImageIndex = index; // Keep carousel in sync
             },
 
             async showQROnly(productId) {
@@ -427,11 +453,10 @@
             },
 
             editProductFromView() {
-                // Close view modal and open edit modal with the current product
-                this.closeViewModal();
                 // Redirect to edit page
                 if (this.viewData && this.viewData._id) {
-                    window.location.href = `/products/edit/${this.viewData._id}`;
+                    const editId = this.viewData._id;
+                    window.location.href = `/products/edit/${editId}`;
                 }
             },
 

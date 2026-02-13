@@ -7,6 +7,10 @@
             technicians: [],
 
             get token() { return window.api.token; },
+            get isSettled() {
+                if (!this.ticket || !this.ticket.logs) return false;
+                return this.ticket.logs.some(log => log.label && log.label.includes('Payment confirmed'));
+            },
 
             async init() {
                 if (!this.token) {

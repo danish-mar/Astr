@@ -193,21 +193,15 @@
                 class="w-full px-4 py-3 bg-white border rounded-xl focus:ring-4 focus:ring-primary-100 focus:border-primary-400 outline-none transition-all text-sm appearance-none cursor-pointer font-bold"
               >
                 <option value="">All Categories</option>
-                <template x-for="category in categories" :key="category._id">
-                  <option :value="category._id" x-text="category.name"></option>
+                <template x-for="cat in categories" :key="cat._id">
+                  <option :value="cat._id" x-text="cat.name" :selected="cat._id === filters.category"></option>
                 </template>
               </select>
               <div
-                class="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none"
-                x-show="!filters.category"
-              >
-                <i class="fas fa-chevron-down text-[8px]"></i>
-              </div>
-              <div
-                class="absolute right-4 top-1/2 -translate-y-1/2 text-primary-500 pointer-events-none"
+                class="absolute right-12 top-1/2 -translate-y-1/2 pointer-events-none"
                 x-show="filters.category"
               >
-                <i class="fas fa-check-circle text-xs"></i>
+                 <span class="text-[8px] font-black text-primary-500 uppercase tracking-tighter bg-primary-50 px-1.5 py-0.5 rounded border border-primary-100">FILTERED</span>
               </div>
             </div>
           </div>
@@ -1078,27 +1072,56 @@
       </div>
     </div>
 
-    <!-- Image Expand Modal -->
+    <!-- Image Expand Modal (Sharp Minimal) -->
     <div
       x-show="expandedImage"
       x-transition:enter="transition ease-out duration-200"
       x-transition:enter-start="opacity-0"
       x-transition:enter-end="opacity-100"
-      class="fixed inset-0 bg-black/95 flex items-center justify-center z-[70] p-4"
-      style="margin: 0 !important;"
+      class="fixed inset-0 bg-black/95 flex items-center justify-center z-[10000] p-4"
+      style="display: none; margin: 0 !important;"
       @click="expandedImage = null"
+      @keydown.window.escape="expandedImage = null"
+      @keydown.window.left="prevExpandedImage()"
+      @keydown.window.right="nextExpandedImage()"
     >
       <button
         @click="expandedImage = null"
-        class="absolute top-6 right-6 w-14 h-14 flex items-center justify-center text-white/80 hover:text-white hover:bg-white/10 rounded-xl transition-all z-[71]"
+        class="absolute top-6 right-6 w-14 h-14 flex items-center justify-center text-white/80 hover:text-white hover:bg-white/10 rounded-xl transition-all z-10"
       >
         <i class="fas fa-times text-2xl"></i>
       </button>
+
+      <!-- Navigation Arrows in Fullscreen -->
+      <template x-if="viewData.images && viewData.images.length > 1">
+        <div>
+          <button
+            @click.stop="prevExpandedImage()"
+            class="absolute left-6 top-1/2 -translate-y-1/2 w-16 h-16 flex items-center justify-center text-white/50 hover:text-white hover:bg-white/10 rounded-2xl transition-all z-10"
+          >
+            <i class="fas fa-chevron-left text-3xl"></i>
+          </button>
+          <button
+            @click.stop="nextExpandedImage()"
+            class="absolute right-6 top-1/2 -translate-y-1/2 w-16 h-16 flex items-center justify-center text-white/50 hover:text-white hover:bg-white/10 rounded-2xl transition-all z-10"
+          >
+            <i class="fas fa-chevron-right text-3xl"></i>
+          </button>
+        </div>
+      </template>
+
       <img
         :src="expandedImage"
-        class="max-w-full max-h-full object-contain"
+        class="max-w-full max-h-full object-contain select-none shadow-2xl"
         @click.stop
       />
+
+      <!-- Image Counter in Fullscreen -->
+      <template x-if="viewData.images && viewData.images.length > 1">
+        <div class="absolute bottom-8 left-1/2 -translate-x-1/2 px-4 py-2 bg-white/10 backdrop-blur-md text-white text-sm font-black uppercase tracking-widest rounded-full border border-white/10">
+          <span x-text="(viewData.images.findIndex(img => img === expandedImage) + 1)"></span> / <span x-text="viewData.images.length"></span>
+        </div>
+      </template>
     </div>
 
     <!-- AI Generated Ads Modal -->

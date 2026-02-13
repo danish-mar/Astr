@@ -1,13 +1,14 @@
 {
   "name": "astr-protocol",
-  "version": "3.0.0",
+  "version": "3.0.5",
   "scripts": {
     "dev": "nodemon --exec ts-node src/server.ts",
     "build": "tsc",
     "start": "node dist/server.js",
     "watch": "tsc -w",
     "seed": "ts-node src/utils/seedData.ts",
-    "create-admin": "ts-node src/utils/createAdmin.ts"
+    "create-admin": "ts-node src/utils/createAdmin.ts",
+    "migrate-ids": "ts-node src/scripts/migrateProductIDs.ts"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.958.0",

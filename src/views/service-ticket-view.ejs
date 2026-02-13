@@ -221,6 +221,7 @@
 
                     <!-- Payment Action -->
                     <button @click="settlePayment()"
+                        x-show="!isSettled && ticket?.status !== 'Delivered'"
                         class="mt-6 w-full py-4 bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl text-[9px] font-black uppercase tracking-widest shadow-lg shadow-emerald-100 transition-all active:scale-95 flex items-center justify-center gap-2 group">
                         <i class="fas fa-check-circle group-hover:scale-125 transition-transform"></i>
                         <span>Confirm Payment</span>
