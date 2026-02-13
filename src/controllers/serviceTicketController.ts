@@ -4,6 +4,7 @@ import Contact from "../models/Contact";
 import { Account, Transaction } from "../models";
 import { sendSuccess, sendError, sendPaginated, handleError } from "../utils";
 import { validateRequiredFields, isValidObjectId } from "../utils";
+import WhatsAppService from "../services/WhatsAppService";
 
 /**
  * Helper to sync ticket financial data to Financial Gateway
@@ -244,6 +245,9 @@ export const createServiceTicket = async (req: Request, res: Response) => {
     // Populate before sending response
     await ticket.populate("customer");
 
+    // Send WhatsApp Notification (Async)
+    WhatsAppService.sendTicketCreatedNotification(ticket).catch(err => console.error('WhatsApp Notify Error:', err));
+
     return sendSuccess(res, ticket, "Service ticket created successfully", 201);
   } catch (error) {
     return handleError(error, res);
@@ -298,6 +302,11 @@ export const updateServiceTicket = async (req: Request, res: Response) => {
 
     await ticket.populate("customer");
 
+    // Send WhatsApp Status Update if status was changed (Async)
+    if (status) {
+      WhatsAppService.sendTicketStatusUpdate(ticket).catch(err => console.error('WhatsApp Notify Error:', err));
+    }
+
     return sendSuccess(res, ticket, "Service ticket updated successfully");
   } catch (error) {
     return handleError(error, res);
@@ -349,6 +358,9 @@ export const updateTicketStatus = async (req: Request, res: Response) => {
     // Note: Automated settlement on 'Delivered' removed per user request for manual confirmation.
 
     await ticket.populate("customer");
+
+    // Send WhatsApp Status Update (Async)
+    WhatsAppService.sendTicketStatusUpdate(ticket).catch(err => console.error('WhatsApp Notify Error:', err));
 
     return sendSuccess(res, ticket, "Ticket status updated successfully");
   } catch (error) {

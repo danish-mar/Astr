@@ -13,6 +13,7 @@ export interface IShopSettings extends Document {
   aiProvider?: 'gemini' | 'openai' | 'none';
   aiApiKey?: string; // Encrypted
   aiEnabled?: boolean;
+  reviewUrl?: string;
   updatedAt: Date;
 }
 
@@ -78,6 +79,11 @@ const shopSettingsSchema = new Schema<IShopSettings>(
     aiEnabled: {
       type: Boolean,
       default: false,
+    },
+    reviewUrl: {
+      type: String,
+      trim: true,
+      default: "https://g.page/r/your-google-review-link",
     },
   },
   {

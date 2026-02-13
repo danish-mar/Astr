@@ -144,6 +144,11 @@ app.get("/team", (req: Request, res: Response) => {
   res.render("team", { title: "Astr - Team Management" });
 });
 
+// WhatsApp Link
+app.get("/whatsapp/link", (req: Request, res: Response) => {
+  res.render("whatsapp-link", { title: "Astr - WhatsApp Link" });
+});
+
 // 404 handler for API routes
 app.use("/api", notFoundHandler);
 

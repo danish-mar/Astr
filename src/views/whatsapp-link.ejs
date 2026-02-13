@@ -1,0 +1,138 @@
+<div x-data="whatsappLink" x-init="init()" class="space-y-8 pb-20">
+    <!-- Premium Header -->
+    <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div>
+            <h1 class="text-2xl font-bold text-slate-900 tracking-tight">WhatsApp Protocol</h1>
+            <p class="text-slate-500 text-sm mt-1">Link your shop WhatsApp for automated service notifications.</p>
+        </div>
+        
+        <div class="flex items-center gap-3 bg-white border border-slate-200 p-2 rounded-2xl shadow-sm">
+            <div class="w-10 h-10 rounded-xl flex items-center justify-center transition-colors"
+                :class="status === 'READY' ? 'bg-emerald-50 text-emerald-600' : 'bg-amber-50 text-amber-600'">
+                <i :class="status === 'READY' ? 'fas fa-check-circle' : 'fas fa-unlink'" class="text-lg"></i>
+            </div>
+            <div class="pr-4">
+                <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Connection Status</p>
+                <p class="text-xs font-bold text-slate-900" x-text="statusText"></p>
+            </div>
+        </div>
+    </div>
+
+    <div class="max-w-4xl mx-auto">
+        <!-- Linking State -->
+        <template x-if="status === 'INITIALIZING'">
+            <div class="bg-white border border-slate-200 p-8 md:p-12 rounded-[40px] shadow-glass space-y-10 text-center animate__animated animate__fadeIn">
+                <div class="space-y-4">
+                    <h2 class="text-2xl font-bold text-slate-900">Link your account</h2>
+                    <p class="text-slate-500 text-sm max-w-md mx-auto">
+                        Scan the QR code below using your mobile WhatsApp application (Settings > Linked Devices).
+                    </p>
+                </div>
+
+                <!-- QR Container -->
+                <div class="relative inline-block p-8 bg-slate-50 border border-slate-100 rounded-[32px]">
+                    <template x-if="qrCode">
+                        <div id="qr-container" class="bg-white p-4 rounded-2xl shadow-sm">
+                            <!-- QR image will be rendered here by JS -->
+                        </div>
+                    </template>
+                    <template x-if="!qrCode">
+                        <div class="w-64 h-64 flex flex-col items-center justify-center gap-4">
+                            <i class="fas fa-spinner fa-spin text-3xl text-primary-500"></i>
+                            <span class="text-xs font-bold text-slate-400 uppercase tracking-widest">Generating Protocol...</span>
+                        </div>
+                    </template>
+
+                    <!-- Pulse indicator -->
+                    <div class="absolute -top-2 -right-2 w-6 h-6 bg-primary-500 rounded-full border-4 border-white animate-pulse"></div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6 pt-8">
+                    <div class="space-y-2">
+                        <div class="w-10 h-10 rounded-xl bg-slate-100 flex items-center justify-center mx-auto text-slate-600">
+                            <span class="font-bold">1</span>
+                        </div>
+                        <p class="text-xs font-bold text-slate-600 uppercase">Open WhatsApp</p>
+                    </div>
+                    <div class="space-y-2">
+                        <div class="w-10 h-10 rounded-xl bg-slate-100 flex items-center justify-center mx-auto text-slate-600">
+                            <span class="font-bold">2</span>
+                        </div>
+                        <p class="text-xs font-bold text-slate-600 uppercase">Tap Linked Devices</p>
+                    </div>
+                    <div class="space-y-2">
+                        <div class="w-10 h-10 rounded-xl bg-slate-100 flex items-center justify-center mx-auto text-slate-600">
+                            <span class="font-bold">3</span>
+                        </div>
+                        <p class="text-xs font-bold text-slate-600 uppercase">Scan this code</p>
+                    </div>
+                </div>
+            </div>
+        </template>
+
+        <!-- Connected State -->
+        <template x-if="status === 'READY'">
+            <div class="bg-white border border-slate-200 p-8 md:p-12 rounded-[40px] shadow-glass space-y-8 animate__animated animate__fadeIn">
+                <div class="flex flex-col items-center text-center space-y-6">
+                    <div class="w-24 h-24 rounded-[32px] bg-emerald-50 text-emerald-500 flex items-center justify-center text-4xl shadow-emerald-100 shadow-xl">
+                        <i class="fab fa-whatsapp"></i>
+                    </div>
+                    
+                    <div class="space-y-2">
+                        <h2 class="text-2xl font-bold text-slate-900">Protocol Active</h2>
+                        <p class="text-slate-500 text-sm">
+                            Your WhatsApp is successfully linked. Automated service ticket notifications are now active.
+                        </p>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 w-full pt-6">
+                        <div class="p-6 bg-slate-50 rounded-3xl border border-slate-100 text-left flex items-start gap-4">
+                            <div class="w-10 h-10 rounded-xl bg-white border border-slate-100 flex items-center justify-center text-primary-500 shadow-sm">
+                                <i class="fas fa-ticket-alt"></i>
+                            </div>
+                            <div>
+                                <h4 class="text-xs font-bold text-slate-900 uppercase">Ticket Receipts</h4>
+                                <p class="text-[10px] text-slate-500 mt-1">Sent automatically on ticket creation.</p>
+                            </div>
+                        </div>
+                        <div class="p-6 bg-slate-50 rounded-3xl border border-slate-100 text-left flex items-start gap-4">
+                            <div class="w-10 h-10 rounded-xl bg-white border border-slate-100 flex items-center justify-center text-emerald-500 shadow-sm">
+                                <i class="fas fa-sync"></i>
+                            </div>
+                            <div>
+                                <h4 class="text-xs font-bold text-slate-900 uppercase">Status Updates</h4>
+                                <p class="text-[10px] text-slate-500 mt-1">Sent automatically on status change.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <button @click="logout()" 
+                        class="px-8 py-4 bg-rose-50 text-rose-600 rounded-2xl font-bold text-sm hover:bg-rose-100 active:scale-95 transition-all flex items-center gap-3 mt-8">
+                        <i class="fas fa-power-off"></i>
+                        Disconnect WhatsApp
+                    </button>
+                </div>
+            </div>
+        </template>
+
+        <!-- Error / Disconnected State -->
+        <template x-if="status === 'DISCONNECTED'">
+             <div class="bg-white border border-slate-200 p-8 md:p-12 rounded-[40px] shadow-glass text-center space-y-6">
+                <div class="w-20 h-20 rounded-3xl bg-rose-50 text-rose-500 flex items-center justify-center text-3xl mx-auto">
+                    <i class="fas fa-exclamation-triangle"></i>
+                </div>
+                <div class="space-y-2">
+                    <h2 class="text-xl font-bold text-slate-900">Connection Failed</h2>
+                    <p class="text-slate-500 text-sm">The WhatsApp engine encountered an error or was disconnected.</p>
+                </div>
+                <button @click="retry()" 
+                    class="px-8 py-4 bg-slate-900 text-white rounded-2xl font-bold text-sm hover:bg-black active:scale-95 transition-all shadow-lg">
+                    Retry Connection
+                </button>
+            </div>
+        </template>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.min.js"></script>
+<script src="/js/pages/whatsapp-link.js"></script>
