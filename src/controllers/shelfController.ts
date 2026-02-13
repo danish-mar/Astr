@@ -42,6 +42,7 @@ export const getPublicShelf = async (req: Request, res: Response) => {
             product,
             shopSettings,
             qrDataUrl,
+            productUrl: qrUrl,
             imageUrls,
             getImageUrl,
             layout: false // Mobile shelf is independent
