@@ -66,8 +66,15 @@ class AIService {
                     configuration: {
                         baseURL: baseUrl ? baseUrl.replace(/\/+$/, '') : undefined,
                         apiKey: apiKey || undefined,
+                        defaultHeaders: {
+                            'User-Agent': 'Astr-Protocol/3.3.0',
+                            'HTTP-Referer': 'https://astr.app',
+                            'X-Title': 'Astr Protocol',
+                        }
                     },
                     temperature: 0.7,
+                    timeout: 10000,
+                    maxRetries: 0,
                 });
 
             case 'custom':
@@ -82,10 +89,15 @@ class AIService {
                     configuration: {
                         baseURL: baseUrl.replace(/\/+$/, ''),
                         apiKey: apiKey || "dummy-key",
+                        defaultHeaders: {
+                            'User-Agent': 'Astr-Protocol/3.3.0',
+                            'HTTP-Referer': 'https://astr.app',
+                            'X-Title': 'Astr Protocol',
+                        }
                     },
                     temperature: 0.7,
-                    timeout: 30000,
-                    maxRetries: 1,
+                    timeout: 10000,
+                    maxRetries: 0,
                 });
 
             default:
@@ -344,6 +356,84 @@ Message:
     }
 
     /**
+     * Fast, resilient prompt execution with direct fetch for custom endpoints and 8s timeout
+     */
+    private async executePrompt(promptText: string, timeoutMs = 8000): Promise<string> {
+        const settings = await ShopSettings.findOne().select('+aiApiKey');
+        const provider = settings?.aiProvider;
+        const apiKey = settings?.aiApiKey;
+        const baseUrl = settings?.aiBaseUrl;
+        const model = settings?.aiModel;
+
+        if (!provider || provider === 'none') {
+            throw new Error('AI is not configured.');
+        }
+
+        if (provider === 'custom') {
+            if (!baseUrl) throw new Error('Base URL is missing for custom provider.');
+            const cleanUrl = baseUrl.trim().replace(/\/+$/, '');
+            const targetUrl = cleanUrl.endsWith('/chat/completions') ? cleanUrl : `${cleanUrl}/chat/completions`;
+
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
+
+            try {
+                const headers: Record<string, string> = {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json',
+                    'User-Agent': 'Astr-Protocol/3.3.0',
+                    'HTTP-Referer': 'https://astr.app',
+                    'X-Title': 'Astr Protocol',
+                };
+                if (apiKey && apiKey.trim() !== '') {
+                    headers['Authorization'] = `Bearer ${apiKey.trim()}`;
+                }
+
+                const payload = {
+                    model: model || 'default',
+                    messages: [
+                        { role: 'user', content: promptText }
+                    ],
+                    temperature: 0.7,
+                    stream: false,
+                };
+
+                const res = await fetch(targetUrl, {
+                    method: 'POST',
+                    headers,
+                    body: JSON.stringify(payload),
+                    signal: controller.signal,
+                });
+
+                if (!res.ok) {
+                    const errText = await res.text().catch(() => res.statusText);
+                    throw new Error(`Custom provider returned ${res.status}: ${errText.slice(0, 200)}`);
+                }
+
+                const data: any = await res.json();
+                const reply = data?.choices?.[0]?.message?.content;
+                if (!reply) throw new Error('Empty response from custom AI provider.');
+                return String(reply).trim();
+            } finally {
+                clearTimeout(timeoutId);
+            }
+        }
+
+        // Gemini or OpenAI Official
+        const llm = await this.getLLM();
+        const promptTemplate = PromptTemplate.fromTemplate("{inputPrompt}");
+        const chain = promptTemplate.pipe(llm);
+        const timeoutPromise = new Promise<never>((_, reject) =>
+            setTimeout(() => reject(new Error(`AI generation timed out after ${timeoutMs}ms.`)), timeoutMs)
+        );
+        const result: any = await Promise.race([
+            chain.invoke({ inputPrompt: promptText }),
+            timeoutPromise
+        ]);
+        return result.content ? result.content.toString().trim() : '';
+    }
+
+    /**
      * Generate customer reviews (random positive from queue or custom prompt based)
      */
     async generateReview(options: {
@@ -360,13 +450,10 @@ Message:
 
         // Custom prompt review (generated dynamically on demand based on specific user prompt)
         try {
-            const llm = await this.getLLM();
-
-            const promptTemplate = PromptTemplate.fromTemplate(`
-You are a satisfied real customer writing an authentic, 5-star Google review for {shopName} (a computer repair and electronics shop).
+            const promptText = `You are a satisfied real customer writing an authentic, 5-star Google review for ${shopName} (a computer repair and electronics shop).
 
 The service or purchase experience was:
-"{customPrompt}"
+"${options.customPrompt}"
 
 Rules for the review:
 - Write in first person ("I got my laptop repaired...", "They fixed my...", "Great experience with...")
@@ -374,18 +461,12 @@ Rules for the review:
 - Length: 2 to 4 concise sentences (40-80 words)
 - Highlight friendly staff, quick turnaround, fair pricing, and quality workmanship
 - Do NOT use hashtags or quote marks around the whole text
-- Mention {shopName} naturally if appropriate
+- Mention ${shopName} naturally if appropriate
 
-Review text:
-`);
+Review text:`;
 
-            const chain = promptTemplate.pipe(llm);
-            const result = await chain.invoke({
-                shopName,
-                customPrompt: options.customPrompt || "Repairs and computer service",
-            });
-
-            return result.content ? result.content.toString().trim() : this.getFallbackReview(options);
+            const review = await this.executePrompt(promptText, 8000);
+            return review || this.getFallbackReview(options);
         } catch (error) {
             console.warn('AI custom review generation fallback invoked:', error);
             return this.getFallbackReview(options);
@@ -416,9 +497,7 @@ Review text:
     private async generateSingleRandomReview(shopName?: string): Promise<string> {
         const shop = shopName || "the shop";
         try {
-            const llm = await this.getLLM();
-            const promptTemplate = PromptTemplate.fromTemplate(`
-You are a satisfied real customer writing an authentic, positive 5-star Google review for {shopName} (a computer/laptop repair and tech shop).
+            const promptText = `You are a satisfied real customer writing an authentic, positive 5-star Google review for ${shop} (a computer/laptop repair and tech shop).
 
 Rules for the review:
 - Write in first person as a happy customer
@@ -427,11 +506,10 @@ Rules for the review:
 - Length: 2 to 4 sentences (40-75 words)
 - Do NOT use hashtags or quote marks around the message
 
-Review text:
-`);
-            const chain = promptTemplate.pipe(llm);
-            const result = await chain.invoke({ shopName: shop });
-            return result.content ? result.content.toString().trim() : this.getFallbackReview({ type: 'random', shopName: shop });
+Review text:`;
+
+            const review = await this.executePrompt(promptText, 8000);
+            return review || this.getFallbackReview({ type: 'random', shopName: shop });
         } catch (error) {
             return this.getFallbackReview({ type: 'random', shopName: shop });
         }
