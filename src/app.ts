@@ -8,6 +8,7 @@ import serviceTicketRoutes from "./routes/serviceTicketRoutes";
 import shopSettingsRoutes from "./routes/shopSettingsRoutes";
 import statisticsRoutes from "./routes/statisticsRoutes";
 import { getPublicShelf } from "./controllers/shelfController";
+import { renderReviewPage, handleInstagramRedirect } from "./controllers/reviewController";
 import pkg from "../package.json";
 
 dotenv.config();
@@ -127,6 +128,14 @@ app.get("/accounting", (req: Request, res: Response) => {
 });
 
 app.get("/product/:productId", getPublicShelf);
+
+// Review Generator Page
+app.get("/reviews", renderReviewPage);
+
+// Instagram Follow Redirect Pages
+app.get("/instagram", handleInstagramRedirect);
+app.get("/ig", handleInstagramRedirect);
+app.get("/follow", handleInstagramRedirect);
 
 
 // Settings

@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title><%= title %></title>
+    <meta name="description" content="Follow <%= shopName %> (@<%= username %>) on Instagram">
+
+    <!-- Google Fonts: Outfit -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- Font Awesome 6 -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+
+    <!-- Animate.css -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css" />
+
+    <style>
+        body {
+            font-family: 'Outfit', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: radial-gradient(circle at 50% 10%, #1e1b4b 0%, #0f172a 100%);
+            min-height: 100vh;
+        }
+        .ig-gradient {
+            background: linear-gradient(45deg, #f09433 0%, #e6683c 25%, #dc2743 50%, #cc2366 75%, #bc1888 100%);
+        }
+        .ig-glow {
+            box-shadow: 0 12px 30px -6px rgba(225, 48, 108, 0.45);
+        }
+    </style>
+</head>
+
+<body class="flex flex-col justify-between items-center py-8 px-4 text-white">
+
+    <div class="max-w-sm w-full my-auto text-center animate__animated animate__fadeInUp">
+        
+        <!-- Instagram Floating Icon Badge -->
+        <div class="relative w-24 h-24 mx-auto mb-6">
+            <div class="w-24 h-24 rounded-[28px] ig-gradient p-1 flex items-center justify-center ig-glow shadow-2xl">
+                <div class="w-full h-full bg-slate-950/20 backdrop-blur-sm rounded-[24px] flex items-center justify-center text-4xl text-white">
+                    <i class="fab fa-instagram"></i>
+                </div>
+            </div>
+            <div class="absolute -bottom-1 -right-1 w-8 h-8 rounded-full bg-emerald-500 border-2 border-slate-900 flex items-center justify-center text-white text-xs">
+                <i class="fas fa-check"></i>
+            </div>
+        </div>
+
+        <h1 class="text-2xl font-black tracking-tight mb-1"><%= shopName %></h1>
+        <p class="text-sm font-semibold text-rose-400 mb-6">@<%= username %></p>
+
+        <p class="text-xs text-slate-300 leading-relaxed mb-8 px-4">
+            Follow us for exclusive repair discounts, quick tech tips, new inventory arrivals, and customer highlights!
+        </p>
+
+        <!-- Actions -->
+        <div class="space-y-3">
+            <a href="<%= appDeepLink %>" id="open-app-btn"
+                class="w-full py-4 ig-gradient text-white rounded-2xl font-bold text-sm tracking-wide transition-all flex items-center justify-center gap-3 active:scale-[0.98] ig-glow">
+                <i class="fab fa-instagram text-lg"></i>
+                <span>Open in Instagram App</span>
+            </a>
+
+            <a href="<%= instagramUrl %>"
+                class="w-full py-3.5 bg-slate-800/80 hover:bg-slate-700 border border-slate-700/60 text-slate-200 rounded-2xl font-semibold text-xs transition-all flex items-center justify-center gap-2 active:scale-[0.98]">
+                <span>Continue in Browser</span>
+                <i class="fas fa-arrow-right text-[10px] text-slate-400"></i>
+            </a>
+        </div>
+
+        <div class="mt-8 pt-6 border-t border-slate-800/80 text-[11px] text-slate-400 font-medium">
+            <%= shopName %> &bull; Powered by Astr
+        </div>
+    </div>
+
+    <script>
+        // Try auto-redirecting to Instagram app on mobile touch devices
+        window.addEventListener('DOMContentLoaded', () => {
+            const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+            if (isMobile) {
+                // Attempt deep link
+                setTimeout(() => {
+                    window.location.href = "<%= appDeepLink %>";
+                }, 300);
+            }
+        });
+    </script>
+</body>
+</html>

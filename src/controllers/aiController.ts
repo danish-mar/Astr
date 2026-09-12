@@ -79,7 +79,8 @@ export const generateProductAd = async (req: Request, res: Response) => {
  */
 export const testConnection = async (req: Request, res: Response) => {
     try {
-        const result = await aiService.testConnection();
+        const { provider, baseUrl, apiKey, model } = req.body || {};
+        const result = await aiService.testConnection({ provider, baseUrl, apiKey, model });
 
         if (result.success) {
             return sendSuccess(res, {
@@ -95,3 +96,21 @@ export const testConnection = async (req: Request, res: Response) => {
         return handleError(error, res);
     }
 };
+
+/**
+ * Fetch models from OpenAI compatible endpoint / provider
+ * POST /api/v1/ai/models
+ */
+export const getModels = async (req: Request, res: Response) => {
+    try {
+        const { provider, baseUrl, apiKey } = req.body || {};
+        const models = await aiService.fetchModels({ provider, baseUrl, apiKey });
+        return sendSuccess(res, { models }, "Models retrieved successfully");
+    } catch (error: any) {
+        return res.status(400).json({
+            success: false,
+            message: error.message || "Failed to fetch models",
+        });
+    }
+};
+

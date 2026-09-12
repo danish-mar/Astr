@@ -49,6 +49,16 @@
                     </div>
                     <span class="text-sm font-semibold">AI Protocol</span>
                 </button>
+
+                <button @click="activeTab = 'reviews'"
+                    class="w-full flex items-center gap-4 p-4 rounded-2xl transition-all group border"
+                    :class="activeTab === 'reviews' ? 'bg-primary-600 border-primary-600 text-white shadow-purple' : 'bg-white border-slate-200 text-slate-500 hover:border-primary-200 hover:text-primary-600'">
+                    <div class="w-10 h-10 rounded-xl flex items-center justify-center transition-colors"
+                        :class="activeTab === 'reviews' ? 'bg-white/10' : 'bg-slate-50 group-hover:bg-primary-50'">
+                        <i class="fas fa-qrcode text-sm"></i>
+                    </div>
+                    <span class="text-sm font-semibold">Review & QR Hub</span>
+                </button>
             </nav>
         </div>
 
@@ -96,7 +106,23 @@
                                     class="block w-full px-5 py-4 bg-slate-50 border border-slate-100 rounded-2xl font-medium focus:ring-4 focus:ring-primary-500/5 focus:border-primary-500 focus:bg-white outline-none transition-all">
                             </div>
 
-                            <div class="md:col-span-2 space-y-2">
+                            <div class="space-y-2">
+                                <div class="flex items-center justify-between ml-1">
+                                    <label class="text-xs font-bold text-slate-500">Instagram Username</label>
+                                    <a :href="getInstagramRedirectLink()" target="_blank" x-show="settings.instagramUsername"
+                                        class="text-[10px] text-pink-600 font-bold hover:underline flex items-center gap-1">
+                                        <span>Test /instagram</span>
+                                        <i class="fas fa-external-link-alt text-[8px]"></i>
+                                    </a>
+                                </div>
+                                <div class="relative">
+                                    <span class="absolute left-5 top-1/2 -translate-y-1/2 text-slate-400 font-bold text-sm">@</span>
+                                    <input type="text" x-model="settings.instagramUsername" placeholder="yourshopname"
+                                        class="block w-full pl-10 pr-5 py-4 bg-slate-50 border border-slate-100 rounded-2xl font-medium focus:ring-4 focus:ring-primary-500/5 focus:border-primary-500 focus:bg-white outline-none transition-all">
+                                </div>
+                            </div>
+
+                            <div class="space-y-2">
                                 <label class="text-xs font-bold text-slate-500 ml-1">Google Review / Rating Link</label>
                                 <input type="url" x-model="settings.reviewUrl" placeholder="https://g.page/r/your-link/review"
                                     class="block w-full px-5 py-4 bg-slate-50 border border-slate-100 rounded-2xl font-medium focus:ring-4 focus:ring-primary-500/5 focus:border-primary-500 focus:bg-white outline-none transition-all">
@@ -176,6 +202,7 @@
                         </div>
 
                         <div class="space-y-6" x-show="settings.aiEnabled">
+                            <!-- Provider Selection -->
                             <div class="space-y-2">
                                 <label class="text-xs font-bold text-slate-500 ml-1">Intelligence Provider</label>
                                 <div class="relative">
@@ -183,7 +210,8 @@
                                         class="block w-full px-5 py-4 bg-slate-50 border border-slate-100 rounded-2xl font-medium focus:ring-4 focus:ring-primary-500/5 focus:border-primary-500 focus:bg-white outline-none transition-all appearance-none cursor-pointer">
                                         <option value="none">Disabled</option>
                                         <option value="gemini">Google Gemini AI</option>
-                                        <option value="openai">OpenAI ChatGPT</option>
+                                        <option value="openai">OpenAI Official</option>
+                                        <option value="custom">Custom (OpenAI Compatible - Ollama, Groq, OpenRouter, LM Studio)</option>
                                     </select>
                                     <div class="absolute right-5 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400">
                                         <i class="fas fa-chevron-down text-xs"></i>
@@ -191,11 +219,34 @@
                                 </div>
                             </div>
 
+                            <!-- Custom Provider Name (for custom provider) -->
+                            <div class="space-y-2" x-show="settings.aiProvider === 'custom'">
+                                <label class="text-xs font-bold text-slate-500 ml-1">Provider Name</label>
+                                <input type="text" x-model="settings.aiCustomProviderName"
+                                    placeholder="e.g., Ollama, Groq, OpenRouter, LocalAI"
+                                    class="block w-full px-5 py-4 bg-slate-50 border border-slate-100 rounded-2xl font-medium text-xs focus:ring-4 focus:ring-primary-500/5 focus:border-primary-500 focus:bg-white outline-none transition-all">
+                            </div>
+
+                            <!-- OpenAI URL / Base URL (for custom and optional for openai) -->
+                            <div class="space-y-2" x-show="settings.aiProvider === 'custom' || settings.aiProvider === 'openai'">
+                                <div class="flex items-center justify-between ml-1">
+                                    <label class="text-xs font-bold text-slate-500">Provider OpenAI URL / Endpoint</label>
+                                    <span class="text-[10px] text-slate-400" x-show="settings.aiProvider === 'custom'">e.g. http://localhost:11434/v1 or https://openrouter.ai/api/v1</span>
+                                </div>
+                                <input type="text" x-model="settings.aiBaseUrl"
+                                    :placeholder="settings.aiProvider === 'custom' ? 'http://localhost:11434/v1' : 'https://api.openai.com/v1 (default)'"
+                                    class="block w-full px-5 py-4 bg-slate-50 border border-slate-100 rounded-2xl font-mono text-xs focus:ring-4 focus:ring-primary-500/5 focus:border-primary-500 focus:bg-white outline-none transition-all">
+                            </div>
+
+                            <!-- Auth Token / API Key -->
                             <div class="space-y-2" x-show="settings.aiProvider !== 'none'">
-                                <label class="text-xs font-bold text-slate-500 ml-1">Auth Token / API Key</label>
+                                <div class="flex items-center justify-between ml-1">
+                                    <label class="text-xs font-bold text-slate-500">Auth Token / API Key</label>
+                                    <span class="text-[10px] text-emerald-600 font-semibold" x-show="settings.hasAiApiKey && !settings.aiApiKey">Key already configured</span>
+                                </div>
                                 <div class="relative">
                                     <input :type="showApiKey ? 'text' : 'password'" x-model="settings.aiApiKey"
-                                        placeholder="Enter your key here..."
+                                        :placeholder="settings.hasAiApiKey ? '•••••••••••••••• (Leave blank to keep current key)' : (settings.aiProvider === 'custom' ? 'Enter API key (leave blank if not required by local endpoint)' : 'Enter your API key here...')"
                                         class="block w-full px-5 py-4 pr-14 bg-slate-50 border border-slate-100 rounded-2xl font-mono text-xs focus:ring-4 focus:ring-primary-500/5 focus:border-primary-500 focus:bg-white outline-none transition-all">
                                     <button type="button" @click="showApiKey = !showApiKey"
                                         class="absolute right-5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600">
@@ -204,7 +255,74 @@
                                 </div>
                             </div>
 
-                            <div class="flex items-center justify-between gap-4" x-show="settings.aiProvider !== 'none'">
+                            <!-- Provider Model & Custom Searchable Dropdown -->
+                            <div class="space-y-2" x-show="settings.aiProvider !== 'none'">
+                                <div class="flex items-center justify-between ml-1">
+                                    <label class="text-xs font-bold text-slate-500">Provider Model</label>
+                                    <span class="text-[10px] text-purple-600 font-medium" x-show="fetchModelsMessage" x-text="fetchModelsMessage"></span>
+                                </div>
+                                <div class="flex gap-2 relative">
+                                    <div class="relative flex-1" @click.outside="showModelDropdown = false">
+                                        <div class="relative flex items-center">
+                                            <input type="text" x-model="settings.aiModel"
+                                                @focus="if (modelsList.length > 0) showModelDropdown = true"
+                                                @input="if (modelsList.length > 0) showModelDropdown = true"
+                                                :placeholder="settings.aiProvider === 'gemini' ? 'gemini-2.5-flash' : (settings.aiProvider === 'openai' ? 'gpt-3.5-turbo' : 'e.g., llama3, mistral, deepseek-chat')"
+                                                class="block w-full px-5 py-4 pr-12 bg-slate-50 border border-slate-100 rounded-2xl font-mono text-xs focus:ring-4 focus:ring-primary-500/5 focus:border-primary-500 focus:bg-white outline-none transition-all">
+                                            
+                                            <button type="button" @click="toggleModelDropdown()"
+                                                class="absolute right-4 text-slate-400 hover:text-slate-600 p-1.5 transition-colors cursor-pointer"
+                                                title="Toggle models list">
+                                                <i class="fas fa-chevron-down text-xs transition-transform duration-200"
+                                                    :class="showModelDropdown ? 'rotate-180 text-primary-600' : ''"></i>
+                                            </button>
+                                        </div>
+
+                                        <!-- Custom Floating Dropdown Menu -->
+                                        <div x-show="showModelDropdown && modelsList.length > 0"
+                                            x-transition:enter="transition ease-out duration-150"
+                                            x-transition:enter-start="opacity-0 translate-y-2"
+                                            x-transition:enter-end="opacity-100 translate-y-0"
+                                            x-transition:leave="transition ease-in duration-100"
+                                            x-transition:leave-start="opacity-100 translate-y-0"
+                                            x-transition:leave-end="opacity-0 translate-y-2"
+                                            class="absolute left-0 right-0 top-full mt-2 bg-white border border-slate-200 rounded-2xl shadow-2xl z-50 max-h-64 overflow-hidden flex flex-col divide-y divide-slate-100">
+                                            
+                                            <div class="p-3 bg-slate-50 border-b border-slate-100 flex items-center justify-between text-[11px] font-semibold text-slate-500">
+                                                <span>Available Models (<span x-text="filteredModels.length"></span>)</span>
+                                                <button type="button" @click="showModelDropdown = false" class="text-slate-400 hover:text-slate-600">
+                                                    <i class="fas fa-times text-xs"></i>
+                                                </button>
+                                            </div>
+
+                                            <div class="overflow-y-auto max-h-52 p-1.5 space-y-0.5 custom-scrollbar">
+                                                <template x-for="m in filteredModels" :key="m">
+                                                    <button type="button" @click="selectModel(m)"
+                                                        class="w-full text-left px-3.5 py-2.5 rounded-xl text-xs font-mono transition-colors flex items-center justify-between group cursor-pointer"
+                                                        :class="settings.aiModel === m ? 'bg-primary-50 text-primary-700 font-bold' : 'text-slate-700 hover:bg-slate-100'">
+                                                        <span x-text="m" class="truncate pr-2"></span>
+                                                        <i class="fas fa-check text-xs text-primary-600" x-show="settings.aiModel === m"></i>
+                                                    </button>
+                                                </template>
+                                                <div x-show="filteredModels.length === 0" class="p-4 text-center text-xs text-slate-400">
+                                                    No models matching "<span x-text="settings.aiModel"></span>". You can keep this custom name.
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <button type="button" @click="fetchModels()" :disabled="fetchingModels"
+                                        class="px-5 py-4 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-2xl text-xs font-bold transition-all flex items-center gap-2 whitespace-nowrap active:scale-95 disabled:opacity-50 cursor-pointer"
+                                        title="Fetch available models from endpoint /models">
+                                        <i :class="fetchingModels ? 'fas fa-spinner fa-spin' : 'fas fa-list'"></i>
+                                        <span x-text="fetchingModels ? 'Fetching...' : 'Get Models'"></span>
+                                    </button>
+                                </div>
+                                <p class="text-[11px] text-slate-400 ml-1">Click the chevron or "Get Models" to select from list, or type any custom model identifier.</p>
+                            </div>
+
+                            <!-- Connection Testing & Feedback -->
+                            <div class="flex items-center justify-between gap-4 pt-2" x-show="settings.aiProvider !== 'none'">
                                 <button type="button" @click="testAIConnection()" :disabled="testingConnection"
                                     class="px-6 py-3 bg-white border border-slate-200 text-slate-600 rounded-2xl text-[11px] font-bold uppercase tracking-wider hover:bg-slate-50 active:scale-95 transition-all flex items-center gap-3">
                                     <i :class="testingConnection ? 'fas fa-spinner fa-spin' : 'fas fa-plug'"></i>
@@ -226,6 +344,168 @@
                             </button>
                         </div>
                     </form>
+                </div>
+            </div>
+
+            <!-- Reviews & QR Hub Section -->
+            <div x-show="activeTab === 'reviews'" x-transition:enter="transition ease-out duration-300" x-transition:enter-start="opacity-0 translate-y-4" x-transition:enter-end="opacity-100 translate-y-0" class="space-y-6">
+                
+                <!-- Main Config Card -->
+                <div class="bg-white border border-slate-200 p-8 md:p-10 rounded-[32px] shadow-glass">
+                    <div class="flex items-center gap-4 mb-8">
+                        <div class="w-12 h-12 rounded-2xl bg-amber-50 flex items-center justify-center text-amber-500">
+                            <i class="fas fa-star text-xl"></i>
+                        </div>
+                        <div>
+                            <h3 class="text-xl font-bold text-slate-900">Review Engine & QR Hub</h3>
+                            <p class="text-slate-500 text-sm">Automate 5-star Google reviews with personalized AI drafts and counter QR standees</p>
+                        </div>
+                    </div>
+
+                    <form @submit.prevent="saveSettings()" class="space-y-6">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            
+                            <div class="md:col-span-2 space-y-2">
+                                <div class="flex items-center justify-between ml-1">
+                                    <label class="text-xs font-bold text-slate-500">Google Business / Review URL</label>
+                                    <span class="text-[10px] text-slate-400">Where customer reviews will be posted</span>
+                                </div>
+                                <input type="url" x-model="settings.reviewUrl"
+                                    placeholder="https://g.page/r/your-shop/review or Google Maps review link"
+                                    class="block w-full px-5 py-4 bg-slate-50 border border-slate-100 rounded-2xl font-mono text-xs focus:ring-4 focus:ring-primary-500/5 focus:border-primary-500 focus:bg-white outline-none transition-all">
+                            </div>
+
+                            <div class="space-y-2">
+                                <div class="flex items-center justify-between ml-1">
+                                    <label class="text-xs font-bold text-slate-500">Review Access Passcode (?key=...)</label>
+                                    <span class="text-[10px] text-slate-400">Protects review generator page</span>
+                                </div>
+                                <input type="text" x-model="settings.reviewAccessKey"
+                                    placeholder="e.g., review123"
+                                    class="block w-full px-5 py-4 bg-slate-50 border border-slate-100 rounded-2xl font-mono text-xs focus:ring-4 focus:ring-primary-500/5 focus:border-primary-500 focus:bg-white outline-none transition-all">
+                            </div>
+
+                            <div class="space-y-2">
+                                <label class="text-xs font-bold text-slate-500 ml-1">Live Review Direct Link</label>
+                                <div class="flex gap-2">
+                                    <input type="text" readonly :value="getReviewDirectLink()"
+                                        class="block w-full px-5 py-4 bg-slate-100 border border-slate-200 rounded-2xl font-mono text-xs text-slate-600 outline-none select-all">
+                                    <button type="button" @click="copyReviewLink()"
+                                        class="px-5 py-4 bg-slate-900 text-white hover:bg-slate-800 active:scale-95 rounded-2xl text-xs font-bold transition-all flex items-center gap-2 whitespace-nowrap shadow-sm">
+                                        <i :class="copiedReviewLink ? 'fas fa-check text-emerald-300' : 'fas fa-copy'"></i>
+                                        <span x-text="copiedReviewLink ? 'Copied' : 'Copy'"></span>
+                                    </button>
+                                </div>
+                            </div>
+
+                            <div class="space-y-2">
+                                <div class="flex items-center justify-between ml-1">
+                                    <label class="text-xs font-bold text-slate-500">Instagram Handle</label>
+                                    <span class="text-[10px] text-pink-600 font-semibold" x-show="settings.instagramUsername" x-text="'@' + settings.instagramUsername.replace(/^@/, '')"></span>
+                                </div>
+                                <div class="relative">
+                                    <span class="absolute left-5 top-1/2 -translate-y-1/2 text-slate-400 font-bold text-sm">@</span>
+                                    <input type="text" x-model="settings.instagramUsername"
+                                        placeholder="yourshopname"
+                                        class="block w-full pl-10 pr-5 py-4 bg-slate-50 border border-slate-100 rounded-2xl font-medium text-xs focus:ring-4 focus:ring-primary-500/5 focus:border-primary-500 focus:bg-white outline-none transition-all">
+                                </div>
+                            </div>
+
+                            <div class="space-y-2">
+                                <label class="text-xs font-bold text-slate-500 ml-1">Instagram Follow Redirect Link</label>
+                                <div class="flex gap-2">
+                                    <input type="text" readonly :value="getInstagramRedirectLink()"
+                                        class="block w-full px-5 py-4 bg-slate-100 border border-slate-200 rounded-2xl font-mono text-xs text-slate-600 outline-none select-all">
+                                    <button type="button" @click="copyInstagramLink()"
+                                        class="px-5 py-4 bg-gradient-to-r from-pink-500 to-rose-600 text-white hover:opacity-90 active:scale-95 rounded-2xl text-xs font-bold transition-all flex items-center gap-2 whitespace-nowrap shadow-sm">
+                                        <i :class="copiedInstagramLink ? 'fas fa-check text-emerald-300' : 'fab fa-instagram'"></i>
+                                        <span x-text="copiedInstagramLink ? 'Copied' : 'Copy Link'"></span>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="flex items-center justify-between pt-4 border-t border-slate-100">
+                            <a :href="getReviewDirectLink()" target="_blank"
+                                class="px-5 py-3 bg-slate-100 text-slate-700 hover:bg-slate-200 active:scale-95 rounded-2xl text-xs font-bold transition-all flex items-center gap-2">
+                                <i class="fas fa-external-link-alt text-xs"></i>
+                                <span>Open Review Page</span>
+                            </a>
+
+                            <button type="submit" :disabled="saving"
+                                class="px-8 py-4 bg-primary-600 text-white rounded-2xl font-bold text-sm hover:bg-primary-700 active:scale-95 transition-all shadow-purple flex items-center gap-3">
+                                <i :class="saving ? 'fas fa-spinner fa-spin' : 'fas fa-save'"></i>
+                                <span x-text="saving ? 'Saving...' : 'Save Review Settings'"></span>
+                            </button>
+                        </div>
+                    </form>
+                </div>
+
+                <!-- QR Code & Standee Card -->
+                <div class="bg-white border border-slate-200 p-8 md:p-10 rounded-[32px] shadow-glass">
+                    <div class="flex items-center gap-4 mb-8">
+                        <div class="w-12 h-12 rounded-2xl bg-indigo-50 flex items-center justify-center text-indigo-600">
+                            <i class="fas fa-qrcode text-xl"></i>
+                        </div>
+                        <div>
+                            <h3 class="text-xl font-bold text-slate-900">Counter QR Standee</h3>
+                            <p class="text-slate-500 text-sm">Download or print ready-to-use QR standee for your reception desk or invoice receipts</p>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-12 gap-8 items-center">
+                        <!-- QR Preview Box -->
+                        <div class="md:col-span-5 flex flex-col items-center justify-center p-8 bg-slate-50 border border-slate-200 rounded-3xl shadow-inner">
+                            <template x-if="qrDataUrl">
+                                <img :src="qrDataUrl" alt="Review QR Code" class="w-52 h-52 object-contain bg-white p-3 rounded-2xl border border-slate-200 shadow-md">
+                            </template>
+                            <template x-if="!qrDataUrl && loadingQr">
+                                <div class="w-52 h-52 flex flex-col items-center justify-center text-slate-400 gap-2">
+                                    <i class="fas fa-spinner fa-spin text-2xl text-indigo-500"></i>
+                                    <span class="text-xs font-semibold">Generating QR...</span>
+                                </div>
+                            </template>
+                            <span class="mt-4 text-[11px] font-bold text-slate-500 tracking-wider uppercase">Scan to Review</span>
+                        </div>
+
+                        <!-- Instructions & Actions -->
+                        <div class="md:col-span-7 space-y-6">
+                            <div class="space-y-3">
+                                <div class="flex items-start gap-3">
+                                    <div class="w-6 h-6 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center text-xs font-bold mt-0.5">1</div>
+                                    <p class="text-xs text-slate-600">Customer scans this QR code with their phone camera after a repair or purchase.</p>
+                                </div>
+                                <div class="flex items-start gap-3">
+                                    <div class="w-6 h-6 rounded-full bg-indigo-100 text-indigo-600 flex items-center justify-center text-xs font-bold mt-0.5">2</div>
+                                    <p class="text-xs text-slate-600">They tap <strong>Quick Positive</strong> or type what was repaired (e.g. <em>Screen Replacement</em>) to draft an authentic 5-star review.</p>
+                                </div>
+                                <div class="flex items-start gap-3">
+                                    <div class="w-6 h-6 rounded-full bg-amber-100 text-amber-600 flex items-center justify-center text-xs font-bold mt-0.5">3</div>
+                                    <p class="text-xs text-slate-600">With one tap, the review is copied to their clipboard and your Google Review page opens automatically.</p>
+                                </div>
+                            </div>
+
+                            <div class="flex flex-wrap items-center gap-3 pt-4">
+                                <button type="button" @click="downloadQrCode()"
+                                    class="px-6 py-3.5 bg-slate-900 text-white hover:bg-slate-800 active:scale-95 rounded-2xl text-xs font-bold transition-all flex items-center gap-2 shadow-sm">
+                                    <i class="fas fa-download"></i>
+                                    <span>Download QR (PNG)</span>
+                                </button>
+
+                                <button type="button" @click="printQrCode()"
+                                    class="px-6 py-3.5 bg-indigo-600 text-white hover:bg-indigo-700 active:scale-95 rounded-2xl text-xs font-bold transition-all flex items-center gap-2 shadow-md">
+                                    <i class="fas fa-print"></i>
+                                    <span>Print Standee</span>
+                                </button>
+
+                                <button type="button" @click="copyReviewLink()"
+                                    class="px-5 py-3.5 bg-slate-100 text-slate-700 hover:bg-slate-200 active:scale-95 rounded-2xl text-xs font-bold transition-all flex items-center gap-2">
+                                    <i class="fas fa-link text-xs"></i>
+                                    <span>Copy URL</span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>

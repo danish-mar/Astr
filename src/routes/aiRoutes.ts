@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { generateProductAd, testConnection } from "../controllers/aiController";
+import { generateProductAd, testConnection, getModels } from "../controllers/aiController";
 import { authenticate as protect, requirePermission } from "../middleware/auth";
 
 const router = Router();
@@ -12,5 +12,8 @@ router.post("/generate-product-ad", requirePermission("products:write"), generat
 
 // Test AI connection
 router.post("/test-connection", requirePermission("ai:manage"), testConnection);
+
+// Fetch models list from endpoint / provider
+router.post("/models", requirePermission("ai:manage"), getModels);
 
 export default router;

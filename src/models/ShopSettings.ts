@@ -10,10 +10,15 @@ export interface IShopSettings extends Document {
   logo?: string;
   themeColor?: string;
   // AI Configuration
-  aiProvider?: 'gemini' | 'openai' | 'none';
+  aiProvider?: 'gemini' | 'openai' | 'custom' | 'none';
+  aiCustomProviderName?: string;
+  aiBaseUrl?: string;
+  aiModel?: string;
   aiApiKey?: string; // Encrypted
   aiEnabled?: boolean;
   reviewUrl?: string;
+  reviewAccessKey?: string;
+  instagramUsername?: string;
   updatedAt: Date;
 }
 
@@ -68,8 +73,23 @@ const shopSettingsSchema = new Schema<IShopSettings>(
     // AI Configuration
     aiProvider: {
       type: String,
-      enum: ['gemini', 'openai', 'none'],
+      enum: ['gemini', 'openai', 'custom', 'none'],
       default: 'none',
+    },
+    aiCustomProviderName: {
+      type: String,
+      trim: true,
+      default: '',
+    },
+    aiBaseUrl: {
+      type: String,
+      trim: true,
+      default: '',
+    },
+    aiModel: {
+      type: String,
+      trim: true,
+      default: '',
     },
     aiApiKey: {
       type: String,
@@ -84,6 +104,16 @@ const shopSettingsSchema = new Schema<IShopSettings>(
       type: String,
       trim: true,
       default: "https://g.page/r/your-google-review-link",
+    },
+    reviewAccessKey: {
+      type: String,
+      trim: true,
+      default: "review123",
+    },
+    instagramUsername: {
+      type: String,
+      trim: true,
+      default: "",
     },
   },
   {
@@ -110,11 +140,15 @@ shopSettingsSchema.statics.getSettings = async function () {
 shopSettingsSchema.statics.updateSettings = async function (
   updates: Partial<IShopSettings>
 ) {
-  let settings = await this.findOne();
+  let settings = await this.findOne().select('+aiApiKey');
 
   if (!settings) {
     settings = await this.create(updates);
   } else {
+    // If aiApiKey is empty string or undefined, do not clear existing saved key
+    if (updates.aiApiKey === undefined || (typeof updates.aiApiKey === 'string' && updates.aiApiKey.trim() === '')) {
+      delete updates.aiApiKey;
+    }
     Object.assign(settings, updates);
     await settings.save();
   }

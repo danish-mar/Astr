@@ -13,6 +13,7 @@ import accountingRoutes from "../accountingRoutes";
 import attendanceRoutes from "../attendanceRoutes";
 import searchRoutes from "../searchRoutes";
 import whatsappRoutes from "../whatsappRoutes";
+import reviewRoutes from "../reviewRoutes";
 
 
 const router = Router();
@@ -32,6 +33,8 @@ router.use("/accounting", accountingRoutes);
 router.use("/attendance", attendanceRoutes);
 router.use("/search", searchRoutes);
 router.use("/whatsapp", whatsappRoutes);
+router.use("/reviews", reviewRoutes);
+
 
 
 export default router;

@@ -7,6 +7,10 @@ import ShopSettings from "../models/ShopSettings";
 class AIService {
     private static instance: AIService;
 
+    private reviewQueue: string[] = [];
+    private isRefillingQueue = false;
+    private readonly QUEUE_TARGET_SIZE = 3;
+
     private constructor() { }
 
     static getInstance(): AIService {
@@ -17,36 +21,180 @@ class AIService {
     }
 
     /**
-     * Get configured LLM instance based on shop settings
+     * Get configured LLM instance based on shop settings or override config
      */
-    private async getLLM() {
+    private async getLLM(overrideConfig?: {
+        provider?: string;
+        apiKey?: string;
+        baseUrl?: string;
+        model?: string;
+    }) {
         const settings = await ShopSettings.findOne().select('+aiApiKey');
 
-        if (!settings || !settings.aiEnabled || settings.aiProvider === 'none') {
-            throw new Error('AI is not configured. Please set up AI in Settings.');
+        const provider = overrideConfig?.provider || settings?.aiProvider;
+        const apiKey = (overrideConfig?.apiKey && overrideConfig.apiKey.trim() !== '')
+            ? overrideConfig.apiKey.trim()
+            : settings?.aiApiKey;
+        const baseUrl = (overrideConfig?.baseUrl && overrideConfig.baseUrl.trim() !== '')
+            ? overrideConfig.baseUrl.trim()
+            : settings?.aiBaseUrl;
+        const model = (overrideConfig?.model && overrideConfig.model.trim() !== '')
+            ? overrideConfig.model.trim()
+            : settings?.aiModel;
+
+        if (!provider || provider === 'none') {
+            throw new Error('AI is not configured. Please select an AI provider in Settings.');
         }
 
-        if (!settings.aiApiKey) {
+        if (!apiKey && provider !== 'custom') {
             throw new Error('AI API key is missing. Please configure it in Settings.');
         }
 
-        switch (settings.aiProvider) {
+        switch (provider) {
             case 'gemini':
                 return new ChatGoogleGenerativeAI({
-                    apiKey: settings.aiApiKey,
-                    model: "gemini-2.5-flash",
+                    apiKey: apiKey || "",
+                    model: model || "gemini-2.5-flash",
                     temperature: 0.7,
                 });
 
             case 'openai':
                 return new ChatOpenAI({
-                    openAIApiKey: settings.aiApiKey,
-                    modelName: "gpt-3.5-turbo",
+                    apiKey: apiKey || undefined,
+                    openAIApiKey: apiKey || undefined,
+                    model: model || "gpt-3.5-turbo",
+                    configuration: {
+                        baseURL: baseUrl ? baseUrl.replace(/\/+$/, '') : undefined,
+                        apiKey: apiKey || undefined,
+                    },
                     temperature: 0.7,
                 });
 
+            case 'custom':
+                if (!baseUrl) {
+                    throw new Error('OpenAI URL / Base URL is required for custom provider.');
+                }
+                return new ChatOpenAI({
+                    apiKey: apiKey || "dummy-key",
+                    openAIApiKey: apiKey || "dummy-key",
+                    model: model || "default",
+                    modelName: model || "default",
+                    configuration: {
+                        baseURL: baseUrl.replace(/\/+$/, ''),
+                        apiKey: apiKey || "dummy-key",
+                    },
+                    temperature: 0.7,
+                    timeout: 30000,
+                    maxRetries: 1,
+                });
+
             default:
-                throw new Error(`Unsupported AI provider: ${settings.aiProvider}`);
+                throw new Error(`Unsupported AI provider: ${provider}`);
+        }
+    }
+
+    /**
+     * Fetch models from an OpenAI-compatible /models endpoint or Gemini provider
+     */
+    async fetchModels(options?: {
+        provider?: string;
+        baseUrl?: string;
+        apiKey?: string;
+    }): Promise<string[]> {
+        const settings = await ShopSettings.findOne().select('+aiApiKey');
+
+        const provider = options?.provider || settings?.aiProvider;
+        const apiKey = (options?.apiKey && options.apiKey.trim() !== '')
+            ? options.apiKey.trim()
+            : settings?.aiApiKey;
+        let baseUrl = (options?.baseUrl && options.baseUrl.trim() !== '')
+            ? options.baseUrl.trim()
+            : settings?.aiBaseUrl;
+
+        if (provider === 'gemini') {
+            return [
+                "gemini-2.5-flash",
+                "gemini-2.5-pro",
+                "gemini-2.0-flash",
+                "gemini-1.5-flash",
+                "gemini-1.5-pro"
+            ];
+        }
+
+        if (provider === 'openai' && !baseUrl) {
+            baseUrl = "https://api.openai.com/v1";
+        }
+
+        if (!baseUrl) {
+            throw new Error("Base URL is required to fetch models for OpenAI compatible provider.");
+        }
+
+        // Clean baseUrl
+        const cleanUrl = baseUrl.trim().replace(/\/+$/, '');
+        const targetUrl = cleanUrl.endsWith('/models') ? cleanUrl : `${cleanUrl}/models`;
+
+        const headers: Record<string, string> = {
+            'Accept': 'application/json',
+        };
+        if (apiKey && apiKey.trim() !== '') {
+            headers['Authorization'] = `Bearer ${apiKey.trim()}`;
+        }
+
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 10000);
+
+        try {
+            let response = await fetch(targetUrl, {
+                method: 'GET',
+                headers,
+                signal: controller.signal
+            });
+
+            // If 404 and doesn't contain /v1, try appending /v1/models
+            if (response.status === 404 && !cleanUrl.includes('/v1')) {
+                const fallbackUrl = `${cleanUrl}/v1/models`;
+                try {
+                    const fallbackResp = await fetch(fallbackUrl, {
+                        method: 'GET',
+                        headers,
+                        signal: controller.signal
+                    });
+                    if (fallbackResp.ok) {
+                        response = fallbackResp;
+                    }
+                } catch {
+                    // ignore fallback error and let standard handler report
+                }
+            }
+
+            if (!response.ok) {
+                const errorText = await response.text().catch(() => response.statusText);
+                throw new Error(`Endpoint returned status ${response.status}: ${errorText.slice(0, 200)}`);
+            }
+
+            const data: any = await response.json();
+            let models: string[] = [];
+
+            if (Array.isArray(data)) {
+                models = data.map((m: any) => (typeof m === 'string' ? m : m.id || m.name)).filter(Boolean);
+            } else if (Array.isArray(data.data)) {
+                models = data.data.map((m: any) => (typeof m === 'string' ? m : m.id || m.name)).filter(Boolean);
+            } else if (Array.isArray(data.models)) {
+                models = data.models.map((m: any) => (typeof m === 'string' ? m : m.name || m.id)).filter(Boolean);
+            }
+
+            if (models.length === 0) {
+                throw new Error("No models were found in the endpoint response.");
+            }
+
+            return Array.from(new Set(models)).sort();
+        } catch (error: any) {
+            if (error.name === 'AbortError') {
+                throw new Error("Connection timed out while fetching models.");
+            }
+            throw error;
+        } finally {
+            clearTimeout(timeoutId);
         }
     }
 
@@ -196,35 +344,283 @@ Message:
     }
 
     /**
-     * Test AI connection with current settings
+     * Generate customer reviews (random positive from queue or custom prompt based)
      */
-    async testConnection(): Promise<{ success: boolean; message: string; provider?: string }> {
-        try {
-            const settings = await ShopSettings.findOne().select('+aiApiKey');
+    async generateReview(options: {
+        type: 'random' | 'custom';
+        customPrompt?: string;
+        shopName?: string;
+    }): Promise<string> {
+        const shopName = options.shopName || "the shop";
 
-            if (!settings || !settings.aiApiKey || settings.aiProvider === 'none') {
+        // For random reviews: instantly pop an already generated review and queue up a replacement
+        if (options.type === 'random' || !options.customPrompt?.trim()) {
+            return this.popFromReviewQueue(shopName);
+        }
+
+        // Custom prompt review (generated dynamically on demand based on specific user prompt)
+        try {
+            const llm = await this.getLLM();
+
+            const promptTemplate = PromptTemplate.fromTemplate(`
+You are a satisfied real customer writing an authentic, 5-star Google review for {shopName} (a computer repair and electronics shop).
+
+The service or purchase experience was:
+"{customPrompt}"
+
+Rules for the review:
+- Write in first person ("I got my laptop repaired...", "They fixed my...", "Great experience with...")
+- Sound genuine, conversational, warm, and natural (NOT overly corporate or robotic)
+- Length: 2 to 4 concise sentences (40-80 words)
+- Highlight friendly staff, quick turnaround, fair pricing, and quality workmanship
+- Do NOT use hashtags or quote marks around the whole text
+- Mention {shopName} naturally if appropriate
+
+Review text:
+`);
+
+            const chain = promptTemplate.pipe(llm);
+            const result = await chain.invoke({
+                shopName,
+                customPrompt: options.customPrompt || "Repairs and computer service",
+            });
+
+            return result.content ? result.content.toString().trim() : this.getFallbackReview(options);
+        } catch (error) {
+            console.warn('AI custom review generation fallback invoked:', error);
+            return this.getFallbackReview(options);
+        }
+    }
+
+    /**
+     * Pop a review from the pre-generated queue and trigger a background refill
+     */
+    async popFromReviewQueue(shopName?: string): Promise<string> {
+        let review: string;
+        if (this.reviewQueue.length > 0) {
+            review = this.reviewQueue.shift()!;
+        } else {
+            // Queue empty: fallback sample
+            review = this.getFallbackReview({ type: 'random', shopName });
+        }
+
+        // Trigger background refill to maintain queue size
+        this.refillReviewQueue(shopName).catch(err => console.warn('Queue refill background error:', err));
+
+        return review;
+    }
+
+    /**
+     * Pre-generate a single random positive review
+     */
+    private async generateSingleRandomReview(shopName?: string): Promise<string> {
+        const shop = shopName || "the shop";
+        try {
+            const llm = await this.getLLM();
+            const promptTemplate = PromptTemplate.fromTemplate(`
+You are a satisfied real customer writing an authentic, positive 5-star Google review for {shopName} (a computer/laptop repair and tech shop).
+
+Rules for the review:
+- Write in first person as a happy customer
+- Vary the topic naturally: mention quick turnaround time, professional diagnosis, affordable repair cost, honesty, or friendly technicians
+- Sound natural, friendly, and human (NOT AI-generated or overly exaggerated)
+- Length: 2 to 4 sentences (40-75 words)
+- Do NOT use hashtags or quote marks around the message
+
+Review text:
+`);
+            const chain = promptTemplate.pipe(llm);
+            const result = await chain.invoke({ shopName: shop });
+            return result.content ? result.content.toString().trim() : this.getFallbackReview({ type: 'random', shopName: shop });
+        } catch (error) {
+            return this.getFallbackReview({ type: 'random', shopName: shop });
+        }
+    }
+
+    /**
+     * Refill queue sequentially until target size of 3 is reached
+     */
+    async refillReviewQueue(shopName?: string): Promise<void> {
+        if (this.isRefillingQueue) return;
+        this.isRefillingQueue = true;
+
+        try {
+            while (this.reviewQueue.length < this.QUEUE_TARGET_SIZE) {
+                const review = await this.generateSingleRandomReview(shopName);
+                if (review) {
+                    this.reviewQueue.push(review);
+                }
+            }
+        } catch (err) {
+            console.warn('[AIService] Failed to refill review queue:', err);
+        } finally {
+            this.isRefillingQueue = false;
+        }
+    }
+
+    /**
+     * Initialize the queue on server startup
+     */
+    async initReviewQueue(shopName?: string): Promise<void> {
+        console.log('[AIService] Pre-generating review queue (target: 3)...');
+        this.refillReviewQueue(shopName).then(() => {
+            console.log(`[AIService] Review queue initialized with ${this.reviewQueue.length} pre-generated reviews.`);
+        }).catch(err => {
+            console.warn('[AIService] Error initializing review queue:', err);
+        });
+    }
+
+    /**
+     * Fallback authentic reviews in case AI is offline / unconfigured
+     */
+    private getFallbackReview(options: { type: 'random' | 'custom'; customPrompt?: string; shopName?: string }): string {
+        const shop = options.shopName || "this shop";
+        if (options.type === 'custom' && options.customPrompt?.trim()) {
+            const customSamples = [
+                `Had a great experience getting my ${options.customPrompt.trim()} done at ${shop}. The team was transparent about pricing and finished the work faster than expected. Everything is running smoothly!`,
+                `Visited ${shop} for ${options.customPrompt.trim()}. The staff was extremely polite and professional. Highly impressed by their quick turnaround and reasonable charges!`,
+                `Super happy with the service at ${shop}! They handled my ${options.customPrompt.trim()} with great care and attention to detail. Highly recommend them for any repair or tech needs.`
+            ];
+            return customSamples[Math.floor(Math.random() * customSamples.length)];
+        }
+
+        const randomSamples = [
+            `Excellent service and honest advice! Took my laptop here for repair and was pleasantly surprised by how quickly they diagnosed and fixed the issue. Very reasonable prices compared to other places.`,
+            `Hands down the best repair and tech shop in town. The technicians at ${shop} really know their craft and were super courteous throughout. 10/10 recommended!`,
+            `Quick, reliable, and very professional service. They fixed my computer issues within the same day at an affordable rate. Will definitely visit again for any tech needs!`,
+            `Great customer support and high quality repair work. Pricing was transparent with no hidden charges. My device works like new again. Thank you ${shop}!`,
+            `Outstanding experience! The staff is friendly, knowledgeable, and honest. They explained the problem clearly and resolved it in no time. Highly recommended!`
+        ];
+        return randomSamples[Math.floor(Math.random() * randomSamples.length)];
+    }
+
+    /**
+     * Test AI connection with current or provided settings
+     */
+    async testConnection(config?: {
+        provider?: string;
+        apiKey?: string;
+        baseUrl?: string;
+        model?: string;
+    }): Promise<{ success: boolean; message: string; provider?: string }> {
+        const settings = await ShopSettings.findOne().select('+aiApiKey');
+
+        const provider = config?.provider || settings?.aiProvider;
+        const apiKey = (config?.apiKey && config.apiKey.trim() !== '') ? config.apiKey.trim() : settings?.aiApiKey;
+        const baseUrl = (config?.baseUrl && config.baseUrl.trim() !== '') ? config.baseUrl.trim() : settings?.aiBaseUrl;
+        const model = (config?.model && config.model.trim() !== '') ? config.model.trim() : settings?.aiModel;
+
+        if (!provider || provider === 'none') {
+            return {
+                success: false,
+                message: 'AI is not configured. Please select an AI provider in Settings.',
+            };
+        }
+
+        if (provider === 'custom') {
+            if (!baseUrl) {
                 return {
                     success: false,
-                    message: 'AI is not configured. Please set up AI provider and API key.',
+                    message: 'Endpoint URL is required for custom provider.',
                 };
             }
 
-            const llm = await this.getLLM();
+            // Direct fast test to chat/completions with 15s timeout
+            const cleanUrl = baseUrl.trim().replace(/\/+$/, '');
+            const targetUrl = cleanUrl.endsWith('/chat/completions') ? cleanUrl : `${cleanUrl}/chat/completions`;
 
-            // Simple test prompt
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 15000);
+
+            try {
+                const headers: Record<string, string> = {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json',
+                    'User-Agent': 'Astr-Protocol/3.2.0',
+                    'HTTP-Referer': 'https://astr.app',
+                    'X-Title': 'Astr Protocol',
+                };
+                if (apiKey) {
+                    headers['Authorization'] = `Bearer ${apiKey}`;
+                }
+
+                const payload: Record<string, any> = {
+                    model: model || 'default',
+                    messages: [
+                        { role: 'user', content: "Say 'Connection successful!' in one sentence." }
+                    ],
+                    stream: false,
+                };
+
+                const response = await fetch(targetUrl, {
+                    method: 'POST',
+                    headers,
+                    body: JSON.stringify(payload),
+                    signal: controller.signal,
+                });
+
+                if (!response.ok) {
+                    let errMsg = '';
+                    try {
+                        const errJson: any = await response.json();
+                        errMsg = errJson?.error?.message || JSON.stringify(errJson);
+                    } catch {
+                        errMsg = await response.text().catch(() => response.statusText);
+                    }
+                    return {
+                        success: false,
+                        message: `Provider returned ${response.status}: ${errMsg.slice(0, 200)}`,
+                        provider,
+                    };
+                }
+
+                const data: any = await response.json();
+                const reply = data?.choices?.[0]?.message?.content || 'Connection successful!';
+
+                return {
+                    success: true,
+                    message: String(reply).trim(),
+                    provider,
+                };
+            } catch (err: any) {
+                if (err.name === 'AbortError') {
+                    return {
+                        success: false,
+                        message: 'Connection timed out after 15s. The model may be cold or endpoint unreachable.',
+                        provider,
+                    };
+                }
+                return {
+                    success: false,
+                    message: `Connection failed: ${err.message}`,
+                    provider,
+                };
+            } finally {
+                clearTimeout(timeoutId);
+            }
+        }
+
+        // Standard Gemini or OpenAI
+        try {
+            const llm = await this.getLLM({ provider, apiKey, baseUrl, model });
             const testPrompt = PromptTemplate.fromTemplate("Say 'Connection successful!' in one sentence.");
             const chain = testPrompt.pipe(llm);
-            const result = await chain.invoke({});
+
+            const timeoutPromise = new Promise((_, reject) =>
+                setTimeout(() => reject(new Error("Request timed out after 15s.")), 15000)
+            );
+            const result: any = await Promise.race([chain.invoke({}), timeoutPromise]);
 
             return {
                 success: true,
-                message: 'AI connection successful!',
-                provider: settings.aiProvider,
+                message: result.content ? result.content.toString().trim() : 'AI connection successful!',
+                provider,
             };
         } catch (error: any) {
             return {
                 success: false,
                 message: `Connection failed: ${error.message}`,
+                provider,
             };
         }
     }
