@@ -3,8 +3,9 @@ FROM node:24-alpine AS builder
 
 WORKDIR /app
 
-# Copy package files
+# Copy package files and postinstall scripts
 COPY package*.json ./
+COPY scripts/ ./scripts/
 
 # Install dependencies
 RUN npm ci
@@ -33,8 +34,9 @@ ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true \
 
 WORKDIR /app
 
-# Copy package files
+# Copy package files and postinstall scripts
 COPY package*.json ./
+COPY scripts/ ./scripts/
 
 # Install production dependencies only
 RUN npm ci --omit=dev

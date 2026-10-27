@@ -9,7 +9,7 @@
     "seed": "ts-node src/utils/seedData.ts",
     "create-admin": "ts-node src/utils/createAdmin.ts",
     "migrate-ids": "ts-node src/scripts/migrateProductIDs.ts",
-    "postinstall": "node scripts/patch-wwebjs.js"
+    "postinstall": "node scripts/patch-wwebjs.js || true"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.958.0",

@@ -8,3 +8,5 @@ README.md
 .vscode
 .idea
 *.md
+.wwebjs_auth
+.wwebjs_cache
