@@ -1,0 +1,405 @@
+<style>
+    @keyframes shimmerWave {
+        0% { background-position: -200% 0; }
+        100% { background-position: 200% 0; }
+    }
+    .animate-shimmer-wave {
+        background: linear-gradient(90deg, #f1f5f9 0%, #e2e8f0 50%, #f1f5f9 100%);
+        background-size: 200% 100%;
+        animation: shimmerWave 1.8s infinite ease-in-out;
+    }
+    .shimmer-text {
+        background: linear-gradient(90deg, #64748b 0%, #6366f1 40%, #8b5cf6 70%, #64748b 100%);
+        background-size: 200% auto;
+        color: transparent;
+        -webkit-background-clip: text;
+        background-clip: text;
+        animation: shimmerWave 2.5s linear infinite;
+    }
+    @keyframes pulseGlowOrb {
+        0%, 100% {
+            transform: scale(1);
+            box-shadow: 0 0 10px rgba(124, 58, 237, 0.35);
+        }
+        50% {
+            transform: scale(1.05);
+            box-shadow: 0 0 18px rgba(124, 58, 237, 0.6);
+        }
+    }
+    .pulse-glow-orb {
+        animation: pulseGlowOrb 2.2s infinite ease-in-out;
+    }
+</style>
+
+<!-- Clean, Properly Sized ChatGPT Container -->
+<div class="h-[calc(100vh-7.5rem)] flex bg-white border border-slate-200/90 rounded-2xl shadow-sm overflow-hidden relative"
+     x-data="chatPage"
+     x-init="init()">
+
+    <!-- 1. CHATGPT SIDEBAR (Light, Subtle, Cohesive) -->
+    <aside class="flex-shrink-0 flex flex-col bg-[#fafafa] border-r border-slate-200/70 text-slate-700 transition-all duration-300 z-30 select-none"
+           :class="isSidebarOpen ? 'w-64 md:w-72' : 'w-0 -translate-x-full md:w-0 overflow-hidden'">
+        
+        <!-- Sidebar Header: New Chat -->
+        <div class="p-3 border-b border-slate-200/60 flex items-center justify-between gap-2">
+            <button @click="newChat()" 
+                    class="flex-1 flex items-center justify-between px-3 py-2 rounded-xl bg-white hover:bg-slate-100 text-slate-800 text-xs font-semibold transition-all border border-slate-200/80 shadow-2xs active:scale-95">
+                <span class="flex items-center gap-2">
+                    <i class="fas fa-plus text-[10px] text-slate-500"></i>
+                    <span>New chat</span>
+                </span>
+                <kbd class="text-[9px] px-1.5 py-0.5 rounded bg-slate-100 text-slate-400 font-mono">⌘O</kbd>
+            </button>
+            <button @click="isSidebarOpen = false" 
+                    title="Collapse sidebar"
+                    class="p-2 w-8 h-8 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-200/60 text-xs transition-all flex items-center justify-center">
+                <i class="fas fa-angles-left"></i>
+            </button>
+        </div>
+
+        <!-- Search Chats Input -->
+        <div class="px-3 py-2 border-b border-slate-200/40">
+            <div class="flex items-center gap-2 px-2.5 py-1.5 rounded-lg bg-slate-200/40 text-slate-500 text-xs focus-within:bg-white focus-within:ring-1 focus-within:ring-slate-300 transition-all">
+                <i class="fas fa-search text-[10px] text-slate-400"></i>
+                <input type="text" x-model="searchFilter" placeholder="Search chats..." class="w-full bg-transparent border-none outline-none text-xs text-slate-800 placeholder:text-slate-400">
+            </div>
+        </div>
+
+        <!-- Chat History List -->
+        <div class="flex-1 overflow-y-auto px-2 py-2 space-y-0.5 custom-scrollbar text-xs">
+            <div class="px-2.5 py-1 text-[9px] font-bold uppercase tracking-wider text-slate-400">Recent Chats</div>
+
+            <template x-for="sess in filteredSessions" :key="sess.id">
+                <div class="group relative flex items-center rounded-xl transition-all cursor-pointer select-none"
+                     :class="sess.id === currentSessionId ? 'bg-slate-200/70 text-slate-950 font-semibold' : 'text-slate-600 hover:bg-slate-200/40 hover:text-slate-900'"
+                     @click="selectSession(sess.id)">
+                    
+                    <div class="flex items-center gap-2.5 px-3 py-2 w-full min-w-0 pr-12">
+                        <i class="far fa-message text-[11px] flex-shrink-0" :class="sess.id === currentSessionId ? 'text-violet-600' : 'text-slate-400'"></i>
+                        <span class="truncate text-xs" x-text="sess.title || 'New chat'"></span>
+                    </div>
+
+                    <!-- Actions on hover (Rename, Delete) -->
+                    <div class="absolute right-2 flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <button @click.stop="renameSession(sess.id)" 
+                                title="Rename"
+                                class="p-1 text-slate-400 hover:text-slate-700 hover:bg-slate-200/70 rounded">
+                            <i class="fas fa-pen text-[9px]"></i>
+                        </button>
+                        <button @click.stop="deleteSession(sess.id)" 
+                                title="Delete"
+                                class="p-1 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded">
+                            <i class="fas fa-trash text-[9px]"></i>
+                        </button>
+                    </div>
+                </div>
+            </template>
+
+            <!-- Empty History State -->
+            <div x-show="filteredSessions.length === 0" class="p-6 text-center text-slate-400 text-xs">
+                <span>No chats found</span>
+            </div>
+        </div>
+
+        <!-- Sidebar Footer: Shop Details -->
+        <div class="p-3 border-t border-slate-200/60 bg-slate-100/50 text-xs flex items-center justify-between">
+            <div class="flex items-center gap-2.5 min-w-0">
+                <div class="w-6 h-6 rounded-lg bg-violet-100 text-violet-700 flex items-center justify-center text-[10px] flex-shrink-0 font-bold">
+                    <i class="fas fa-robot"></i>
+                </div>
+                <div class="min-w-0 truncate">
+                    <p class="font-bold text-slate-900 text-[11px] truncate leading-tight" x-text="aiStatus.shopName || 'Astr ERP'"></p>
+                    <p class="text-[9px] text-slate-400 truncate mt-0.5" x-text="aiStatus.provider ? (aiStatus.provider + ' • ' + (aiStatus.model || 'active')) : 'Ready'"></p>
+                </div>
+            </div>
+        </div>
+    </aside>
+
+    <!-- 2. MAIN WORKSPACE (ChatGPT Reading Column) -->
+    <div class="flex-1 flex flex-col h-full overflow-hidden bg-white relative">
+        
+        <!-- Clean ChatGPT Top Bar -->
+        <header class="h-12 border-b border-slate-100 px-4 flex items-center justify-between flex-shrink-0 bg-white z-20">
+            <div class="flex items-center gap-2.5">
+                <button @click="isSidebarOpen = !isSidebarOpen"
+                        title="Toggle Sidebar"
+                        class="p-1.5 rounded-lg border border-slate-200/70 hover:bg-slate-50 text-slate-500 transition-all text-xs flex items-center justify-center">
+                    <i class="fas fa-bars-staggered"></i>
+                </button>
+
+                <!-- Model Badge -->
+                <div class="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-slate-50 border border-slate-200/60 text-xs font-semibold text-slate-700 cursor-default">
+                    <span class="w-1.5 h-1.5 rounded-full" :class="aiStatus.isConfigured ? 'bg-emerald-500' : 'bg-amber-500'"></span>
+                    <span>Astr Copilot</span>
+                    <span class="text-[10px] font-normal text-slate-400 ml-1 truncate max-w-[150px]" x-text="aiStatus.model ? ('(' + aiStatus.model + ')') : ''"></span>
+                </div>
+            </div>
+
+            <div>
+                <button @click="newChat()" 
+                        class="flex items-center gap-1.5 px-2.5 py-1 rounded-lg border border-slate-200/70 hover:bg-slate-50 text-slate-600 text-xs font-medium transition-all shadow-2xs">
+                    <i class="fas fa-plus text-[9px] text-slate-400"></i>
+                    <span>New chat</span>
+                </button>
+            </div>
+        </header>
+
+        <!-- Messages Scroll Container -->
+        <div id="chatMessagesContainer" class="flex-1 overflow-y-auto px-4 py-5 custom-scrollbar space-y-5">
+            <div class="max-w-2xl mx-auto space-y-5">
+
+                <!-- Welcome Screen if Empty -->
+                <template x-if="currentMessages.length === 0">
+                    <div class="py-12 md:py-16 text-center space-y-4">
+                        <div class="w-11 h-11 rounded-2xl bg-gradient-to-tr from-violet-600 to-indigo-600 text-white mx-auto flex items-center justify-center shadow-md pulse-glow-orb">
+                            <svg class="w-5 h-5 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09zM18.259 8.715L18 9.75l-.259-1.035a3.375 3.375 0 00-2.455-2.456L14.25 6l1.036-.259a3.375 3.375 0 002.455-2.456L18 2.25l.259 1.035a3.375 3.375 0 002.456 2.456L21.75 6l-1.035.259a3.375 3.375 0 00-2.456 2.456z"/>
+                            </svg>
+                        </div>
+                        <div>
+                            <h2 class="text-xl font-bold text-slate-900 tracking-tight">How can I help you today?</h2>
+                            <p class="text-xs text-slate-400 mt-1 max-w-sm mx-auto leading-relaxed">
+                                Ask about catalog inventory, create repair tickets, or generate GST quotations and invoices.
+                            </p>
+                        </div>
+
+                        <!-- Prompt Pills -->
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 text-left max-w-md mx-auto pt-2">
+                            <button @click="usePrompt('Suggest laptops under 50000 rs from our catalog')"
+                                    class="p-2.5 rounded-xl border border-slate-200/70 hover:border-violet-300 hover:bg-violet-50/20 bg-white transition-all text-xs group text-slate-700 shadow-2xs">
+                                <span class="font-semibold text-slate-800 group-hover:text-violet-700 block text-xs">Laptops under ₹50,000</span>
+                                <span class="text-[10px] text-slate-400 block truncate">Search catalog inventory</span>
+                            </button>
+
+                            <button @click="usePrompt('Create a repair ticket for Dell Inspiron 15 not powering on, customer Ramesh 9876543210, estimated cost 1500')"
+                                    class="p-2.5 rounded-xl border border-slate-200/70 hover:border-violet-300 hover:bg-violet-50/20 bg-white transition-all text-xs group text-slate-700 shadow-2xs">
+                                <span class="font-semibold text-slate-800 group-hover:text-violet-700 block text-xs">Log repair ticket</span>
+                                <span class="text-[10px] text-slate-400 block truncate">Dell Inspiron, Ramesh 9876543210</span>
+                            </button>
+
+                            <button @click="usePrompt('Create a quotation for Sharma Tech: 2x 512GB NVMe SSD at 2500 each and 1x 16GB DDR4 RAM at 3200 with 18% GST')"
+                                    class="p-2.5 rounded-xl border border-slate-200/70 hover:border-violet-300 hover:bg-violet-50/20 bg-white transition-all text-xs group text-slate-700 shadow-2xs">
+                                <span class="font-semibold text-slate-800 group-hover:text-violet-700 block text-xs">Create Quotation</span>
+                                <span class="text-[10px] text-slate-400 block truncate">Sharma Tech (2 SSDs, 1 RAM)</span>
+                            </button>
+
+                            <button @click="usePrompt('Generate an invoice for Rajesh Kumar for Laptop Battery Replacement at 2400 with 18% GST')"
+                                    class="p-2.5 rounded-xl border border-slate-200/70 hover:border-violet-300 hover:bg-violet-50/20 bg-white transition-all text-xs group text-slate-700 shadow-2xs">
+                                <span class="font-semibold text-slate-800 group-hover:text-violet-700 block text-xs">Generate Invoice</span>
+                                <span class="text-[10px] text-slate-400 block truncate">Rajesh Kumar (Battery service)</span>
+                            </button>
+                        </div>
+                    </div>
+                </template>
+
+                <!-- Conversation Turns -->
+                <template x-for="(msg, index) in currentMessages" :key="index">
+                    <div class="space-y-3">
+                        
+                        <!-- 1. USER TURN -->
+                        <template x-if="msg.role === 'user'">
+                            <div class="flex justify-end gap-2.5 items-start">
+                                <div class="bg-slate-100 text-slate-800 text-sm font-normal px-4 py-2.5 rounded-2xl rounded-tr-sm max-w-lg leading-relaxed shadow-2xs">
+                                    <p class="whitespace-pre-wrap" x-text="msg.content"></p>
+                                </div>
+                                <div class="w-7 h-7 rounded-full bg-slate-800 text-white flex items-center justify-center text-xs font-semibold flex-shrink-0 mt-0.5 shadow-2xs">
+                                    <span x-text="(Alpine.store('app').user?.name || 'U').charAt(0).toUpperCase()"></span>
+                                </div>
+                            </div>
+                        </template>
+
+                        <!-- 2. ASSISTANT TURN -->
+                        <template x-if="msg.role === 'assistant'">
+                            <div class="flex gap-3 items-start mr-auto">
+                                <!-- Copilot Logo SVG (Always renders crisp!) -->
+                                <div class="w-7 h-7 rounded-full bg-violet-600 text-white flex items-center justify-center flex-shrink-0 mt-0.5 shadow-sm">
+                                    <svg class="w-3.5 h-3.5 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09zM18.259 8.715L18 9.75l-.259-1.035a3.375 3.375 0 00-2.455-2.456L14.25 6l1.036-.259a3.375 3.375 0 002.455-2.456L18 2.25l.259 1.035a3.375 3.375 0 002.456 2.456L21.75 6l-1.035.259a3.375 3.375 0 00-2.456 2.456z"/>
+                                    </svg>
+                                </div>
+
+                                <div class="flex-1 space-y-3 min-w-0">
+                                    <!-- Text Reply -->
+                                    <div class="text-sm text-slate-800 leading-relaxed font-normal whitespace-pre-wrap" x-text="msg.content"></div>
+
+                                    <!-- DYNAMIC CARD 1: PRODUCT LISTING -->
+                                    <template x-if="msg.cardType === 'products' && msg.cardData && msg.cardData.length > 0">
+                                        <div class="border border-slate-200/80 rounded-2xl p-3 bg-slate-50/50 space-y-2">
+                                            <div class="flex items-center justify-between text-[10px] font-bold text-slate-500 uppercase tracking-wider pb-1 border-b border-slate-200/60">
+                                                <span>Catalog Results (<span x-text="msg.cardData.length"></span>)</span>
+                                                <a href="/products" class="text-violet-600 hover:text-violet-700 font-semibold normal-case">View stock →</a>
+                                            </div>
+
+                                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                                                <template x-for="item in msg.cardData" :key="item.id">
+                                                    <div class="p-2.5 rounded-xl bg-white border border-slate-200/60 hover:border-violet-300 transition-all space-y-1 shadow-2xs">
+                                                        <div class="flex justify-between items-start gap-1.5">
+                                                            <div class="min-w-0">
+                                                                <p class="text-xs font-semibold text-slate-900 truncate" x-text="item.name"></p>
+                                                                <span class="text-[9px] text-slate-400" x-text="item.category"></span>
+                                                            </div>
+                                                            <span class="font-mono text-xs font-bold text-slate-900 whitespace-nowrap">
+                                                                ₹<span x-text="Number(item.price || 0).toLocaleString('en-IN')"></span>
+                                                            </span>
+                                                        </div>
+
+                                                        <div class="flex items-center justify-between pt-1 text-[9px]">
+                                                            <span class="font-medium" :class="item.isSold ? 'text-rose-500' : 'text-emerald-600'">
+                                                                ● <span x-text="item.isSold ? 'Sold' : 'In stock'"></span>
+                                                            </span>
+                                                            <button @click="addPrompt('Create quotation for ' + item.name + ' at ₹' + item.price)"
+                                                                    class="px-2 py-0.5 rounded bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold transition-all">
+                                                                + Quote
+                                                            </button>
+                                                        </div>
+                                                    </div>
+                                                </template>
+                                            </div>
+                                        </div>
+                                    </template>
+
+                                    <!-- DYNAMIC CARD 2: SERVICE TICKET -->
+                                    <template x-if="msg.cardType === 'ticket' && msg.cardData">
+                                        <div class="border border-slate-200/80 rounded-2xl p-3 bg-slate-50/50 space-y-2">
+                                            <div class="flex items-center justify-between pb-1 border-b border-slate-200/60">
+                                                <div class="flex items-center gap-1.5">
+                                                    <span class="w-1.5 h-1.5 rounded-full bg-amber-500"></span>
+                                                    <span class="text-[10px] font-bold uppercase tracking-wider text-slate-700">Ticket Registered</span>
+                                                    <span class="text-[10px] font-mono font-bold text-slate-900" x-text="'#' + msg.cardData.ticketNumber"></span>
+                                                </div>
+                                                <span class="text-[9px] font-semibold text-amber-700 bg-amber-50 px-2 py-0.5 rounded border border-amber-200" x-text="msg.cardData.status"></span>
+                                            </div>
+
+                                            <div class="text-xs space-y-0.5">
+                                                <p><span class="text-slate-400">Customer:</span> <strong class="text-slate-800" x-text="msg.cardData.customerName"></strong></p>
+                                                <p><span class="text-slate-400">Device:</span> <span class="text-slate-800 font-medium" x-text="msg.cardData.deviceDetails"></span></p>
+                                                <p x-show="msg.cardData.serviceCharge > 0"><span class="text-slate-400">Est. Charge:</span> <strong class="text-slate-900 font-mono">₹<span x-text="Number(msg.cardData.serviceCharge).toLocaleString('en-IN')"></span></strong></p>
+                                            </div>
+
+                                            <div class="pt-1.5 border-t border-slate-200/60 flex justify-end">
+                                                <a href="/service-tickets" class="text-[11px] font-semibold text-violet-600 hover:text-violet-700">Open Service Tickets →</a>
+                                            </div>
+                                        </div>
+                                    </template>
+
+                                    <!-- DYNAMIC CARD 3: QUOTATION / INVOICE -->
+                                    <template x-if="msg.cardType === 'invoice' && msg.cardData">
+                                        <div class="border border-slate-200/80 rounded-2xl p-3 bg-slate-50/50 space-y-2">
+                                            <div class="flex items-center justify-between pb-1 border-b border-slate-200/60">
+                                                <div class="flex items-center gap-1.5">
+                                                    <span class="w-1.5 h-1.5 rounded-full" :class="msg.cardData.docType === 'Quotation' ? 'bg-indigo-500' : 'bg-emerald-500'"></span>
+                                                    <span class="text-[10px] font-bold uppercase tracking-wider text-slate-700" x-text="msg.cardData.docType === 'Quotation' ? 'Quotation Saved' : 'Invoice Saved'"></span>
+                                                    <span class="text-[10px] font-mono font-bold text-violet-700 ml-1" x-text="msg.cardData.docNumber"></span>
+                                                </div>
+                                                <span class="font-mono text-xs font-bold text-slate-950">
+                                                    ₹<span x-text="Number(msg.cardData.grandTotal || 0).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })"></span>
+                                                </span>
+                                            </div>
+
+                                            <div class="text-xs space-y-1">
+                                                <p><span class="text-slate-400">Party:</span> <strong class="text-slate-800" x-text="msg.cardData.customerName"></strong></p>
+                                                <div class="space-y-0.5 pt-0.5">
+                                                    <template x-for="item in msg.cardData.items || []" :key="item.description">
+                                                        <div class="flex justify-between text-[11px] text-slate-600">
+                                                            <span class="truncate pr-2" x-text="item.description + ' (x' + item.quantity + ')'"></span>
+                                                            <span class="font-mono text-slate-900 font-medium">₹<span x-text="Number(item.total || (item.quantity * item.unitPrice)).toLocaleString('en-IN')"></span></span>
+                                                        </div>
+                                                    </template>
+                                                </div>
+                                            </div>
+
+                                            <div class="pt-1.5 border-t border-slate-200/60 flex items-center justify-end gap-2 text-xs">
+                                                <a :href="'/invoices/' + msg.cardData.id + '/edit'" class="px-2.5 py-1 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 font-medium">Edit</a>
+                                                <a :href="'/invoices/' + msg.cardData.id" class="px-2.5 py-1 rounded-lg bg-slate-900 text-white hover:bg-slate-800 font-medium shadow-2xs">View</a>
+                                                <a :href="'/invoices/' + msg.cardData.id + '/print?autoprint=1'" target="_blank" class="px-2.5 py-1 rounded-lg bg-violet-600 text-white hover:bg-violet-700 font-medium shadow-2xs">Print PDF</a>
+                                            </div>
+                                        </div>
+                                    </template>
+
+                                    <!-- DYNAMIC CARD 4: OPERATIONS SNAPSHOT -->
+                                    <template x-if="msg.cardType === 'kpis' && msg.cardData">
+                                        <div class="border border-slate-200/80 rounded-2xl p-3 bg-slate-50/50 space-y-2">
+                                            <div class="text-[10px] font-bold uppercase tracking-wider text-slate-400 flex items-center justify-between pb-1 border-b border-slate-200/50">
+                                                <span>Live Operations Snapshot</span>
+                                                <span class="text-[9px] text-emerald-600 font-semibold">● Active</span>
+                                            </div>
+                                            <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 pt-0.5">
+                                                <div class="px-3 py-2 rounded-xl bg-white border border-slate-200/60 shadow-2xs">
+                                                    <span class="text-[10px] text-slate-500 block">Pending Repairs</span>
+                                                    <span class="text-sm font-bold text-slate-900 font-mono block mt-0.5" x-text="msg.cardData.pendingTickets"></span>
+                                                </div>
+                                                <div class="px-3 py-2 rounded-xl bg-white border border-slate-200/60 shadow-2xs">
+                                                    <span class="text-[10px] text-slate-500 block">Unpaid Invoices</span>
+                                                    <span class="text-sm font-bold text-slate-900 font-mono block mt-0.5" x-text="msg.cardData.unpaidInvoices"></span>
+                                                </div>
+                                                <div class="px-3 py-2 rounded-xl bg-white border border-slate-200/60 shadow-2xs">
+                                                    <span class="text-[10px] text-slate-500 block">In Stock</span>
+                                                    <span class="text-sm font-bold text-slate-900 font-mono block mt-0.5" x-text="msg.cardData.inStockCount"></span>
+                                                </div>
+                                                <div class="px-3 py-2 rounded-xl bg-white border border-slate-200/60 shadow-2xs">
+                                                    <span class="text-[10px] text-slate-500 block">Quotations</span>
+                                                    <span class="text-sm font-bold text-slate-900 font-mono block mt-0.5" x-text="msg.cardData.totalQuotations"></span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </template>
+
+                                </div>
+                            </div>
+                        </template>
+
+                    </div>
+                </template>
+
+                <!-- 3. PREMIUM REASONING LOADER -->
+                <div x-show="isThinking" class="flex gap-3 items-start mr-auto pt-1" style="display: none;">
+                    <div class="w-7 h-7 rounded-full bg-violet-600 text-white flex items-center justify-center flex-shrink-0 mt-0.5 shadow-sm pulse-glow-orb">
+                        <svg class="w-3.5 h-3.5 text-white animate-spin" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09z"/>
+                        </svg>
+                    </div>
+
+                    <div class="space-y-2 pt-0.5">
+                        <div class="flex items-center gap-2">
+                            <span class="shimmer-text text-xs font-semibold">Thinking...</span>
+                            <div class="flex items-center gap-1">
+                                <span class="w-1 h-1 rounded-full bg-violet-500 animate-bounce"></span>
+                                <span class="w-1 h-1 rounded-full bg-indigo-500 animate-bounce [animation-delay:0.2s]"></span>
+                                <span class="w-1 h-1 rounded-full bg-purple-500 animate-bounce [animation-delay:0.4s]"></span>
+                            </div>
+                        </div>
+
+                        <div class="w-44 h-2 rounded-full animate-shimmer-wave"></div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <!-- 4. FLOATING INPUT BAR (Clean, ChatGPT Style) -->
+        <div class="p-3 bg-white border-t border-slate-100 flex-shrink-0">
+            <form @submit.prevent="sendMessage()" class="max-w-2xl mx-auto relative flex items-center bg-slate-50 focus-within:bg-white rounded-2xl border border-slate-200 focus-within:border-slate-300 focus-within:shadow-sm transition-all p-1.5 pl-3.5">
+                <textarea x-model="inputText"
+                          @keydown.enter.prevent="if (!$event.shiftKey) sendMessage()"
+                          rows="1"
+                          placeholder="Ask Copilot: 'suggest laptops under 50k', 'create quotation for...'..."
+                          class="w-full bg-transparent border-none outline-none text-xs text-slate-800 placeholder:text-slate-400 resize-none max-h-32 py-1.5 pr-10 custom-scrollbar"></textarea>
+
+                <button type="submit"
+                        :disabled="isThinking || !inputText.trim()"
+                        class="w-7 h-7 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-xs flex items-center justify-center transition-all disabled:opacity-30 disabled:cursor-not-allowed flex-shrink-0 active:scale-95 shadow-2xs">
+                    <i class="fas fa-arrow-up text-[10px]" x-show="!isThinking"></i>
+                    <i class="fas fa-circle-notch fa-spin text-[9px]" x-show="isThinking" style="display: none;"></i>
+                </button>
+            </form>
+            <p class="text-[10px] text-center text-slate-400 mt-1 font-normal">
+                Press <kbd class="px-1 py-0.5 rounded bg-slate-100 border border-slate-200 font-mono text-[9px]">Enter</kbd> to send
+            </p>
+        </div>
+
+    </div>
+
+</div>
+
+<!-- Chat Alpine Controller Script -->
+<script src="/js/pages/chat.js"></script>

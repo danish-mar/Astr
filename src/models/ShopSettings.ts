@@ -19,6 +19,26 @@ export interface IShopSettings extends Document {
   reviewUrl?: string;
   reviewAccessKey?: string;
   instagramUsername?: string;
+  // GST & Invoicing Configuration
+  gstin?: string;
+  state?: string;
+  stateCode?: string;
+  defaultGstRate?: number;
+  invoicePrefix?: string;
+  invoiceNextNumber?: number;
+  quotationPrefix?: string;
+  quotationNextNumber?: number;
+  // Bank Details for Invoices
+  bankName?: string;
+  bankAccountNumber?: string;
+  bankIfsc?: string;
+  bankBranch?: string;
+  upiId?: string;
+  invoiceTerms?: string;
+  // WhatsApp Agent Configuration
+  whatsappAgentEnabled?: boolean;
+  bossPhone?: string;
+  defaultMarginPercent?: number;
   updatedAt: Date;
 }
 
@@ -114,6 +134,91 @@ const shopSettingsSchema = new Schema<IShopSettings>(
       type: String,
       trim: true,
       default: "",
+    },
+    // GST & Invoicing Configuration
+    gstin: {
+      type: String,
+      trim: true,
+      uppercase: true,
+      default: "",
+    },
+    state: {
+      type: String,
+      trim: true,
+      default: "",
+    },
+    stateCode: {
+      type: String,
+      trim: true,
+      default: "",
+    },
+    defaultGstRate: {
+      type: Number,
+      default: 18,
+    },
+    invoicePrefix: {
+      type: String,
+      trim: true,
+      default: "INV-",
+    },
+    invoiceNextNumber: {
+      type: Number,
+      default: 1001,
+    },
+    quotationPrefix: {
+      type: String,
+      trim: true,
+      default: "QTN-",
+    },
+    quotationNextNumber: {
+      type: Number,
+      default: 1001,
+    },
+    bankName: {
+      type: String,
+      trim: true,
+      default: "",
+    },
+    bankAccountNumber: {
+      type: String,
+      trim: true,
+      default: "",
+    },
+    bankIfsc: {
+      type: String,
+      trim: true,
+      uppercase: true,
+      default: "",
+    },
+    bankBranch: {
+      type: String,
+      trim: true,
+      default: "",
+    },
+    upiId: {
+      type: String,
+      trim: true,
+      default: "",
+    },
+    invoiceTerms: {
+      type: String,
+      trim: true,
+      default: "1. Goods once sold will not be taken back or exchanged.\n2. Warranty is as per manufacturer terms.\n3. Payment is due within the stipulated time.",
+    },
+    // WhatsApp AI Agent Configuration
+    whatsappAgentEnabled: {
+      type: Boolean,
+      default: true,
+    },
+    bossPhone: {
+      type: String,
+      trim: true,
+      default: "",
+    },
+    defaultMarginPercent: {
+      type: Number,
+      default: 20,
+      min: [0, "Margin cannot be negative"],
     },
   },
   {

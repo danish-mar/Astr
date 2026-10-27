@@ -8,6 +8,8 @@ export interface IContact extends Document {
   contactType: "Vendor" | "Customer" | "Supplier" | "Custom" | "Employee";
   address?: string;
   companyName?: string;
+  gstin?: string;
+  state?: string;
   notes?: string;
   createdAt: Date;
   updatedAt: Date;
@@ -48,6 +50,15 @@ const contactSchema = new Schema<IContact>(
       trim: true,
     },
     companyName: {
+      type: String,
+      trim: true,
+    },
+    gstin: {
+      type: String,
+      trim: true,
+      uppercase: true,
+    },
+    state: {
       type: String,
       trim: true,
     },

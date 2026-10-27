@@ -59,9 +59,20 @@
                         <div class="space-y-2">
                             <label
                                 class="text-[9px] font-black text-slate-400 uppercase tracking-widest">Description</label>
-                            <textarea x-model="formData.description" rows="5"
+                            <textarea x-model="formData.description" rows="4"
                                 placeholder="Brief description..."
                                 class="block w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-slate-900 font-medium text-sm focus:ring-2 focus:ring-primary-200 focus:bg-white focus:border-primary-300 outline-none transition-all resize-none"></textarea>
+                        </div>
+                        <div class="space-y-2">
+                            <label class="text-[9px] font-black text-slate-400 uppercase tracking-widest">
+                                WhatsApp Agent Profit Margin (%)
+                            </label>
+                            <div class="relative">
+                                <input type="number" min="0" max="200" step="1" x-model.number="formData.marginPercent" placeholder="20"
+                                    class="block w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-slate-900 font-medium text-sm focus:ring-2 focus:ring-primary-200 focus:bg-white focus:border-primary-300 outline-none transition-all pr-10">
+                                <span class="absolute right-4 top-3 text-sm font-bold text-slate-400">%</span>
+                            </div>
+                            <p class="text-[10px] text-slate-400">Added to supplier wholesale quotes when answering customer inquiries.</p>
                         </div>
                     </div>
                 </div>

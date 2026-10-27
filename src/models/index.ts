@@ -17,3 +17,6 @@ export { default as Expenditure, IExpenditure } from "./Expenditure";
 export { default as Tag, ITag } from "./Tag";
 export { default as Account, IAccount } from "./Account";
 export { default as Transaction, ITransaction } from "./Transaction";
+export { default as Invoice, IInvoice, IInvoiceItem, IInvoicePayment } from "./Invoice";
+export { default as WhatsAppInquiry, IWhatsAppInquiry } from "./WhatsAppInquiry";
+export { default as CustomerMemory, ICustomerMemory } from "./CustomerMemory";

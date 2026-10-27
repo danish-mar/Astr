@@ -1,0 +1,335 @@
+<script src="/js/pages/invoice-view.js"></script>
+
+<style>
+/* Distinct billing typography: tabular figures where 0 and 8 are clearly distinguishable */
+#printableInvoice .font-mono,
+.font-mono {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif !important;
+    font-variant-numeric: tabular-nums !important;
+    font-feature-settings: "tnum" 1 !important;
+    letter-spacing: 0.01em;
+}
+
+@media print {
+    body * {
+        visibility: hidden;
+    }
+    #printableInvoice, #printableInvoice * {
+        visibility: visible;
+    }
+    #printableInvoice {
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 100%;
+        margin: 0;
+        padding: 0;
+        border: none !important;
+        box-shadow: none !important;
+    }
+    .no-print {
+        display: none !important;
+    }
+}
+</style>
+
+<div x-data="invoiceViewData()" x-init="init()" class="space-y-6 pb-20">
+
+    <!-- Top Action Toolbar (Hidden during print) -->
+    <div class="no-print flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-200 pb-5">
+        <div class="flex items-center gap-3">
+            <a href="/invoices" class="w-9 h-9 rounded-xl bg-slate-100 hover:bg-slate-200 flex items-center justify-center text-slate-600 transition-all">
+                <i class="fas fa-arrow-left text-xs"></i>
+            </a>
+            <div>
+                <div class="flex items-center gap-2">
+                    <h1 class="text-xl font-black text-slate-900 tracking-tight" x-text="invoice?.docType === 'Invoice' ? 'Tax Invoice' : 'Quotation'"></h1>
+                    <span class="font-mono text-sm font-bold text-slate-500" x-text="'#' + (invoice?.docNumber || '')"></span>
+                    <span class="px-2 py-0.5 rounded text-[10px] font-black uppercase tracking-wider"
+                        :class="{
+                            'bg-emerald-50 text-emerald-700 border border-emerald-200': invoice?.status === 'Paid',
+                            'bg-amber-50 text-amber-700 border border-amber-200': invoice?.status === 'Partially Paid' || invoice?.status === 'Sent',
+                            'bg-rose-50 text-rose-700 border border-rose-200': invoice?.status === 'Unpaid',
+                            'bg-slate-100 text-slate-600 border border-slate-200': invoice?.status === 'Draft',
+                            'bg-indigo-50 text-indigo-700 border border-indigo-200': invoice?.status === 'Converted' || invoice?.status === 'Accepted'
+                        }" x-text="invoice?.status"></span>
+                </div>
+                <p class="text-xs text-slate-400">View formatted tax invoice, print hardcopy, or record settlements.</p>
+            </div>
+        </div>
+
+        <div class="flex items-center gap-2">
+            <!-- If Quotation: Convert button -->
+            <template x-if="invoice?.docType === 'Quotation' && invoice?.status !== 'Converted'">
+                <button type="button" @click="convertQuotation()"
+                    class="px-4 py-2 bg-indigo-50 border border-indigo-200 text-indigo-700 hover:bg-indigo-100 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 shadow-sm">
+                    <i class="fas fa-bolt text-xs"></i>
+                    <span>Convert to Invoice</span>
+                </button>
+            </template>
+
+            <!-- Edit Button (Quotations & Editable Invoices) -->
+            <template x-if="invoice?.status !== 'Converted' && invoice?.status !== 'Paid'">
+                <a :href="'/invoices/' + invoice?._id + '/edit'"
+                    class="px-4 py-2 bg-white border border-slate-200 text-slate-700 hover:border-primary-300 hover:text-primary-600 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 shadow-sm">
+                    <i class="fas fa-pencil text-xs"></i>
+                    <span>Edit</span>
+                </a>
+            </template>
+
+            <!-- If Invoice with Balance: Collect Payment -->
+            <template x-if="invoice?.docType === 'Invoice' && invoice?.balanceDue > 0">
+                <button type="button" @click="paymentModal.show = true"
+                    class="px-4 py-2 bg-emerald-600 text-white hover:bg-emerald-700 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 shadow-sm active:scale-95">
+                    <i class="fas fa-indian-rupee-sign text-xs"></i>
+                    <span>Record Payment</span>
+                </button>
+            </template>
+
+            <!-- WhatsApp Share -->
+            <button type="button" @click="shareWhatsApp()"
+                class="px-4 py-2 bg-emerald-50 border border-emerald-200 text-emerald-700 hover:bg-emerald-100 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5">
+                <i class="fab fa-whatsapp text-sm"></i>
+                <span>Send WhatsApp</span>
+            </button>
+
+            <!-- Print Button -->
+            <button type="button" @click="printInvoice()"
+                class="px-5 py-2 bg-slate-900 text-white hover:bg-slate-800 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 shadow-md active:scale-95">
+                <i class="fas fa-print text-xs"></i>
+                <span>Print / PDF</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- Printable Formal GST Invoice Sheet -->
+    <div id="printableInvoice" class="bg-white border border-slate-300 rounded-2xl shadow-sm p-8 md:p-12 max-w-4xl mx-auto space-y-8 text-slate-900 font-sans">
+        
+        <!-- Header: Shop & Tax Details -->
+        <div class="flex flex-col sm:flex-row justify-between items-start gap-6 border-b-2 border-slate-900 pb-6">
+            <div>
+                <h2 class="text-2xl font-black text-slate-900 uppercase tracking-tight" x-text="shop?.shopName || 'Astr Store'"></h2>
+                <p class="text-xs text-slate-600 mt-1 max-w-sm whitespace-pre-line" x-text="shop?.address || 'Shop Address'"></p>
+                <div class="mt-2 text-xs text-slate-500 space-y-0.5">
+                    <p x-show="shop?.phone">Phone: <strong class="text-slate-800" x-text="shop?.phone"></strong></p>
+                    <p x-show="shop?.email">Email: <span class="text-slate-800" x-text="shop?.email"></span></p>
+                    <p x-show="shop?.gstin">GSTIN: <strong class="font-mono text-slate-900 font-bold" x-text="shop?.gstin"></strong></p>
+                    <p x-show="shop?.state">State: <span class="text-slate-800" x-text="shop?.state + (shop?.stateCode ? ' (Code: ' + shop?.stateCode + ')' : '')"></span></p>
+                </div>
+            </div>
+
+            <div class="sm:text-right">
+                <div class="inline-block px-3 py-1 bg-slate-900 text-white rounded text-[11px] font-black uppercase tracking-widest"
+                    x-text="invoice?.docType === 'Invoice' ? 'TAX INVOICE' : 'COMMERCIAL QUOTATION'"></div>
+                <div class="mt-3 text-xs space-y-1">
+                    <p><span class="text-slate-500">Doc Number:</span> <strong class="font-mono text-sm text-slate-900" x-text="invoice?.docNumber"></strong></p>
+                    <p><span class="text-slate-500">Issue Date:</span> <strong x-text="formatDate(invoice?.issueDate)"></strong></p>
+                    <p x-show="invoice?.dueDate"><span class="text-slate-500">Due Date:</span> <strong x-text="formatDate(invoice?.dueDate)"></strong></p>
+                    <p><span class="text-slate-500">Place of Supply:</span> <strong x-text="invoice?.customerState || shop?.state || 'State'"></strong></p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Billed To Section -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-6 bg-slate-50 p-5 rounded-xl border border-slate-200 text-xs">
+            <div>
+                <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5">Billed To (Customer Details)</p>
+                <h3 class="text-sm font-black text-slate-900" x-text="invoice?.customerName"></h3>
+                <p class="text-slate-600 mt-1 whitespace-pre-line" x-text="invoice?.customerAddress || 'Customer Address'"></p>
+                <p class="mt-1" x-show="invoice?.customerPhone">Phone: <strong class="text-slate-800" x-text="invoice?.customerPhone"></strong></p>
+            </div>
+
+            <div class="sm:text-right space-y-1">
+                <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5">Customer Tax Profile</p>
+                <p x-show="invoice?.customerGstin">GSTIN / UIN: <strong class="font-mono text-slate-900" x-text="invoice?.customerGstin"></strong></p>
+                <p>State: <strong class="text-slate-800" x-text="invoice?.customerState || 'State'"></strong></p>
+                <template x-if="invoice?.serviceTicket">
+                    <p class="text-amber-700 font-bold mt-2">Ref: Service Ticket #<span x-text="invoice?.serviceTicket?.ticketNumber"></span></p>
+                </template>
+            </div>
+        </div>
+
+        <!-- Line Items Table -->
+        <div class="overflow-x-auto">
+            <table class="w-full text-left text-xs border border-slate-300">
+                <thead>
+                    <tr class="bg-slate-100 border-b border-slate-300 text-[9px] font-black text-slate-600 uppercase tracking-wider">
+                        <th class="py-2.5 px-3 w-8 text-center border-r border-slate-300">#</th>
+                        <th class="py-2.5 px-3 border-r border-slate-300">Item & Description</th>
+                        <th class="py-2.5 px-2 w-20 text-center border-r border-slate-300">HSN/SAC</th>
+                        <th class="py-2.5 px-2 w-14 text-right border-r border-slate-300">Qty</th>
+                        <th class="py-2.5 px-3 w-24 text-right border-r border-slate-300">Rate (₹)</th>
+                        <th class="py-2.5 px-3 w-24 text-right border-r border-slate-300">Taxable (₹)</th>
+                        <th class="py-2.5 px-2 w-16 text-center border-r border-slate-300">GST %</th>
+                        <th class="py-2.5 px-3 w-28 text-right">Total (₹)</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-200">
+                    <template x-for="(itm, idx) in invoice?.items" :key="idx">
+                        <tr>
+                            <td class="py-2.5 px-3 text-center text-slate-400 border-r border-slate-200" x-text="idx + 1"></td>
+                            <td class="py-2.5 px-3 font-medium text-slate-900 border-r border-slate-200" x-text="itm.description"></td>
+                            <td class="py-2.5 px-2 text-center font-mono text-slate-600 border-r border-slate-200" x-text="itm.hsnSac || '—'"></td>
+                            <td class="py-2.5 px-2 text-right font-mono font-bold text-slate-900 border-r border-slate-200" x-text="itm.quantity"></td>
+                            <td class="py-2.5 px-3 text-right font-mono text-slate-700 border-r border-slate-200" x-text="formatNumber(itm.unitPrice)"></td>
+                            <td class="py-2.5 px-3 text-right font-mono text-slate-700 border-r border-slate-200" x-text="formatNumber(itm.taxableAmount)"></td>
+                            <td class="py-2.5 px-2 text-center font-mono text-slate-700 border-r border-slate-200" x-text="itm.gstRate + '%'"></td>
+                            <td class="py-2.5 px-3 text-right font-mono font-bold text-slate-900" x-text="formatNumber(itm.total)"></td>
+                        </tr>
+                    </template>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Calculations & Tax Summary -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-8 items-start">
+            <!-- Left: Terms & Conditions (or Bank Details if Invoice) -->
+            <div class="space-y-4 text-xs">
+                <div x-show="invoice?.terms || shop?.invoiceTerms" class="text-[11px] text-slate-500">
+                    <p class="font-bold uppercase tracking-wider text-slate-700 mb-1">TERMS & CONDITIONS:</p>
+                    <p class="whitespace-pre-line leading-relaxed" x-text="invoice?.terms || shop?.invoiceTerms"></p>
+                </div>
+
+                <template x-if="invoice?.docType === 'Invoice' && (shop?.bankAccountNumber || shop?.upiId)">
+                    <div class="p-4 bg-slate-50 border border-slate-200 rounded-xl space-y-1">
+                        <p class="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1">Bank Settlement Details</p>
+                        <p x-show="shop?.bankName">Bank: <strong class="text-slate-800" x-text="shop?.bankName"></strong></p>
+                        <p x-show="shop?.bankAccountNumber">A/C No: <strong class="font-mono text-slate-900" x-text="shop?.bankAccountNumber"></strong></p>
+                        <p x-show="shop?.bankIfsc">IFSC: <strong class="font-mono text-slate-900" x-text="shop?.bankIfsc"></strong></p>
+                        <p x-show="shop?.upiId">UPI ID: <strong class="text-indigo-600" x-text="shop?.upiId"></strong></p>
+                    </div>
+                </template>
+            </div>
+
+            <!-- Right: Totals -->
+            <div class="space-y-2 text-xs border border-slate-200 rounded-xl p-4 bg-slate-50">
+                <div class="flex justify-between text-slate-600">
+                    <span>Taxable Subtotal:</span>
+                    <span class="font-mono font-semibold" x-text="'₹' + formatNumber(invoice?.taxableTotal)"></span>
+                </div>
+
+                <template x-if="invoice?.cgstTotal > 0 || invoice?.sgstTotal > 0">
+                    <div class="space-y-1 py-1 border-y border-dashed border-slate-200 text-slate-500 text-[11px]">
+                        <div class="flex justify-between">
+                            <span>Central GST (CGST):</span>
+                            <span class="font-mono font-semibold" x-text="'₹' + formatNumber(invoice?.cgstTotal)"></span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span>State GST (SGST):</span>
+                            <span class="font-mono font-semibold" x-text="'₹' + formatNumber(invoice?.sgstTotal)"></span>
+                        </div>
+                    </div>
+                </template>
+
+                <template x-if="invoice?.igstTotal > 0">
+                    <div class="flex justify-between py-1 border-y border-dashed border-slate-200 text-indigo-700 text-[11px]">
+                        <span>Integrated GST (IGST):</span>
+                        <span class="font-mono font-semibold" x-text="'₹' + formatNumber(invoice?.igstTotal)"></span>
+                    </div>
+                </template>
+
+                <div class="flex justify-between text-slate-500 text-[11px]" x-show="invoice?.roundOff !== 0">
+                    <span>Round Off:</span>
+                    <span class="font-mono" x-text="(invoice?.roundOff > 0 ? '+ ₹' : '- ₹') + formatNumber(Math.abs(invoice?.roundOff || 0))"></span>
+                </div>
+
+                <div class="flex justify-between text-base font-black text-slate-900 pt-2 border-t border-slate-900">
+                    <span>Grand Total:</span>
+                    <span class="font-mono" x-text="'₹' + formatNumber(invoice?.grandTotal)"></span>
+                </div>
+
+                <template x-if="invoice?.docType === 'Invoice'">
+                    <div class="pt-2 border-t border-slate-200 space-y-1 text-[11px]">
+                        <div class="flex justify-between text-emerald-700 font-bold">
+                            <span>Paid Amount:</span>
+                            <span class="font-mono" x-text="'₹' + formatNumber(invoice?.paidAmount)"></span>
+                        </div>
+                        <div class="flex justify-between text-rose-600 font-bold text-xs">
+                            <span>Balance Due:</span>
+                            <span class="font-mono" x-text="'₹' + formatNumber(invoice?.balanceDue)"></span>
+                        </div>
+                    </div>
+                </template>
+            </div>
+        </div>
+
+        <!-- Footer / Signatures -->
+        <div class="pt-12 flex justify-between items-end text-xs text-slate-500 border-t border-slate-200">
+            <div>
+                <p class="text-[9px] uppercase tracking-widest text-slate-400">Electronic generated document</p>
+                <p class="font-mono text-[10px]" x-text="'Powered by Astr ERP Suite • ' + new Date().toLocaleDateString('en-IN')"></p>
+            </div>
+            <div class="text-right">
+                <div class="w-44 border-b border-slate-900 mb-1"></div>
+                <p class="font-bold text-slate-800 uppercase tracking-wider text-[10px]">Authorized Signatory</p>
+                <p class="text-[9px]" x-text="'For ' + (shop?.shopName || 'Astr Store')"></p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Payment Collection Modal -->
+    <div x-show="paymentModal.show" style="display: none;" class="no-print fixed inset-0 z-[100] flex items-center justify-center px-4">
+        <div class="absolute inset-0 bg-black/40 backdrop-blur-sm" @click="paymentModal.show = false"></div>
+        <div class="relative bg-white rounded-3xl shadow-2xl w-full max-w-md p-6 border border-slate-200">
+            <div class="flex items-center justify-between border-b border-slate-100 pb-4 mb-4">
+                <div>
+                    <h3 class="text-base font-black text-slate-900">Record Payment</h3>
+                    <p class="text-xs text-slate-400" x-text="'Invoice #' + (invoice?.docNumber || '')"></p>
+                </div>
+                <button @click="paymentModal.show = false" class="text-slate-400 hover:text-slate-600">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+
+            <form @submit.prevent="submitPayment()" class="space-y-4">
+                <div class="bg-slate-50 p-3 rounded-xl border border-slate-100 flex items-center justify-between">
+                    <span class="text-xs font-bold text-slate-500">Balance Due:</span>
+                    <span class="text-base font-black font-mono text-rose-600" x-text="'₹' + formatNumber(invoice?.balanceDue)"></span>
+                </div>
+
+                <div class="space-y-1.5">
+                    <label class="text-xs font-bold text-slate-600">Amount Received (₹)</label>
+                    <input type="number" step="0.01" x-model.number="paymentModal.amount" required
+                        class="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl font-mono text-base font-bold outline-none focus:border-primary-500">
+                </div>
+
+                <div class="grid grid-cols-2 gap-3">
+                    <div class="space-y-1.5">
+                        <label class="text-xs font-bold text-slate-600">Payment Mode</label>
+                        <select x-model="paymentModal.paymentMode" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold outline-none">
+                            <option value="Cash">Cash</option>
+                            <option value="UPI">UPI / QR</option>
+                            <option value="Bank">Bank Transfer</option>
+                            <option value="Cheque">Cheque</option>
+                        </select>
+                    </div>
+
+                    <div class="space-y-1.5">
+                        <label class="text-xs font-bold text-slate-600">Deposit Account</label>
+                        <select x-model="paymentModal.accountId" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold outline-none">
+                            <option value="">No Ledger Link</option>
+                            <template x-for="acc in accounts" :key="acc._id">
+                                <option :value="acc._id" x-text="acc.accountName"></option>
+                            </template>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="space-y-1.5">
+                    <label class="text-xs font-bold text-slate-600">Reference / Transaction ID</label>
+                    <input type="text" x-model="paymentModal.reference" placeholder="e.g. UPI Ref, Cheque #"
+                        class="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs outline-none">
+                </div>
+
+                <div class="pt-3 flex gap-2">
+                    <button type="button" @click="paymentModal.show = false" class="flex-1 py-3 bg-slate-100 text-slate-700 rounded-xl font-bold text-xs">
+                        Cancel
+                    </button>
+                    <button type="submit" :disabled="paymentModal.submitting" class="flex-1 py-3 bg-emerald-600 text-white rounded-xl font-bold text-xs hover:bg-emerald-700 shadow-md">
+                        <span x-text="paymentModal.submitting ? 'Recording...' : 'Confirm Payment'"></span>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>

@@ -1,357 +1,786 @@
 <script src="/js/pages/accounting.js"></script>
 
-<div x-data="accountingData()" x-init="init()" class="space-y-6 animate__animated animate__fadeIn">
-    <!-- Sophisticated Header -->
-    <div class="flex items-center justify-between border-b border-slate-200 pb-6">
+<div x-data="accountingData" class="space-y-5 animate__animated animate__fadeIn pb-12">
+    <!-- Header -->
+    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 pb-4 border-b border-slate-200/80">
         <div>
-            <h1 class="text-2xl font-bold text-slate-900 tracking-tight">Accounting Gateway</h1>
-            <p class="text-xs text-slate-500 mt-1 uppercase tracking-widest font-black">Professional Ledger & Voucher Suite</p>
-        </div>
-        <div class="flex items-center gap-3">
-            <button @click="openAddAccountModal()"
-                class="px-5 py-2.5 bg-white border border-slate-200 text-slate-600 rounded-xl font-bold text-[10px] uppercase tracking-widest hover:border-primary-300 hover:text-primary-600 transition-all shadow-sm">
-                <i class="fas fa-book-medical mr-2"></i>Ledger Master
-            </button>
-            <button @click="openAddTransactionModal()"
-                class="px-5 py-2.5 bg-primary-600 text-white rounded-xl font-bold text-[10px] uppercase tracking-widest hover:bg-primary-700 shadow-lg shadow-primary-100 transition-all flex items-center gap-2 active:scale-95">
-                <i class="fas fa-plus"></i>
-                <span>Voucher Entry</span>
-            </button>
-        </div>
-    </div>
-
-    <!-- Unified Liquidity Bar -->
-    <div class="bg-white border border-slate-200 rounded-2xl p-2 shadow-sm flex items-stretch divide-x divide-slate-100">
-        <div class="flex-1 px-8 py-4 space-y-1">
-            <p class="text-[9px] font-bold text-slate-400 uppercase tracking-widest">Net Position</p>
-            <div class="flex items-baseline gap-2">
-                <span class="text-slate-400 text-sm font-bold">₹</span>
-                <span class="text-2xl font-black text-slate-900 tracking-tighter" x-text="formatNumber(summary.netBalance)">0</span>
-                <span class="text-[10px] font-black uppercase px-2 py-0.5 rounded ml-2" 
-                    :class="summary.netBalance >= 0 ? 'bg-emerald-50 text-emerald-600' : 'bg-rose-50 text-rose-600'"
-                    x-text="summary.netBalance >= 0 ? 'Debit (Dr.)' : 'Credit (Cr.)'"></span>
-            </div>
-        </div>
-        <div class="flex-1 px-8 py-4 space-y-1">
-            <p class="text-[9px] font-bold text-slate-400 uppercase tracking-widest">Total Payables (Cr.)</p>
-            <div class="flex items-baseline gap-2">
-                <span class="text-slate-400 text-sm font-bold">₹</span>
-                <span class="text-2xl font-black text-slate-900 tracking-tighter" x-text="formatNumber(summary.totalPayable)">0</span>
-            </div>
-        </div>
-        <div class="flex-1 px-8 py-4 space-y-1">
-            <p class="text-[9px] font-bold text-slate-400 uppercase tracking-widest">Total Receivables (Dr.)</p>
-            <div class="flex items-baseline gap-2">
-                <span class="text-slate-400 text-sm font-bold">₹</span>
-                <span class="text-2xl font-black text-slate-900 tracking-tighter" x-text="formatNumber(summary.totalReceivable)">0</span>
-            </div>
-        </div>
-    </div>
-
-    <!-- Integrated Workspace -->
-    <div class="bg-white border border-slate-200 rounded-3xl shadow-sm flex overflow-hidden min-h-[600px]">
-        <!-- Seamless Sidebar: Ledger Navigation -->
-        <div class="w-80 border-r border-slate-100 flex flex-col bg-slate-50/50">
-            <div class="p-6 border-b border-slate-100">
-                <div class="relative group">
-                    <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-slate-300 text-[10px]"></i>
-                    <input type="text" x-model="searchQuery" placeholder="Search Master Ledger..."
-                        class="w-full pl-8 pr-3 py-2 bg-white border border-slate-200 rounded-xl text-[10px] font-bold outline-none focus:ring-4 focus:ring-primary-50">
+            <div class="flex items-center gap-2.5">
+                <div class="w-9 h-9 rounded-xl bg-primary-100/70 text-primary-700 flex items-center justify-center text-sm font-bold shadow-2xs">
+                    <i class="fas fa-book-journal-whills"></i>
+                </div>
+                <div>
+                    <h1 class="text-xl font-bold text-slate-900 tracking-tight leading-tight">Shop Accounts</h1>
+                    <p class="text-xs text-slate-500 mt-0.5">Double-entry general ledger, party balances & voucher journal</p>
                 </div>
             </div>
-            <div class="flex-1 overflow-y-auto custom-scrollbar p-2 space-y-1">
-                <template x-for="acc in filteredAccounts" :key="acc._id">
-                    <button @click="selectAccount(acc)"
-                        :class="selectedAccount?._id === acc._id ? 'bg-white shadow-md border-slate-200' : 'hover:bg-white/60 border-transparent'"
-                        class="w-full flex items-center justify-between p-4 rounded-2xl border transition-all text-left group">
-                        <div class="flex items-center gap-3">
-                            <div class="w-9 h-9 rounded-xl flex items-center justify-center font-bold text-xs"
-                                :class="selectedAccount?._id === acc._id ? 'bg-primary-600 text-white' : 'bg-slate-200 text-slate-500'"
-                                x-text="acc.contact?.name?.charAt(0) || 'A'"></div>
-                            <div>
-                                <p class="text-sm font-bold text-slate-800" x-text="acc.accountName"></p>
-                                <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider" x-text="acc.contact?.companyName || 'Private'"></p>
+        </div>
+        <div class="flex items-center flex-wrap gap-2">
+            <button type="button" @click="modals.manageTags = true"
+                class="inline-flex items-center gap-1.5 px-3 py-2 bg-white border border-slate-200/90 text-slate-700 rounded-xl text-xs font-semibold hover:bg-slate-50 transition-all shadow-2xs active:scale-95">
+                <i class="fas fa-tags text-[11px] text-slate-400"></i>
+                <span>Tags</span>
+            </button>
+            <button type="button" @click="openAddAccountModal()"
+                class="inline-flex items-center gap-1.5 px-3 py-2 bg-white border border-slate-200/90 text-slate-700 rounded-xl text-xs font-semibold hover:bg-slate-50 transition-all shadow-2xs active:scale-95">
+                <i class="fas fa-plus text-[11px] text-slate-400"></i>
+                <span>New Account</span>
+            </button>
+            <button type="button" @click="openAddTransactionModal()"
+                class="inline-flex items-center gap-1.5 px-4 py-2 bg-primary-600 hover:bg-primary-700 text-white rounded-xl text-xs font-bold transition-all shadow-md shadow-primary-200 active:scale-95">
+                <i class="fas fa-receipt text-xs"></i>
+                <span>Record Voucher</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- 3-Metric Executive Position Strip -->
+    <div class="grid grid-cols-1 sm:grid-cols-3 gap-3.5">
+        <!-- Net Position -->
+        <div class="bg-white border border-slate-200/80 rounded-2xl p-4 shadow-2xs flex items-center justify-between">
+            <div class="space-y-1">
+                <div class="flex items-center gap-1.5">
+                    <span class="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Net Position</span>
+                    <span class="text-[10px] font-bold uppercase px-1.5 py-0.2 rounded"
+                        :class="summary.netBalance >= 0 ? 'bg-emerald-50 text-emerald-700 border border-emerald-200/60' : 'bg-rose-50 text-rose-700 border border-rose-200/60'"
+                        x-text="summary.netBalance >= 0 ? 'Dr. Asset' : 'Cr. Liability'"></span>
+                </div>
+                <div class="flex items-baseline gap-1 font-mono">
+                    <span class="text-slate-400 text-sm font-semibold">₹</span>
+                    <span class="text-2xl font-extrabold text-slate-900 tracking-tight" x-text="formatNumber(Math.abs(summary.netBalance))">0</span>
+                </div>
+            </div>
+            <div class="w-10 h-10 rounded-xl bg-slate-50 border border-slate-100 flex items-center justify-center text-slate-500 text-sm">
+                <i class="fas fa-scale-balanced"></i>
+            </div>
+        </div>
+
+        <!-- Total Receivables (Debtors / Dr.) -->
+        <div class="bg-white border border-slate-200/80 rounded-2xl p-4 shadow-2xs flex items-center justify-between">
+            <div class="space-y-1">
+                <span class="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Total Receivables (Dr.)</span>
+                <div class="flex items-baseline gap-1 font-mono">
+                    <span class="text-emerald-500 text-sm font-semibold">₹</span>
+                    <span class="text-2xl font-extrabold text-emerald-600 tracking-tight" x-text="formatNumber(summary.totalReceivable)">0</span>
+                </div>
+            </div>
+            <div class="w-10 h-10 rounded-xl bg-emerald-50 border border-emerald-100/80 flex items-center justify-center text-emerald-600 text-sm">
+                <i class="fas fa-arrow-trend-up"></i>
+            </div>
+        </div>
+
+        <!-- Total Payables (Creditors / Cr.) -->
+        <div class="bg-white border border-slate-200/80 rounded-2xl p-4 shadow-2xs flex items-center justify-between">
+            <div class="space-y-1">
+                <span class="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Total Payables (Cr.)</span>
+                <div class="flex items-baseline gap-1 font-mono">
+                    <span class="text-rose-500 text-sm font-semibold">₹</span>
+                    <span class="text-2xl font-extrabold text-rose-600 tracking-tight" x-text="formatNumber(summary.totalPayable)">0</span>
+                </div>
+            </div>
+            <div class="w-10 h-10 rounded-xl bg-rose-50 border border-rose-100/80 flex items-center justify-center text-rose-600 text-sm">
+                <i class="fas fa-arrow-trend-down"></i>
+            </div>
+        </div>
+    </div>
+
+    <!-- Mobile View Mode Tabs (Visible on < lg screens) -->
+    <div class="lg:hidden flex items-center p-1 bg-slate-100 rounded-xl border border-slate-200/60">
+        <button type="button" @click="selectGeneralLedger()"
+            :class="isGeneralLedger ? 'bg-white text-slate-900 shadow-sm font-bold' : 'text-slate-500 hover:text-slate-800 font-medium'"
+            class="flex-1 py-2 text-xs rounded-lg transition-all text-center flex items-center justify-center gap-1.5">
+            <i class="fas fa-book-open text-[11px]"></i>
+            <span>General Ledger</span>
+        </button>
+        <button type="button" @click="switchToAccountsList()"
+            :class="(!isGeneralLedger && mobileTab === 'accounts') ? 'bg-white text-slate-900 shadow-sm font-bold' : 'text-slate-500 hover:text-slate-800 font-medium'"
+            class="flex-1 py-2 text-xs rounded-lg transition-all text-center flex items-center justify-center gap-1.5">
+            <i class="fas fa-users text-[11px]"></i>
+            <span>Party Ledgers (<span x-text="accounts.length"></span>)</span>
+        </button>
+        <template x-if="selectedAccount">
+            <button type="button" @click="mobileTab = 'statement'"
+                :class="(!isGeneralLedger && mobileTab === 'statement') ? 'bg-white text-primary-700 shadow-sm font-bold' : 'text-slate-500 hover:text-slate-800 font-medium'"
+                class="flex-1 py-2 text-xs rounded-lg transition-all text-center flex items-center justify-center gap-1.5 truncate">
+                <i class="fas fa-file-invoice text-[11px]"></i>
+                <span class="truncate" x-text="selectedAccount.accountName"></span>
+            </button>
+        </template>
+    </div>
+
+    <!-- Main Workspace Container -->
+    <div class="bg-white border border-slate-200/90 rounded-2xl shadow-sm overflow-hidden flex flex-col lg:flex-row min-h-[600px]">
+        
+        <!-- Left Panel: Account Selector List (Desktop always visible, mobile visible when mobileTab === 'accounts') -->
+        <div :class="{'hidden lg:flex': mobileTab !== 'accounts', 'flex': mobileTab === 'accounts'}"
+            class="w-full lg:w-80 border-r border-slate-200/80 flex-col bg-slate-50/50 shrink-0">
+            
+            <!-- Search & Filters Header -->
+            <div class="p-3.5 border-b border-slate-200/80 bg-white space-y-2.5">
+                <div class="relative">
+                    <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i>
+                    <input type="text" x-model="searchQuery" placeholder="Search account or party..."
+                        class="w-full pl-8 pr-3 py-1.5 bg-slate-50 border border-slate-200 rounded-xl text-xs placeholder:text-slate-400 focus:bg-white focus:ring-1 focus:ring-primary-500 focus:border-primary-500 outline-none transition-all">
+                </div>
+
+                <!-- Type Selector Segment Tabs -->
+                <div class="grid grid-cols-3 gap-1 p-0.5 bg-slate-100 rounded-lg">
+                    <button type="button" @click="selectedType = 'All'"
+                        :class="selectedType === 'All' ? 'bg-white text-slate-900 shadow-xs font-bold' : 'text-slate-500 hover:text-slate-700 font-medium'"
+                        class="py-1 text-[11px] rounded-md transition-all text-center">All</button>
+                    <button type="button" @click="selectedType = 'Customer'"
+                        :class="selectedType === 'Customer' ? 'bg-white text-primary-700 shadow-xs font-bold' : 'text-slate-500 hover:text-slate-700 font-medium'"
+                        class="py-1 text-[11px] rounded-md transition-all text-center">Customers</button>
+                    <button type="button" @click="selectedType = 'Vendor'"
+                        :class="selectedType === 'Vendor' ? 'bg-white text-amber-700 shadow-xs font-bold' : 'text-slate-500 hover:text-slate-700 font-medium'"
+                        class="py-1 text-[11px] rounded-md transition-all text-center">Vendors</button>
+                </div>
+
+                <div class="flex items-center justify-between px-1 text-[11px] text-slate-400">
+                    <span x-text="filteredAccounts.length + ' accounts'"></span>
+                    <button type="button" @click="openAddAccountModal()" class="text-primary-600 hover:text-primary-700 font-semibold">+ Add Ledger</button>
+                </div>
+            </div>
+
+            <!-- Scrollable List of Ledgers -->
+            <div class="flex-1 overflow-y-auto p-2.5 space-y-1.5 max-h-[580px] lg:max-h-none">
+                <!-- Top Quick Item: General Shop Ledger -->
+                <button type="button" @click="selectGeneralLedger()"
+                    :class="isGeneralLedger ? 'bg-primary-50 border-primary-300 text-primary-950 shadow-xs ring-1 ring-primary-300/60' : 'bg-white hover:bg-slate-100/70 border-slate-200/80 text-slate-700'"
+                    class="w-full p-2.5 rounded-xl border transition-all text-left flex items-center justify-between group">
+                    <div class="flex items-center gap-2.5">
+                        <div class="w-8 h-8 rounded-lg flex items-center justify-center font-bold text-xs shrink-0 transition-colors"
+                            :class="isGeneralLedger ? 'bg-primary-600 text-white' : 'bg-primary-50 text-primary-700 group-hover:bg-primary-100'">
+                            <i class="fas fa-book-open text-xs"></i>
+                        </div>
+                        <div>
+                            <p class="text-xs font-bold text-slate-900 leading-tight">General Shop Ledger</p>
+                            <p class="text-[10px] text-slate-400 mt-0.5">Consolidated day book & vouchers</p>
+                        </div>
+                    </div>
+                    <span class="text-[10px] font-bold text-primary-700 bg-primary-100/70 px-1.5 py-0.5 rounded-md">All</span>
+                </button>
+
+                <div class="pt-2 pb-1 px-1">
+                    <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Party Ledgers</p>
+                </div>
+
+                <!-- Individual Account Cards -->
+                <template x-for="acc in displayedAccounts" :key="acc._id">
+                    <button type="button" @click="selectAccount(acc)"
+                        :class="(!isGeneralLedger && selectedAccount?._id === acc._id) ? 'bg-primary-50 border-primary-300 text-primary-950 shadow-xs ring-1 ring-primary-300/60' : 'bg-white hover:bg-slate-100/70 border-slate-200/80 text-slate-700'"
+                        class="w-full p-2.5 rounded-xl border transition-all text-left group">
+                        
+                        <!-- Top Row: Avatar + Account Name + Amount -->
+                        <div class="flex items-center justify-between gap-2">
+                            <div class="flex items-center gap-2 min-w-0 flex-1">
+                                <div class="w-7 h-7 rounded-lg flex items-center justify-center font-bold text-xs shrink-0 transition-colors"
+                                    :class="(!isGeneralLedger && selectedAccount?._id === acc._id) ? 'bg-primary-600 text-white' : 'bg-slate-100 text-slate-600 group-hover:bg-slate-200'"
+                                    x-text="(acc.contact?.name || acc.accountName || 'A').charAt(0)"></div>
+                                <p class="text-xs font-semibold text-slate-900 truncate" x-text="acc.accountName"></p>
+                            </div>
+                            <div class="text-right shrink-0">
+                                <span class="text-xs font-bold font-mono tabular-nums tracking-tight"
+                                    :class="acc.totalBalance >= 0 ? 'text-emerald-600' : 'text-rose-600'"
+                                    x-text="'₹' + formatNumber(Math.abs(acc.totalBalance))"></span>
                             </div>
                         </div>
-                        <p class="text-xs font-black tracking-tight" :class="acc.totalBalance >= 0 ? 'text-emerald-600' : 'text-rose-600'" x-text="'₹' + formatNumber(Math.abs(acc.totalBalance))"></p>
+
+                        <!-- Bottom Row: Subtitle Party + Type badge + Dr/Cr -->
+                        <div class="flex items-center justify-between mt-1 pl-9 text-[11px]">
+                            <span class="text-slate-400 truncate max-w-[130px]" x-text="acc.contact?.companyName || acc.contact?.name || 'Party'"></span>
+                            <div class="flex items-center gap-1 shrink-0">
+                                <span class="px-1.5 py-0.2 rounded text-[9px] font-semibold uppercase tracking-wider"
+                                    :class="acc.accountType === 'Payable' ? 'bg-amber-50 text-amber-700 border border-amber-200/50' : 'bg-blue-50 text-blue-700 border border-blue-200/50'"
+                                    x-text="acc.accountType"></span>
+                                <span class="text-[9px] font-bold text-slate-400 uppercase"
+                                    x-text="acc.totalBalance >= 0 ? 'Dr.' : 'Cr.'"></span>
+                            </div>
+                        </div>
                     </button>
                 </template>
-            </div>
-            <div class="p-4 bg-white border-t border-slate-100">
-                <button @click="modals.manageTags = true" class="w-full py-2.5 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] flex items-center justify-center gap-2 hover:text-primary-600">
-                    <i class="fas fa-tags text-[9px]"></i> Classification Master
-                </button>
+
+                <!-- Load More Button for 1000+ Accounts -->
+                <div x-show="filteredAccounts.length > visibleAccountLimit" class="pt-2 pb-1 px-1">
+                    <button type="button" @click="loadMoreAccounts()" 
+                        class="w-full py-2 px-3 bg-white hover:bg-slate-100 border border-slate-200 rounded-xl text-[11px] font-bold text-slate-600 transition-colors shadow-xs flex items-center justify-center gap-1.5">
+                        <i class="fas fa-angles-down text-[10px] text-slate-400"></i>
+                        <span>Show more ledgers (<span x-text="filteredAccounts.length - visibleAccountLimit"></span> remaining)</span>
+                    </button>
+                </div>
+
+                <div x-show="filteredAccounts.length === 0" class="py-12 text-center text-slate-400 px-4">
+                    <i class="fas fa-folder-open text-2xl mb-2 text-slate-300"></i>
+                    <p class="text-xs font-semibold text-slate-700">No accounts found</p>
+                    <p class="text-[11px] text-slate-400 mt-1">Try adjusting your search query</p>
+                </div>
             </div>
         </div>
 
-        <!-- Unified Workspace: Workstation Area -->
-        <div class="flex-1 flex flex-col bg-white">
-            <template x-if="selectedAccount">
-                <div class="flex-1 flex flex-col">
-                    <div class="px-8 py-6 border-b border-slate-50 flex items-center justify-between">
-                        <div class="flex flex-col">
-                            <div class="flex items-center gap-3 mb-1">
-                                <h3 class="text-xl font-black text-slate-900" x-text="selectedAccount.accountName"></h3>
-                                <span class="px-2 py-0.5 bg-slate-900 text-white text-[8px] font-black rounded uppercase" x-text="selectedAccount.contact?.contactType"></span>
-                            </div>
-                            <p class="text-xs text-slate-400" x-text="'Ledger Summary for ' + selectedAccount.contact?.name"></p>
-                        </div>
+        <!-- Right Panel: Ledger Workstation (Desktop always visible, mobile visible when mobileTab !== 'accounts') -->
+        <div :class="{'hidden lg:flex': mobileTab === 'accounts', 'flex': mobileTab !== 'accounts'}"
+            class="flex-1 flex-col bg-white overflow-hidden">
+            
+            <!-- Top Workstation Header -->
+            <div class="p-4 border-b border-slate-100 flex flex-col md:flex-row md:items-center md:justify-between gap-3 bg-gradient-to-b from-slate-50/50 to-white">
+                <div class="flex items-center gap-3">
+                    <!-- Mobile Back to Accounts button -->
+                    <button type="button" @click="switchToAccountsList()" 
+                        class="lg:hidden w-8 h-8 rounded-lg bg-slate-100 hover:bg-slate-200 flex items-center justify-center text-slate-600 transition-colors"
+                        title="Back to accounts list">
+                        <i class="fas fa-arrow-left text-xs"></i>
+                    </button>
+
+                    <div class="w-9 h-9 rounded-xl flex items-center justify-center font-bold text-xs"
+                        :class="isGeneralLedger ? 'bg-primary-50 text-primary-600 border border-primary-200/60' : 'bg-emerald-50 text-emerald-600 border border-emerald-200/60'">
+                        <i class="fas" :class="isGeneralLedger ? 'fa-book-open' : 'fa-user-check'"></i>
+                    </div>
+
+                    <div>
                         <div class="flex items-center gap-2">
-                             <div class="flex items-center bg-slate-50 border border-slate-200 p-1.5 rounded-xl">
-                                <input type="date" x-model="filter.startDate" @change="loadLedger(selectedAccount._id)" class="text-[9px] font-black p-1 bg-transparent">
-                                <span class="text-slate-300 text-[9px] px-1 font-black">TO</span>
-                                <input type="date" x-model="filter.endDate" @change="loadLedger(selectedAccount._id)" class="text-[9px] font-black p-1 bg-transparent">
+                            <h2 class="text-sm sm:text-base font-bold text-slate-900 tracking-tight"
+                                x-text="isGeneralLedger ? 'General Shop Ledger' : selectedAccount?.accountName"></h2>
+                            <span class="px-2 py-0.5 rounded-full text-[10px] font-semibold uppercase tracking-wider"
+                                :class="isGeneralLedger ? 'bg-primary-50 text-primary-700 border border-primary-200/60' : (selectedAccount?.accountType === 'Payable' ? 'bg-amber-50 text-amber-700 border border-amber-200/60' : 'bg-emerald-50 text-emerald-700 border border-emerald-200/60')"
+                                x-text="isGeneralLedger ? 'All Vouchers' : selectedAccount?.accountType"></span>
+                        </div>
+                        <p class="text-xs text-slate-500 mt-0.5">
+                            <span x-show="isGeneralLedger">Consolidated double-entry records across all parties</span>
+                            <span x-show="!isGeneralLedger">
+                                Party: <span class="font-medium text-slate-700" x-text="selectedAccount?.contact?.name || 'Walk-in Client'"></span>
+                                <template x-if="selectedAccount?.contact?.phone">
+                                    <span class="text-slate-400 font-mono ml-1.5" x-text="'• ' + selectedAccount.contact.phone"></span>
+                                </template>
+                            </span>
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Actions & Date Preset Toolbar -->
+                <div class="flex items-center flex-wrap gap-2 self-end md:self-auto">
+                    <!-- Quick Date Presets -->
+                    <div class="inline-flex p-0.5 bg-slate-100 rounded-lg text-xs">
+                        <button type="button" @click="setFilterPreset('all')"
+                            :class="filter.preset === 'all' ? 'bg-white text-slate-900 shadow-xs font-bold' : 'text-slate-500 hover:text-slate-800 font-medium'"
+                            class="px-2.5 py-1 rounded-md transition-all">All</button>
+                        <button type="button" @click="setFilterPreset('month')"
+                            :class="filter.preset === 'month' ? 'bg-white text-slate-900 shadow-xs font-bold' : 'text-slate-500 hover:text-slate-800 font-medium'"
+                            class="px-2.5 py-1 rounded-md transition-all">This Month</button>
+                        <button type="button" @click="setFilterPreset('30d')"
+                            :class="filter.preset === '30d' ? 'bg-white text-slate-900 shadow-xs font-bold' : 'text-slate-500 hover:text-slate-800 font-medium'"
+                            class="px-2.5 py-1 rounded-md transition-all">30D</button>
+                    </div>
+
+                    <!-- Single Account Actions (WhatsApp / Print / Edit) -->
+                    <template x-if="!isGeneralLedger && selectedAccount">
+                        <div class="flex items-center gap-1.5">
+                            <button type="button" @click="sendWhatsAppStatement()" title="Send WhatsApp Statement"
+                                class="px-2.5 py-1.5 bg-emerald-50 border border-emerald-200 text-emerald-700 hover:bg-emerald-100 rounded-lg text-xs font-bold flex items-center gap-1 transition-all shadow-2xs active:scale-95">
+                                <i class="fab fa-whatsapp text-xs"></i>
+                                <span class="hidden sm:inline">WhatsApp</span>
+                            </button>
+                            <button type="button" @click="window.print()" title="Print Statement"
+                                class="w-8 h-8 rounded-lg border border-slate-200 text-slate-500 hover:text-slate-800 hover:bg-slate-50 flex items-center justify-center transition-colors">
+                                <i class="fas fa-print text-xs"></i>
+                            </button>
+                            <button type="button" @click="editAccount(selectedAccount)" title="Edit Ledger"
+                                class="w-8 h-8 rounded-lg border border-slate-200 text-slate-500 hover:text-slate-800 hover:bg-slate-50 flex items-center justify-center transition-colors">
+                                <i class="fas fa-pen text-xs"></i>
+                            </button>
+                            <button type="button" @click="confirmDeleteAccount()" title="Delete Ledger"
+                                class="w-8 h-8 rounded-lg border border-slate-200 text-slate-400 hover:text-rose-600 hover:bg-rose-50 flex items-center justify-center transition-colors">
+                                <i class="fas fa-trash-alt text-xs"></i>
+                            </button>
+                        </div>
+                    </template>
+
+                    <!-- Add Entry Button -->
+                    <button type="button" @click="openAddTransactionModal()"
+                        class="px-3 py-1.5 bg-primary-600 hover:bg-primary-700 text-white rounded-lg text-xs font-bold transition-all shadow-xs flex items-center gap-1.5 active:scale-95">
+                        <i class="fas fa-plus text-[10px]"></i>
+                        <span>Entry</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Single Account Balance Banner (Shown when an individual account is active) -->
+            <template x-if="!isGeneralLedger && selectedAccount">
+                <div class="p-4 bg-slate-50/80 border-b border-slate-200/80 flex flex-wrap items-center justify-between gap-4">
+                    <div class="flex items-center gap-4">
+                        <div>
+                            <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400 block leading-tight">Closing Balance</span>
+                            <div class="flex items-baseline gap-1.5 font-mono mt-0.5">
+                                <span class="text-sm font-bold text-slate-400">₹</span>
+                                <span class="text-2xl font-extrabold tracking-tight"
+                                    :class="selectedAccount.totalBalance >= 0 ? 'text-emerald-600' : 'text-rose-600'"
+                                    x-text="formatNumber(Math.abs(selectedAccount.totalBalance))">0</span>
+                                <span class="text-xs font-bold uppercase px-1.5 py-0.5 rounded"
+                                    :class="selectedAccount.totalBalance >= 0 ? 'bg-emerald-100 text-emerald-800' : 'bg-rose-100 text-rose-800'"
+                                    x-text="selectedAccount.totalBalance >= 0 ? 'Dr. (Due to us)' : 'Cr. (Advance)'"></span>
                             </div>
-                            <button @click="editAccount(selectedAccount)" class="w-9 h-9 text-slate-300 hover:text-slate-600"><i class="fas fa-cog text-xs"></i></button>
-                            <button @click="confirmDeleteAccount()" class="w-9 h-9 text-slate-300 hover:text-rose-600"><i class="fas fa-trash-alt text-xs"></i></button>
                         </div>
                     </div>
-                    <div x-show="periodStats" class="grid grid-cols-3 divide-x divide-slate-50 border-b border-slate-50">
-                        <div class="p-6"><p class="text-[9px] font-bold text-slate-400 uppercase">Debit (Dr.)</p><p class="text-lg font-black text-emerald-600">₹<span x-text="formatNumber(periodStats.totalGave)">0</span></p></div>
-                        <div class="p-6"><p class="text-[9px] font-bold text-slate-400 uppercase">Credit (Cr.)</p><p class="text-lg font-black text-rose-600">₹<span x-text="formatNumber(periodStats.totalTook)">0</span></p></div>
-                        <div class="p-6"><p class="text-[9px] font-bold text-slate-400 uppercase">Vouchers</p><p class="text-lg font-black text-slate-800" x-text="periodStats.count">0</p></div>
+
+                    <div class="flex items-center gap-4 text-xs font-mono">
+                        <div class="text-right">
+                            <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400 block font-sans">Debit Inflow</span>
+                            <span class="font-bold text-emerald-600" x-text="'₹' + formatNumber(periodStats?.totalGave || 0)">₹0</span>
+                        </div>
+                        <div class="w-px h-7 bg-slate-200"></div>
+                        <div class="text-right">
+                            <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400 block font-sans">Credit Outflow</span>
+                            <span class="font-bold text-rose-600" x-text="'₹' + formatNumber(periodStats?.totalTook || 0)">₹0</span>
+                        </div>
+                        <div class="w-px h-7 bg-slate-200"></div>
+                        <div class="text-right">
+                            <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400 block font-sans">Vouchers</span>
+                            <span class="font-bold text-slate-800" x-text="periodStats?.count || 0">0</span>
+                        </div>
                     </div>
-                    <div class="flex-1 overflow-y-auto">
-                        <table class="w-full">
-                            <thead class="sticky top-0 bg-white border-b border-slate-50">
-                                <tr class="text-[9px] font-black text-slate-300 uppercase tracking-[0.25em]">
-                                    <th class="px-8 py-4 text-left">Period</th>
-                                    <th class="px-8 py-4 text-left">Voucher Particulars</th>
-                                    <th class="px-8 py-4 text-right">Debit</th>
-                                    <th class="px-8 py-4 text-right">Credit</th>
-                                    <th class="px-8 py-4 text-center">Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody class="divide-y divide-slate-50/50">
-                                <template x-for="tx in ledgerTransactions" :key="tx._id">
-                                    <tr class="hover:bg-slate-50/50 group">
-                                        <td class="px-8 py-5"><p class="text-[11px] font-bold text-slate-800" x-text="formatDate(tx.date)"></p><p class="text-[8px] font-black text-slate-300 uppercase" x-text="tx.reference || 'VC-ENTRY'"></p></td>
-                                        <td class="px-8 py-5"><p class="text-xs text-slate-600 mb-1" x-text="tx.description || 'Ledger Posting'"></p><template x-if="tx.tag"><span :style="`color: ${tx.tag.color}; border-color: ${tx.tag.color}20`" class="inline-block px-1.5 py-0.5 rounded border text-[8px] font-black uppercase" x-text="tag.name"></span></template></td>
-                                        <td class="px-8 py-5 text-right font-black text-emerald-600 text-sm" x-text="tx.transactionType === 'Debit' ? '₹' + formatNumber(tx.amount) : '-'"></td>
-                                        <td class="px-8 py-5 text-right font-black text-rose-600 text-sm" x-text="tx.transactionType === 'Credit' ? '₹' + formatNumber(tx.amount) : '-'"></td>
-                                        <td class="px-8 py-5 text-center opacity-0 group-hover:opacity-100"><button @click="editTransaction(tx)" class="text-slate-300 hover:text-primary-600 mr-2"><i class="fas fa-edit text-[10px]"></i></button><button @click="deleteTransaction(tx._id)" class="text-slate-300 hover:text-rose-600"><i class="fas fa-trash-alt text-[10px]"></i></button></td>
-                                    </tr>
+                </div>
+            </template>
+
+            <!-- General Ledger Stats Banner -->
+            <template x-if="isGeneralLedger && periodStats">
+                <div class="grid grid-cols-3 divide-x divide-slate-100 border-b border-slate-200/80 bg-slate-50/60 py-2.5 px-4 text-xs">
+                    <div>
+                        <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400 block">Total Debited (Dr.)</span>
+                        <span class="text-sm font-bold text-emerald-600 font-mono" x-text="'₹' + formatNumber(periodStats.totalGave)">₹0</span>
+                    </div>
+                    <div class="pl-4">
+                        <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400 block">Total Credited (Cr.)</span>
+                        <span class="text-sm font-bold text-rose-600 font-mono" x-text="'₹' + formatNumber(periodStats.totalTook)">₹0</span>
+                    </div>
+                    <div class="pl-4">
+                        <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400 block">Vouchers Recorded</span>
+                        <span class="text-sm font-bold text-slate-900 font-mono" x-text="periodStats.count">0</span>
+                    </div>
+                </div>
+            </template>
+
+            <!-- Ledger Transactions Table -->
+            <div class="flex-1 overflow-x-auto overflow-y-auto custom-scrollbar">
+                <table class="w-full border-collapse min-w-[620px]">
+                    <thead class="sticky top-0 bg-slate-50/95 backdrop-blur-sm border-b border-slate-200/80 z-10">
+                        <tr class="text-[11px] font-bold text-slate-500 uppercase tracking-wider">
+                            <th class="px-4 py-3 text-left">Posting Date</th>
+                            <template x-if="isGeneralLedger">
+                                <th class="px-4 py-3 text-left">Account / Party</th>
+                            </template>
+                            <th class="px-4 py-3 text-left">Particulars &amp; Notes</th>
+                            <th class="px-4 py-3 text-right">Debit (Dr.)</th>
+                            <th class="px-4 py-3 text-right">Credit (Cr.)</th>
+                            <template x-if="!isGeneralLedger">
+                                <th class="px-4 py-3 text-right">Running Balance</th>
+                            </template>
+                            <th class="px-4 py-3 text-center w-20">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-100 text-xs">
+                        <template x-for="tx in ledgerTransactions" :key="tx._id">
+                            <tr class="hover:bg-slate-50/80 transition-colors group">
+                                <!-- Date & Ref -->
+                                <td class="px-4 py-3 align-top whitespace-nowrap">
+                                    <p class="font-bold text-slate-800" x-text="formatDate(tx.date)"></p>
+                                    <p class="text-[10px] font-mono text-slate-400 mt-0.5" x-text="tx.reference || 'VOUCHER'"></p>
+                                </td>
+
+                                <!-- Account / Party (Shown in General Ledger) -->
+                                <template x-if="isGeneralLedger">
+                                    <td class="px-4 py-3 align-top">
+                                        <p class="font-bold text-slate-900 leading-snug" x-text="tx.account?.accountName || 'Shop Ledger'"></p>
+                                        <span class="text-[10px] text-slate-400 block mt-0.5" x-text="tx.account?.contact?.name || ''"></span>
+                                    </td>
                                 </template>
-                            </tbody>
-                        </table>
+
+                                <!-- Particulars & Tags -->
+                                <td class="px-4 py-3 align-top">
+                                    <p class="font-medium text-slate-800 leading-snug" x-text="tx.description || 'Ledger Posting'"></p>
+                                    <template x-if="tx.tag">
+                                        <span :style="`color: ${tx.tag.color}; border-color: ${tx.tag.color}40; background-color: ${tx.tag.color}15`"
+                                            class="inline-block mt-1 px-1.5 py-0.5 rounded border text-[9px] font-bold uppercase tracking-wider"
+                                            x-text="tx.tag.name"></span>
+                                    </template>
+                                </td>
+
+                                <!-- Debit (Dr.) -->
+                                <td class="px-4 py-3 align-top text-right font-mono font-bold tabular-nums text-emerald-600">
+                                    <span x-text="tx.transactionType === 'Debit' ? '₹' + formatNumber(tx.amount) : '-'"></span>
+                                </td>
+
+                                <!-- Credit (Cr.) -->
+                                <td class="px-4 py-3 align-top text-right font-mono font-bold tabular-nums text-rose-600">
+                                    <span x-text="tx.transactionType === 'Credit' ? '₹' + formatNumber(tx.amount) : '-'"></span>
+                                </td>
+
+                                <!-- Running Balance (For Single Account) -->
+                                <template x-if="!isGeneralLedger">
+                                    <td class="px-4 py-3 align-top text-right font-mono font-bold tabular-nums whitespace-nowrap"
+                                        :class="(tx.runningBalance || 0) >= 0 ? 'text-slate-800' : 'text-rose-600'"
+                                        x-text="'₹' + formatNumber(Math.abs(tx.runningBalance || 0)) + ((tx.runningBalance || 0) >= 0 ? ' Dr' : ' Cr')">
+                                    </td>
+                                </template>
+
+                                <!-- Row Actions -->
+                                <td class="px-4 py-3 align-top text-center">
+                                    <div class="flex items-center justify-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                                        <button type="button" @click="editTransaction(tx)" title="Edit voucher"
+                                            class="w-7 h-7 rounded-lg text-slate-400 hover:text-primary-600 hover:bg-slate-100 flex items-center justify-center transition-colors">
+                                            <i class="fas fa-pen text-[10px]"></i>
+                                        </button>
+                                        <button type="button" @click="deleteTransaction(tx._id)" title="Delete voucher"
+                                            class="w-7 h-7 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 flex items-center justify-center transition-colors">
+                                            <i class="fas fa-trash-alt text-[10px]"></i>
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                        </template>
+                    </tbody>
+                </table>
+
+                <!-- Empty State -->
+                <div x-show="ledgerTransactions.length === 0" class="py-20 text-center text-slate-400">
+                    <div class="w-12 h-12 bg-slate-50 border border-slate-200 rounded-2xl flex items-center justify-center mx-auto mb-3 text-slate-300">
+                        <i class="fas fa-file-invoice text-lg"></i>
                     </div>
+                    <p class="text-xs font-bold text-slate-700">No voucher records found</p>
+                    <p class="text-[11px] text-slate-400 mt-1 max-w-xs mx-auto">There are no transactions recorded for this period.</p>
+                    <button type="button" @click="openAddTransactionModal()"
+                        class="mt-4 inline-flex items-center gap-1.5 px-3.5 py-1.5 bg-primary-600 text-white rounded-xl text-xs font-bold hover:bg-primary-700 transition-all shadow-xs">
+                        <i class="fas fa-plus text-[10px]"></i>
+                        <span>Record First Voucher</span>
+                    </button>
                 </div>
-            </template>
-            <template x-if="!selectedAccount">
-                <div class="flex-1 flex flex-col items-center justify-center p-12 text-center bg-slate-50/20">
-                    <div class="w-16 h-16 bg-white border border-slate-100 rounded-3xl flex items-center justify-center shadow-sm mb-6"><i class="fas fa-file-invoice text-xl text-slate-200"></i></div>
-                    <p class="text-xs text-slate-400 uppercase tracking-widest font-black">Select Party Identity</p>
-                </div>
-            </template>
+            </div>
         </div>
     </div>
 
-    <!-- PERFORMANCE OPTIMIZED LANDSCAPE MODALS -->
-    
-    <!-- 1. Voucher Entry Modal (LANDSCAPE DUAL-VIEW) -->
-    <div x-show="modals.addTransaction" class="fixed inset-0 z-[9999] flex items-center justify-center p-6 bg-slate-900/60" x-cloak x-transition>
-        <div @click="modals.addTransaction = false" class="absolute inset-0"></div>
-        <div class="relative w-full max-w-4xl bg-white rounded-[32px] shadow-2xl overflow-hidden flex flex-col animate__animated animate__zoomIn">
-            <!-- Modal Header -->
-            <div class="px-8 py-6 bg-slate-900 text-white flex items-center justify-between shrink-0">
-                <div class="flex items-center gap-4">
-                    <div class="w-10 h-10 rounded-xl bg-white/10 flex items-center justify-center">
-                        <i class="fas fa-file-invoice text-sm"></i>
-                    </div>
-                    <div>
-                        <h3 class="text-xl font-bold uppercase tracking-tight" x-text="editMode.transaction ? 'Revise Voucher' : 'New Voucher Entry'"></h3>
-                        <p class="text-[9px] font-bold text-slate-400 uppercase tracking-[0.2em] mt-0.5">Dual-View Gateway Configuration</p>
-                    </div>
-                </div>
-                <button @click="modals.addTransaction = false" class="w-10 h-10 rounded-xl bg-white/5 flex items-center justify-center hover:bg-white/10 hover:rotate-90 transition-all">
-                    <i class="fas fa-times text-sm"></i>
-                </button>
-            </div>
+    <!-- MODALS -->
 
-            <!-- Dual View Layout -->
-            <form @submit.prevent="saveTransaction()" class="flex flex-1 overflow-hidden h-[500px]">
-                <!-- Left Column: Primary Config -->
-                <div class="w-2/5 p-8 border-r border-slate-100 space-y-6 overflow-y-auto custom-scrollbar">
-                    <div class="space-y-2">
-                        <label class="text-[9px] font-black text-slate-400 uppercase ml-1">Party Identity</label>
-                        <select x-model="newTx.accountId" class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl font-bold text-sm outline-none focus:ring-4 focus:ring-primary-100 focus:border-primary-300 transition-all">
-                            <option value="">Select Ledger...</option>
-                            <template x-for="acc in accounts" :key="acc._id">
-                                <option :value="acc._id" x-text="acc.accountName + ' (' + (acc.contact?.name || 'Unknown') + ')'"></option>
-                            </template>
-                        </select>
-                    </div>
-
-                    <div class="space-y-3">
-                        <label class="text-[10px] font-black text-slate-400 uppercase ml-1">Voucher Nature</label>
-                        <div class="flex items-center bg-slate-100 p-1.5 rounded-2xl border border-slate-200">
-                            <button type="button" @click="newTx.transactionType = 'Debit'"
-                                :class="newTx.transactionType === 'Debit' ? 'bg-white text-emerald-600 shadow-md ring-1 ring-slate-200' : 'text-slate-400 hover:text-slate-600'"
-                                class="flex-1 py-3.5 text-[10px] font-bold uppercase rounded-xl transition-all">Debit (Dr.)</button>
-                            <button type="button" @click="newTx.transactionType = 'Credit'"
-                                :class="newTx.transactionType === 'Credit' ? 'bg-primary-600 text-white shadow-lg' : 'text-slate-400 hover:text-slate-600'"
-                                class="flex-1 py-3.5 text-[10px] font-bold uppercase rounded-xl transition-all">Credit (Cr.)</button>
+    <!-- 1. Voucher Entry Modal -->
+    <template x-teleport="body">
+        <div x-show="modals.addTransaction" 
+            class="fixed inset-0 z-[9999] overflow-y-auto p-3 sm:p-4 flex min-h-full items-center justify-center bg-slate-900/60 backdrop-blur-xs" 
+            x-cloak x-transition
+            @keydown.window.escape="modals.addTransaction = false">
+            <div @click="modals.addTransaction = false" class="fixed inset-0 bg-transparent"></div>
+            <div class="relative w-full max-w-md bg-white rounded-2xl shadow-2xl border border-slate-200 overflow-hidden flex flex-col max-h-[calc(100vh-2rem)] my-auto animate__animated animate__zoomIn animate__faster">
+                <!-- Modal Header -->
+                <div class="px-5 py-3.5 border-b border-slate-100 flex items-center justify-between bg-slate-50/70 shrink-0">
+                    <div class="flex items-center gap-2.5">
+                        <div class="w-8 h-8 rounded-xl bg-primary-100 text-primary-700 flex items-center justify-center text-xs font-bold">
+                            <i class="fas fa-receipt"></i>
+                        </div>
+                        <div>
+                            <h3 class="text-sm font-bold text-slate-900" x-text="editMode.transaction ? 'Edit Voucher' : 'New Voucher Entry'"></h3>
+                            <p class="text-[11px] text-slate-500">Record debit or credit transaction</p>
                         </div>
                     </div>
-
-                    <div class="space-y-3">
-                        <label class="text-[10px] font-black text-slate-400 uppercase ml-1">Principal Amount (₹)</label>
-                        <div class="relative">
-                            <span class="absolute left-6 top-1/2 -translate-y-1/2 text-slate-300 font-bold text-xl">₹</span>
-                            <input type="number" x-model="newTx.amount" placeholder="0.00" class="w-full pl-12 pr-6 py-5 bg-slate-50 border border-slate-200 rounded-2xl font-black text-4xl outline-none focus:bg-white text-slate-900 border-none">
-                        </div>
-                    </div>
-
-                    <!-- Live Summary Card -->
-                    <div x-show="newTx.amount > 0" class="p-6 bg-slate-900 rounded-2xl text-white space-y-3 transition-all">
-                        <p class="text-[9px] font-bold text-slate-500 uppercase tracking-widest">Computed Impact Assessment</p>
-                        <div class="flex items-center justify-between">
-                             <p class="text-sm font-bold opacity-80" x-text="newTx.transactionType === 'Debit' ? 'Settlement Outflow' : 'Receipt Inflow'"></p>
-                             <p class="text-2xl font-black" :class="newTx.transactionType === 'Debit' ? 'text-emerald-400' : 'text-primary-400'" x-text="'₹' + formatNumber(newTx.amount)"></p>
-                        </div>
-                    </div>
+                    <button type="button" @click="modals.addTransaction = false" class="w-7 h-7 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100 flex items-center justify-center transition-colors">
+                        <i class="fas fa-times text-xs"></i>
+                    </button>
                 </div>
 
-                <!-- Right Column: Secondary Details -->
-                <div class="w-3/5 p-8 flex flex-col justify-between bg-slate-50/20 overflow-y-auto custom-scrollbar">
-                    <div class="space-y-6">
-                        <div class="grid grid-cols-2 gap-6">
-                            <div class="space-y-2">
-                                <label class="text-[9px] font-black text-slate-400 uppercase ml-1">Classification Tag</label>
-                                <select x-model="newTx.tagId" class="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl font-bold text-xs outline-none focus:ring-4 focus:ring-primary-50 transition-all">
+                <!-- Form Body -->
+                <form @submit.prevent="saveTransaction()" class="flex flex-col flex-1 min-h-0">
+                    <div class="p-5 space-y-3.5 overflow-y-auto flex-1 custom-scrollbar">
+                        <!-- Party Account Combobox -->
+                        <div class="space-y-1 relative" @click.outside="txAccountDropdownOpen = false">
+                            <div class="flex items-center justify-between">
+                                <label class="text-xs font-bold text-slate-700">Party Account *</label>
+                                <span x-show="selectedTxAccount" class="text-[10px] font-bold px-1.5 py-0.2 rounded"
+                                    :class="selectedTxAccount?.accountType === 'Receivable' ? 'bg-emerald-50 text-emerald-700' : 'bg-primary-50 text-primary-700'"
+                                    x-text="selectedTxAccount?.accountType === 'Receivable' ? 'Receivable (Dr.)' : 'Payable (Cr.)'">
+                                </span>
+                            </div>
+                            
+                            <div class="relative">
+                                <input type="text"
+                                    x-model="txAccountSearch"
+                                    @focus="txAccountDropdownOpen = true"
+                                    @input="txAccountDropdownOpen = true; if (!txAccountSearch) newTx.accountId = ''"
+                                    placeholder="Type to search ledger or party..."
+                                    class="w-full pl-8 pr-7 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold focus:bg-white focus:ring-1 focus:ring-primary-500 focus:border-primary-500 outline-none transition-all">
+                                
+                                <i class="fas fa-search absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400 text-xs pointer-events-none"></i>
+                                
+                                <button type="button" x-show="newTx.accountId || txAccountSearch" 
+                                    @click="selectTxAccount(null)"
+                                    class="absolute right-2 top-1/2 -translate-y-1/2 w-5 h-5 rounded text-slate-400 hover:text-slate-600 flex items-center justify-center text-xs">
+                                    <i class="fas fa-times"></i>
+                                </button>
+                            </div>
+
+                            <!-- Dropdown List (Capped at 25 results) -->
+                            <div x-show="txAccountDropdownOpen" x-cloak
+                                class="absolute left-0 right-0 top-full mt-1 bg-white border border-slate-200 rounded-xl shadow-xl z-50 max-h-48 overflow-y-auto custom-scrollbar p-1">
+                                <template x-for="acc in filteredTxAccounts" :key="acc._id">
+                                    <div @click="selectTxAccount(acc)"
+                                        class="px-3 py-2 rounded-lg text-xs hover:bg-slate-50 cursor-pointer flex items-center justify-between transition-colors"
+                                        :class="newTx.accountId === acc._id ? 'bg-primary-50 text-primary-900 font-bold' : 'text-slate-700 font-medium'">
+                                        <div class="truncate">
+                                            <span x-text="acc.accountName"></span>
+                                            <span class="text-[10px] text-slate-400 block truncate" x-text="(acc.contact?.name || 'Party') + (acc.contact?.phone ? ' • ' + acc.contact.phone : '')"></span>
+                                        </div>
+                                        <span class="text-[10px] font-mono shrink-0 ml-2" :class="acc.totalBalance >= 0 ? 'text-slate-700' : 'text-rose-600'" x-text="'₹' + formatNumber(Math.abs(acc.totalBalance))"></span>
+                                    </div>
+                                </template>
+                                <div x-show="filteredTxAccounts.length === 0" class="py-3 text-center text-xs text-slate-400">
+                                    No matching accounts found
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Voucher Nature Toggle -->
+                        <div class="space-y-1">
+                            <label class="text-xs font-bold text-slate-700">Voucher Nature *</label>
+                            <div class="grid grid-cols-2 gap-2 bg-slate-100 p-1 rounded-xl border border-slate-200/80">
+                                <button type="button" @click="newTx.transactionType = 'Debit'"
+                                    :class="newTx.transactionType === 'Debit' ? 'bg-white text-emerald-700 shadow-sm font-bold border border-slate-200/80' : 'text-slate-600 hover:text-slate-900 font-medium'"
+                                    class="py-2 text-xs rounded-lg transition-all flex items-center justify-center gap-1.5">
+                                    <i class="fas fa-arrow-down text-[11px]"></i>
+                                    <span>Debit (Dr. / Payment)</span>
+                                </button>
+                                <button type="button" @click="newTx.transactionType = 'Credit'"
+                                    :class="newTx.transactionType === 'Credit' ? 'bg-white text-primary-700 shadow-sm font-bold border border-slate-200/80' : 'text-slate-600 hover:text-slate-900 font-medium'"
+                                    class="py-2 text-xs rounded-lg transition-all flex items-center justify-center gap-1.5">
+                                    <i class="fas fa-arrow-up text-[11px]"></i>
+                                    <span>Credit (Cr. / Charge)</span>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Amount Input -->
+                        <div class="space-y-1">
+                            <label class="text-xs font-bold text-slate-700">Amount (₹) *</label>
+                            <div class="relative">
+                                <span class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 font-bold text-sm">₹</span>
+                                <input type="number" step="any" x-model="newTx.amount" placeholder="0.00"
+                                    class="w-full pl-8 pr-3 py-2 bg-slate-50 border border-slate-200 rounded-xl font-mono font-bold text-sm text-slate-900 focus:bg-white focus:ring-1 focus:ring-primary-500 focus:border-primary-500 outline-none transition-all" required>
+                            </div>
+                        </div>
+
+                        <!-- 2 Column: Date & Classification Tag -->
+                        <div class="grid grid-cols-2 gap-3">
+                            <div class="space-y-1">
+                                <label class="text-xs font-bold text-slate-700">Posting Date</label>
+                                <input type="date" x-model="newTx.date" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-mono font-medium focus:bg-white focus:ring-1 focus:ring-primary-500 focus:border-primary-500 outline-none transition-all" required>
+                            </div>
+                            <div class="space-y-1">
+                                <label class="text-xs font-bold text-slate-700">Tag / Category</label>
+                                <select x-model="newTx.tagId" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium focus:bg-white focus:ring-1 focus:ring-primary-500 focus:border-primary-500 outline-none transition-all">
                                     <option value="">General Entry</option>
                                     <template x-for="tag in tags" :key="tag._id">
                                         <option :value="tag._id" x-text="tag.name"></option>
                                     </template>
                                 </select>
                             </div>
-                            <div class="space-y-3">
-                                <label class="text-[10px] font-black text-slate-400 uppercase ml-1">Posting Date</label>
-                                <input type="date" x-model="newTx.date" class="w-full px-5 py-4 bg-white border border-slate-200 rounded-2xl text-xs font-bold outline-none focus:ring-4 focus:ring-primary-50 transition-all">
-                            </div>
                         </div>
 
-                        <div class="space-y-3">
-                            <label class="text-[10px] font-black text-slate-400 uppercase ml-1">Master Narration (Required context)</label>
-                            <textarea x-model="newTx.description" placeholder="Provide detailed financial context for this entry..." class="w-full px-6 py-5 bg-white border border-slate-200 rounded-2xl text-sm font-medium h-36 resize-none outline-none focus:ring-4 focus:ring-primary-50 transition-all"></textarea>
+                        <!-- External Reference -->
+                        <div class="space-y-1">
+                            <label class="text-xs font-bold text-slate-700">Reference #</label>
+                            <input type="text" x-model="newTx.reference" placeholder="Invoice #, Bill #, or Receipt ID"
+                                class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-mono placeholder:font-sans focus:bg-white focus:ring-1 focus:ring-primary-500 focus:border-primary-500 outline-none transition-all">
                         </div>
-                        
-                        <div class="space-y-3">
-                            <label class="text-[10px] font-black text-slate-400 uppercase ml-1">External Reference</label>
-                            <input type="text" x-model="newTx.reference" placeholder="Invoice #, Receipt #, or System ID" class="w-full px-6 py-4 bg-white border border-slate-200 rounded-2xl text-xs font-bold outline-none focus:ring-4 focus:ring-primary-50 transition-all">
+
+                        <!-- Narration / Description -->
+                        <div class="space-y-1">
+                            <label class="text-xs font-bold text-slate-700">Narration / Notes</label>
+                            <textarea x-model="newTx.description" placeholder="Details or remarks for this entry..." rows="2"
+                                class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs focus:bg-white focus:ring-1 focus:ring-primary-500 focus:border-primary-500 outline-none transition-all resize-none"></textarea>
                         </div>
                     </div>
 
-                    <div class="pt-8 mt-auto border-t border-slate-100 flex items-center justify-end gap-6 text-right">
-                        <div class="mr-auto hidden sm:block">
-                             <p class="text-[8px] font-black text-slate-300 uppercase tracking-widest">Entry Verification Required</p>
+                    <!-- Footer Buttons -->
+                    <div class="px-5 py-3 border-t border-slate-100 flex items-center justify-end gap-2 bg-white shrink-0">
+                        <button type="button" @click="modals.addTransaction = false"
+                            class="px-4 py-2 text-xs font-semibold text-slate-600 hover:text-slate-800 hover:bg-slate-100 rounded-xl transition-colors">
+                            Cancel
+                        </button>
+                        <button type="submit" :disabled="!isTxValid || loading"
+                            :class="isTxValid && !loading ? 'bg-primary-600 hover:bg-primary-700 text-white shadow-md shadow-primary-200 cursor-pointer active:scale-95' : 'bg-slate-100 text-slate-400 border border-slate-200 cursor-not-allowed'"
+                            class="px-5 py-2 rounded-xl text-xs font-bold transition-all">
+                            <span x-text="loading ? 'Saving...' : (editMode.transaction ? 'Save Changes' : 'Post Voucher')"></span>
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </template>
+
+    <!-- 2. Ledger Master Modal (Add / Edit Account) -->
+    <template x-teleport="body">
+        <div x-show="modals.addAccount" 
+            class="fixed inset-0 z-[9999] overflow-y-auto p-3 sm:p-4 flex min-h-full items-center justify-center bg-slate-900/60 backdrop-blur-xs" 
+            x-cloak x-transition
+            @keydown.window.escape="modals.addAccount = false">
+            <div @click="modals.addAccount = false" class="fixed inset-0 bg-transparent"></div>
+            <div class="relative w-full max-w-md bg-white rounded-2xl shadow-2xl border border-slate-200 overflow-hidden flex flex-col max-h-[calc(100vh-2rem)] my-auto animate__animated animate__zoomIn animate__faster">
+                <!-- Modal Header -->
+                <div class="px-5 py-3.5 border-b border-slate-100 flex items-center justify-between bg-slate-50/70 shrink-0">
+                    <div class="flex items-center gap-2.5">
+                        <div class="w-8 h-8 rounded-xl bg-primary-100 text-primary-700 flex items-center justify-center text-xs font-bold">
+                            <i class="fas fa-book-medical"></i>
                         </div>
-                        <button type="button" @click="modals.addTransaction = false" class="text-[10px] font-black uppercase text-slate-400 hover:text-slate-900 transition-colors tracking-widest">Discard</button>
-                        <button type="submit" :disabled="!isTxValid || loading" 
-                            class="px-10 py-4 bg-primary-600 text-white rounded-xl font-black text-[10px] uppercase tracking-[0.2em] hover:bg-primary-700 shadow-xl shadow-primary-200 transition-all disabled:opacity-50 active:scale-[0.98]">
-                            <span x-text="loading ? 'Processing...' : (editMode.transaction ? 'Commit' : 'Post Voucher')"></span>
+                        <div>
+                            <h3 class="text-sm font-bold text-slate-900" x-text="editMode.account ? 'Edit Account' : 'New Account'"></h3>
+                            <p class="text-[11px] text-slate-500">Party ledger for double-entry records</p>
+                        </div>
+                    </div>
+                    <button type="button" @click="modals.addAccount = false" class="w-7 h-7 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100 flex items-center justify-center transition-colors">
+                        <i class="fas fa-times text-xs"></i>
+                    </button>
+                </div>
+
+                <form @submit.prevent="editMode.account ? updateAccountSettings() : createAccount()" class="flex flex-col flex-1 min-h-0">
+                    <div class="p-5 space-y-4 overflow-y-auto flex-1 custom-scrollbar">
+                        <!-- Party Contact Combobox with live debounced search -->
+                        <div class="space-y-1 relative" @click.outside="accountContactDropdownOpen = false">
+                            <div class="flex items-center justify-between">
+                                <label class="text-xs font-bold text-slate-700">Party Contact *</label>
+                                <span x-show="isSearchingContacts" class="text-[10px] text-primary-600 font-semibold flex items-center gap-1">
+                                    <i class="fas fa-spinner fa-spin text-[9px]"></i> Searching...
+                                </span>
+                            </div>
+
+                            <div class="relative">
+                                <input type="text"
+                                    x-model="accountContactSearch"
+                                    @focus="accountContactDropdownOpen = true; searchAccountContacts()"
+                                    @input.debounce.250ms="accountContactDropdownOpen = true; searchAccountContacts()"
+                                    placeholder="Type contact name, phone, or company..."
+                                    class="w-full pl-8 pr-7 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold focus:bg-white focus:ring-1 focus:ring-primary-500 focus:border-primary-500 outline-none transition-all">
+
+                                <i class="fas fa-user absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400 text-xs pointer-events-none"></i>
+
+                                <button type="button" x-show="newAccount.contactId || accountContactSearch" 
+                                    @click="selectAccountContact(null)"
+                                    class="absolute right-2 top-1/2 -translate-y-1/2 w-5 h-5 rounded text-slate-400 hover:text-slate-600 flex items-center justify-center text-xs">
+                                    <i class="fas fa-times"></i>
+                                </button>
+                            </div>
+
+                            <!-- Dropdown List -->
+                            <div x-show="accountContactDropdownOpen" x-cloak
+                                class="absolute left-0 right-0 top-full mt-1 bg-white border border-slate-200 rounded-xl shadow-xl z-50 max-h-48 overflow-y-auto custom-scrollbar p-1">
+                                <template x-for="c in contactSearchResults" :key="c._id">
+                                    <div @click="selectAccountContact(c)"
+                                        class="px-3 py-2 rounded-lg text-xs hover:bg-slate-50 cursor-pointer flex items-center justify-between transition-colors"
+                                        :class="newAccount.contactId === c._id ? 'bg-primary-50 text-primary-900 font-bold' : 'text-slate-700 font-medium'">
+                                        <div class="truncate">
+                                            <span x-text="c.name"></span>
+                                            <span class="text-[10px] text-slate-400 block truncate" x-text="(c.companyName ? c.companyName + ' • ' : '') + (c.phone || c.contactType || '')"></span>
+                                        </div>
+                                        <span class="text-[10px] uppercase font-bold px-1.5 py-0.2 rounded text-slate-500 bg-slate-100 shrink-0 ml-2" x-text="c.contactType || 'Party'"></span>
+                                    </div>
+                                </template>
+                                <div x-show="contactSearchResults.length === 0 && !isSearchingContacts" class="py-3 text-center text-xs text-slate-400">
+                                    No contacts found
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="space-y-1">
+                            <label class="text-xs font-bold text-slate-700">Account Nature *</label>
+                            <select x-model="newAccount.accountType" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold focus:bg-white focus:ring-1 focus:ring-primary-500 focus:border-primary-500 outline-none transition-all">
+                                <option value="Receivable">Receivable Ledger (Debtor / Dr.)</option>
+                                <option value="Payable">Payable Ledger (Creditor / Cr.)</option>
+                            </select>
+                        </div>
+
+                        <div class="space-y-1">
+                            <label class="text-xs font-bold text-slate-700">Account Name / Alias *</label>
+                            <input type="text" x-model="newAccount.accountName" placeholder="e.g. John Doe's Service Ledger"
+                                class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold focus:bg-white focus:ring-1 focus:ring-primary-500 focus:border-primary-500 outline-none transition-all" required>
+                        </div>
+                    </div>
+
+                    <div class="px-5 py-3 border-t border-slate-100 flex items-center justify-end gap-2 bg-white shrink-0">
+                        <button type="button" @click="modals.addAccount = false"
+                            class="px-4 py-2 text-xs font-semibold text-slate-600 hover:text-slate-800 hover:bg-slate-100 rounded-xl transition-colors">
+                            Cancel
+                        </button>
+                        <button type="submit" :disabled="loading"
+                            class="px-5 py-2 bg-primary-600 text-white rounded-xl text-xs font-bold hover:bg-primary-700 shadow-md shadow-primary-200 transition-all disabled:opacity-50 active:scale-95">
+                            <span x-text="loading ? 'Saving...' : (editMode.account ? 'Save Changes' : 'Create Ledger')"></span>
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </template>
+
+    <!-- 3. Classification Tags Modal -->
+    <template x-teleport="body">
+        <div x-show="modals.manageTags" 
+            class="fixed inset-0 z-[9999] overflow-y-auto p-3 sm:p-4 flex min-h-full items-center justify-center bg-slate-900/60 backdrop-blur-xs" 
+            x-cloak x-transition
+            @keydown.window.escape="modals.manageTags = false">
+            <div @click="modals.manageTags = false" class="fixed inset-0 bg-transparent"></div>
+            <div class="relative w-full max-w-md bg-white rounded-2xl shadow-2xl border border-slate-200 overflow-hidden flex flex-col max-h-[calc(100vh-2rem)] my-auto animate__animated animate__zoomIn animate__faster">
+                <!-- Modal Header -->
+                <div class="px-5 py-3.5 border-b border-slate-100 flex items-center justify-between bg-slate-50/70 shrink-0">
+                    <div class="flex items-center gap-2.5">
+                        <div class="w-8 h-8 rounded-xl bg-primary-100 text-primary-700 flex items-center justify-center text-xs font-bold">
+                            <i class="fas fa-tags"></i>
+                        </div>
+                        <div>
+                            <h3 class="text-sm font-bold text-slate-900">Classification Tags</h3>
+                            <p class="text-[11px] text-slate-500">Categories for voucher entries</p>
+                        </div>
+                    </div>
+                    <button type="button" @click="modals.manageTags = false" class="w-7 h-7 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100 flex items-center justify-center transition-colors">
+                        <i class="fas fa-times text-xs"></i>
+                    </button>
+                </div>
+
+                <div class="flex flex-col flex-1 min-h-0">
+                    <div class="p-5 space-y-4 overflow-y-auto flex-1 custom-scrollbar">
+                        <!-- Add New Tag Form -->
+                        <form @submit.prevent="createTag()" class="space-y-2 bg-slate-50 p-3 rounded-xl border border-slate-200/80">
+                            <label class="text-xs font-bold text-slate-700 block">Add Category</label>
+                            <div class="flex items-center gap-2">
+                                <input type="text" x-model="newTag.name" placeholder="Tag label..."
+                                    class="flex-1 px-3 py-1.5 bg-white border border-slate-200 rounded-lg text-xs outline-none focus:ring-1 focus:ring-primary-500 focus:border-primary-500" required>
+                                <input type="color" x-model="newTag.color" class="w-8 h-8 p-0 border border-slate-200 rounded-lg cursor-pointer bg-white shrink-0">
+                                <button type="submit"
+                                    class="px-3 py-1.5 bg-primary-600 text-white rounded-lg text-xs font-bold hover:bg-primary-700 shadow-xs transition-colors shrink-0">
+                                    Add
+                                </button>
+                            </div>
+                        </form>
+
+                        <!-- Active Tags List -->
+                        <div class="space-y-1.5 max-h-52 overflow-y-auto custom-scrollbar">
+                            <label class="text-xs font-bold text-slate-700 block">Active Tags (<span x-text="tags.length"></span>)</label>
+                            <template x-for="tag in tags" :key="tag._id">
+                                <div class="flex items-center justify-between p-2.5 bg-white rounded-xl border border-slate-200/70 hover:border-slate-300 transition-colors group">
+                                    <div class="flex items-center gap-2">
+                                        <span class="w-2.5 h-2.5 rounded-full shrink-0" :style="`background-color: ${tag.color}`"></span>
+                                        <span class="text-xs font-semibold text-slate-800" x-text="tag.name"></span>
+                                    </div>
+                                    <button type="button" @click="deleteTag(tag._id)"
+                                        class="p-1 text-slate-300 hover:text-rose-600 rounded transition-colors opacity-0 group-hover:opacity-100"
+                                        title="Delete tag">
+                                        <i class="fas fa-trash-alt text-xs"></i>
+                                    </button>
+                                </div>
+                            </template>
+                            <div x-show="tags.length === 0" class="py-4 text-center text-slate-400 text-xs">
+                                No custom tags created yet.
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="px-5 py-3 border-t border-slate-100 flex items-center justify-end bg-white shrink-0">
+                        <button type="button" @click="modals.manageTags = false"
+                            class="px-4 py-2 text-xs font-bold text-slate-700 bg-slate-100 hover:bg-slate-200 rounded-xl transition-colors">
+                            Done
                         </button>
                     </div>
                 </div>
-            </form>
-        </div>
-    </div>
-
-    <!-- 2. Ledger Master (LANDSCAPE) -->
-    <div x-show="modals.addAccount" class="fixed inset-0 z-[9999] flex items-center justify-center p-6 bg-slate-900/60" x-cloak x-transition>
-        <div @click="modals.addAccount = false" class="absolute inset-0"></div>
-        <div class="relative w-full max-w-3xl bg-white rounded-[32px] shadow-2xl overflow-hidden flex animate__animated animate__zoomIn">
-            <div class="w-2/5 bg-slate-900 p-10 flex flex-col justify-between text-white">
-                <div>
-                     <div class="w-12 h-12 bg-white/10 rounded-2xl flex items-center justify-center mb-6">
-                        <i class="fas fa-address-card text-xl"></i>
-                    </div>
-                    <h2 class="text-2xl font-bold tracking-tight leading-tight" x-text="editMode.account ? 'Revise Master' : 'New Ledger'"></h2>
-                    <p class="text-[9px] text-slate-400 mt-4 leading-relaxed uppercase tracking-widest font-black">Finance Terminal</p>
-                </div>
-                <div class="space-y-4">
-                    <p class="text-[8px] font-black uppercase tracking-[0.4em] opacity-30">ASTR CORE v2</p>
-                </div>
-            </div>
-            <form @submit.prevent="editMode.account ? updateAccountSettings() : createAccount()" class="w-3/5 p-10 space-y-8">
-                <div class="space-y-2">
-                    <label class="text-[9px] font-black text-slate-400 uppercase ml-1">Identity Selection</label>
-                    <select x-model="newAccount.contactId" class="w-full px-5 py-4 bg-slate-50 border border-slate-200 rounded-xl font-bold text-sm outline-none focus:ring-4 focus:ring-primary-100 transition-all" required>
-                        <option value="">Select Contact...</option>
-                        <template x-for="c in contacts" :key="c._id">
-                            <option :value="c._id" x-text="c.name"></option>
-                        </template>
-                    </select>
-                </div>
-                <div class="grid grid-cols-2 gap-8">
-                    <div class="space-y-3">
-                        <label class="text-[10px] font-black text-slate-400 uppercase ml-1">Account Nature</label>
-                        <select x-model="newAccount.accountType" class="w-full px-6 py-5 bg-slate-50 border border-slate-200 rounded-2xl font-bold text-xs outline-none focus:ring-4 focus:ring-primary-100">
-                            <option value="Payable">Payable Ledger (Cr.)</option>
-                            <option value="Receivable">Receivable Ledger (Dr.)</option>
-                        </select>
-                    </div>
-                    <div class="space-y-3">
-                        <label class="text-[10px] font-black text-slate-400 uppercase ml-1">Alias / Identifier</label>
-                        <input type="text" x-model="newAccount.accountName" placeholder="Ledger Display Name" class="w-full px-6 py-5 bg-slate-50 border border-slate-200 rounded-2xl font-bold text-xs outline-none focus:bg-white transition-all">
-                    </div>
-                </div>
-                <div class="pt-8 flex justify-end gap-6 items-center border-t border-slate-50 font-black">
-                     <button type="button" @click="modals.addAccount = false" class="text-[10px] text-slate-400 uppercase tracking-widest">Discard</button>
-                     <button type="submit" class="px-10 py-4 bg-primary-600 text-white rounded-xl text-[10px] uppercase tracking-[0.2em] hover:bg-primary-700 shadow-xl shadow-primary-200 transition-all active:scale-95">
-                        <span x-text="editMode.account ? 'Save' : 'Initialize'"></span>
-                    </button>
-                </div>
-            </form>
-        </div>
-    </div>
-
-    <!-- 3. Classification Hub (LANDSCAPE) -->
-    <div x-show="modals.manageTags" class="fixed inset-0 z-[9999] flex items-center justify-center p-6 bg-slate-900/60" x-cloak x-transition>
-        <div @click="modals.manageTags = false" class="absolute inset-0"></div>
-        <div class="relative w-full max-w-3xl bg-white rounded-[32px] shadow-2xl overflow-hidden flex flex-col animate__animated animate__zoomIn">
-            <div class="px-8 py-6 bg-slate-900 text-white flex items-center justify-between shrink-0">
-                <div class="flex items-center gap-4">
-                    <div class="w-10 h-10 rounded-xl bg-white/10 flex items-center justify-center font-black">
-                        <i class="fas fa-tags text-sm font-black"></i>
-                    </div>
-                    <div>
-                        <h3 class="text-lg font-bold uppercase tracking-tight">Classifications</h3>
-                    </div>
-                </div>
-                <button @click="modals.manageTags = false" class="w-10 h-10 rounded-xl bg-white/5 flex items-center justify-center hover:bg-white/10 transition-all">
-                    <i class="fas fa-times text-sm"></i>
-                </button>
-            </div>
-            
-            <div class="flex h-[400px]">
-                <div class="w-2/5 p-8 border-r border-slate-50 bg-slate-50/30 space-y-6">
-                     <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1">New category</p>
-                     <form @submit.prevent="createTag()" class="space-y-5">
-                        <div class="space-y-2">
-                            <input type="text" x-model="newTag.name" placeholder="Name" class="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl font-bold text-xs outline-none focus:ring-4 focus:ring-primary-100" required>
-                        </div>
-                        <div class="space-y-2">
-                             <div class="flex items-center gap-3 bg-white p-2 border border-slate-200 rounded-xl">
-                                 <input type="color" x-model="newTag.color" class="w-full h-10 rounded-lg cursor-pointer">
-                             </div>
-                        </div>
-                        <button type="submit" class="w-full py-4 bg-primary-600 text-white rounded-xl font-black text-[10px] uppercase tracking-widest hover:bg-primary-700 shadow-xl shadow-primary-100 transition-all">Add</button>
-                    </form>
-                </div>
-                <div class="w-3/5 p-8 overflow-y-auto custom-scrollbar space-y-3">
-                     <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1">Active Masters</p>
-                     <template x-for="tag in tags" :key="tag._id">
-                        <div class="flex items-center justify-between p-4 bg-slate-50 rounded-xl border border-slate-100 group">
-                            <div class="flex items-center gap-3">
-                                <div class="w-3 h-3 rounded-full" :style="`background-color: ${tag.color}`"></div>
-                                <span class="text-[10px] font-black text-slate-700 uppercase" x-text="tag.name"></span>
-                            </div>
-                            <button @click="deleteTag(tag._id)" class="text-slate-200 hover:text-rose-500 opacity-0 group-hover:opacity-100 p-1"><i class="fas fa-trash-alt text-[10px]"></i></button>
-                        </div>
-                    </template>
-                </div>
             </div>
         </div>
-    </div>
+    </template>
 </div>

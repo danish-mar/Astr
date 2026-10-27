@@ -2,13 +2,11 @@ import { Request, Response } from "express";
 import Product from "../models/Product";
 import ServiceTicket from "../models/ServiceTicket";
 import Lead from "../models/Lead";
+import Contact from "../models/Contact";
 import { handleError, sendSuccess } from "../utils";
-
-// ... previous getDashboardStats remains same ...
 
 export const getDashboardStats = async (req: Request, res: Response) => {
     try {
-        // ... (existing code) ...
         const totalProducts = await Product.countDocuments();
         const availableProducts = await Product.countDocuments({ isSold: false });
         const soldProducts = await Product.countDocuments({ isSold: true });
@@ -16,6 +14,21 @@ export const getDashboardStats = async (req: Request, res: Response) => {
         const totalTickets = await ServiceTicket.countDocuments();
         const pendingTickets = await ServiceTicket.countDocuments({ status: "Pending" });
         const completedTickets = await ServiceTicket.countDocuments({ status: "Completed" });
+        const activeTickets = await ServiceTicket.countDocuments({
+            status: { $nin: ["Completed", "Delivered", "Cancelled"] },
+        });
+
+        const totalContacts = await Contact.countDocuments();
+
+        const rangeQuery = req.query.range as string;
+        const rangeDays = rangeQuery === "30d" || rangeQuery === "30" ? 30 : 7;
+
+        const today = new Date();
+        today.setHours(23, 59, 59, 999);
+
+        const startDate = new Date();
+        startDate.setDate(startDate.getDate() - (rangeDays - 1));
+        startDate.setHours(0, 0, 0, 0);
 
         const sevenDaysAgo = new Date();
         sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
@@ -72,21 +85,76 @@ export const getDashboardStats = async (req: Request, res: Response) => {
             },
         ]);
 
-        const revenueOverTime = await ServiceTicket.aggregate([
+        const serviceTrend = await ServiceTicket.aggregate([
             {
                 $match: {
                     status: { $in: ["Completed", "Delivered"] },
-                    updatedAt: { $gte: sevenDaysAgo },
+                    updatedAt: { $gte: startDate, $lte: today },
                 },
             },
             {
                 $group: {
                     _id: { $dateToString: { format: "%Y-%m-%d", date: "$updatedAt" } },
                     total: { $sum: "$serviceCharge" },
+                    count: { $sum: 1 },
                 },
             },
-            { $sort: { _id: 1 } },
         ]);
+
+        const productTrend = await Product.aggregate([
+            {
+                $match: {
+                    isSold: true,
+                    updatedAt: { $gte: startDate, $lte: today },
+                },
+            },
+            {
+                $group: {
+                    _id: { $dateToString: { format: "%Y-%m-%d", date: "$updatedAt" } },
+                    total: { $sum: "$price" },
+                    count: { $sum: 1 },
+                },
+            },
+        ]);
+
+        const serviceMap = new Map<string, number>();
+        serviceTrend.forEach((item) => serviceMap.set(item._id, item.total || 0));
+
+        const productMap = new Map<string, number>();
+        productTrend.forEach((item) => productMap.set(item._id, item.total || 0));
+
+        const revenueTrend = [];
+        let periodTotal = 0;
+        let highestDay = { date: "", label: "", total: 0 };
+
+        for (let i = 0; i < rangeDays; i++) {
+            const curDate = new Date(startDate);
+            curDate.setDate(curDate.getDate() + i);
+            const dateStr = curDate.toISOString().split("T")[0];
+            const services = serviceMap.get(dateStr) || 0;
+            const products = productMap.get(dateStr) || 0;
+            const total = services + products;
+            periodTotal += total;
+
+            const label = curDate.toLocaleDateString("en-US", { month: "short", day: "numeric" });
+            const dayName = curDate.toLocaleDateString("en-US", { weekday: "short" });
+
+            if (total > highestDay.total) {
+                highestDay = { date: dateStr, label, total };
+            }
+
+            revenueTrend.push({
+                _id: dateStr,
+                date: dateStr,
+                label,
+                dayName,
+                services,
+                products,
+                total,
+            });
+        }
+
+        const dailyAverage = Math.round(periodTotal / rangeDays);
 
         const totalLeads = await Lead.countDocuments();
         const wonLeads = await Lead.countDocuments({ status: "Closed Won" });
@@ -95,8 +163,9 @@ export const getDashboardStats = async (req: Request, res: Response) => {
         return sendSuccess(res, {
             stats: {
                 products: { total: totalProducts, available: availableProducts, sold: soldProducts },
-                tickets: { total: totalTickets, pending: pendingTickets, completed: completedTickets },
+                tickets: { total: totalTickets, pending: pendingTickets, completed: completedTickets, active: activeTickets },
                 leads: { total: totalLeads, won: wonLeads, conversionRatio: leadConversionRatio.toFixed(2) },
+                contacts: totalContacts,
                 revenue,
                 productRevenue,
                 serviceRevenue,
@@ -105,7 +174,13 @@ export const getDashboardStats = async (req: Request, res: Response) => {
             recentTickets,
             charts: {
                 ticketStatus: ticketStatusCounts,
-                revenueTrend: revenueOverTime,
+                revenueTrend,
+                trendSummary: {
+                    total: periodTotal,
+                    dailyAverage,
+                    highestDay,
+                    rangeDays,
+                },
             },
         }, "Dashboard stats fetched successfully");
     } catch (error) {

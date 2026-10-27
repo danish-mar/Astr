@@ -81,6 +81,8 @@ export const getAllServiceTickets = async (req: Request, res: Response) => {
       customer,
       technician,
       search,
+      custody,
+      outcome,
       page = 1,
       limit = 10,
     } = req.query;
@@ -90,6 +92,16 @@ export const getAllServiceTickets = async (req: Request, res: Response) => {
     // Filter by status
     if (status && status !== "All") {
       filter.status = status;
+    }
+
+    // Filter by custody location
+    if (custody && custody !== "All") {
+      filter["outsourcedRepair.custodyLocation"] = custody;
+    }
+
+    // Filter by partner repair outcome
+    if (outcome && outcome !== "All") {
+      filter["outsourcedRepair.repairOutcome"] = outcome;
     }
 
     // Filter by customer
@@ -108,6 +120,8 @@ export const getAllServiceTickets = async (req: Request, res: Response) => {
       filter.$or = [
         { ticketNumber: { $regex: searchStr, $options: "i" } },
         { deviceDetails: { $regex: search, $options: "i" } },
+        { "outsourcedRepair.partnerShopName": { $regex: search, $options: "i" } },
+        { "outsourcedRepair.externalJobNumber": { $regex: search, $options: "i" } },
       ];
     }
 
@@ -265,6 +279,7 @@ export const updateServiceTicket = async (req: Request, res: Response) => {
       serviceCharge,
       notes,
       logEntry,
+      outsourcedRepair,
     } = req.body;
 
     if (!isValidObjectId(id)) {
@@ -291,6 +306,77 @@ export const updateServiceTicket = async (req: Request, res: Response) => {
       ticket.assignedTechnician = assignedTechnician;
     if (serviceCharge !== undefined) ticket.serviceCharge = serviceCharge;
     if (notes !== undefined) ticket.notes = notes;
+
+    // Handle Outsourced / Partner Repair tracking
+    if (outsourcedRepair !== undefined) {
+      const prevCustody = ticket.outsourcedRepair?.custodyLocation || "In-House";
+      const prevOutcome = ticket.outsourcedRepair?.repairOutcome || "Pending";
+      const wasOutsourced = ticket.outsourcedRepair?.isOutsourced || false;
+
+      ticket.outsourcedRepair = {
+        isOutsourced: Boolean(outsourcedRepair.isOutsourced),
+        partnerShopName: (outsourcedRepair.partnerShopName || "").trim(),
+        partnerContact: (outsourcedRepair.partnerContact || "").trim(),
+        externalJobNumber: (outsourcedRepair.externalJobNumber || "").trim(),
+        sentDate: outsourcedRepair.sentDate ? new Date(outsourcedRepair.sentDate) : (ticket.outsourcedRepair?.sentDate || (outsourcedRepair.isOutsourced ? new Date() : undefined)),
+        expectedReturnDate: outsourcedRepair.expectedReturnDate ? new Date(outsourcedRepair.expectedReturnDate) : undefined,
+        receivedDate: outsourcedRepair.receivedDate ? new Date(outsourcedRepair.receivedDate) : undefined,
+        vendorCost: Number(outsourcedRepair.vendorCost || 0),
+        custodyLocation: outsourcedRepair.custodyLocation || "In-House",
+        repairOutcome: outsourcedRepair.repairOutcome || "Pending",
+        notes: (outsourcedRepair.notes || "").trim(),
+      };
+
+      // Auto-append timeline logs
+      if (!wasOutsourced && ticket.outsourcedRepair.isOutsourced) {
+        ticket.logs.push({
+          status: ticket.status,
+          label: `Outsourced to partner: ${ticket.outsourcedRepair.partnerShopName || "External Workshop"}`,
+          note: ticket.outsourcedRepair.externalJobNumber ? `Partner Job #${ticket.outsourcedRepair.externalJobNumber}` : undefined,
+          timestamp: new Date(),
+        });
+      } else if (ticket.outsourcedRepair.isOutsourced) {
+        if (prevCustody !== ticket.outsourcedRepair.custodyLocation) {
+          if (ticket.outsourcedRepair.custodyLocation === "At Partner Shop") {
+            ticket.logs.push({
+              status: ticket.status,
+              label: `Dispatched to partner shop: ${ticket.outsourcedRepair.partnerShopName || "External Workshop"}`,
+              note: ticket.outsourcedRepair.externalJobNumber ? `Ref #${ticket.outsourcedRepair.externalJobNumber}` : undefined,
+              timestamp: new Date(),
+            });
+          } else if (ticket.outsourcedRepair.custodyLocation === "Received Back") {
+            ticket.logs.push({
+              status: ticket.status,
+              label: `Device received back from partner shop`,
+              note: `Outcome: ${ticket.outsourcedRepair.repairOutcome || "Pending"}`,
+              timestamp: new Date(),
+            });
+          } else if (ticket.outsourcedRepair.custodyLocation === "In-House") {
+            ticket.logs.push({
+              status: ticket.status,
+              label: `Custody returned to In-House workshop`,
+              timestamp: new Date(),
+            });
+          }
+        }
+
+        if (ticket.outsourcedRepair.repairOutcome && prevOutcome !== ticket.outsourcedRepair.repairOutcome && ticket.outsourcedRepair.repairOutcome !== "Pending") {
+          const outcomeMap: Record<string, string> = {
+            "Repaired": "Partner diagnostic: Repaired successfully",
+            "Not Repaired": "Partner returned: Not Repaired",
+            "Cant Repair": "Partner diagnostic: Can't Repair (Unfixable / Dead)",
+            "In Progress": "Partner update: Diagnostic / Repair In Progress",
+          };
+          const outcomeKey = ticket.outsourcedRepair.repairOutcome;
+          ticket.logs.push({
+            status: ticket.status,
+            label: outcomeMap[outcomeKey] || `Partner outcome: ${outcomeKey}`,
+            note: ticket.outsourcedRepair.notes || undefined,
+            timestamp: new Date(),
+          });
+        }
+      }
+    }
 
     await ticket.save();
 

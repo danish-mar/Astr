@@ -13,6 +13,9 @@ router.get("/accounts", authenticate, requirePermission("accounting:read"), acco
 // Ledger for a Specific Account
 router.get("/ledger/:accountId", authenticate, requirePermission("accounting:read"), accountingController.getAccountLedger);
 
+// General Ledger (All Transactions across all accounts)
+router.get("/transactions", authenticate, requirePermission("accounting:read"), accountingController.getAllTransactions);
+
 // Process a Transaction
 router.post("/transaction", authenticate, requirePermission("accounting:write"), accountingController.createTransaction);
 router.put("/transaction/:transactionId", authenticate, requirePermission("accounting:write"), accountingController.updateTransaction);

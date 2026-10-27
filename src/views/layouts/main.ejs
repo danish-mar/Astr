@@ -12,10 +12,10 @@
   <link rel="icon" type="image/svg+xml"
     href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 576 512'><path fill='%23007aff' d='M259.3 17.8L194 150.2 47.9 171.5c-26.2 3.8-36.7 36.1-17.7 54.6l105.7 103-25 145.5c-4.5 26.3 23.2 46 46.4 33.7L288 439.6l130.7 68.7c23.2 12.2 50.9-7.4 46.4-33.7l-25-145.5 105.7-103c19-18.5 8.5-50.8-17.7-54.6L382 150.2 316.7 17.8c-11.7-23.6-45.6-23.9-57.4 0z'/></svg>">
 
-  <!-- Google Fonts: Outfit -->
+  <!-- Google Fonts: Inter (UI), JetBrains Mono (Data/Code), Outfit (Brand) -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&family=Outfit:wght@500;600;700;800&display=swap" rel="stylesheet">
 
   <!-- Tailwind CSS -->
   <script src="https://cdn.tailwindcss.com"></script>
@@ -45,30 +45,46 @@
       theme: {
         extend: {
           fontFamily: {
-            sans: ['Outfit', 'Inter', 'sans-serif'],
+            sans: ['Inter', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'sans-serif'],
+            mono: ['JetBrains Mono', 'ui-monospace', 'monospace'],
+            display: ['Outfit', 'Inter', 'sans-serif'],
           },
           colors: {
             primary: {
-              50: "#f5f3ff",
-              100: "#ede9fe",
-              200: "#ddd6fe",
-              300: "#c4b5fd",
-              400: "#a78bfa",
-              500: "#7c3aed", // Vibrant Purple
-              600: "#6d28d9", // Deep Purple
-              700: "#5b21b6",
-              800: "#4c1d95",
-              900: "#2e1065",
+              50: "#faf5ff",
+              100: "#f3e8ff",
+              200: "#e9d5ff",
+              300: "#d8b4fe",
+              400: "#c084fc",
+              500: "#8b5cf6", // Vibrant Iris
+              600: "#7c3aed", // Signature Enterprise Purple
+              700: "#6d28d9", // Deep Royal Violet
+              800: "#5b21b6",
+              900: "#4c1d95",
+            },
+            lavender: {
+              50: "#faf8ff",
+              100: "#f5f0fe",
+              200: "#ede4fe",
+              300: "#dccefd",
+              400: "#c2abfc",
+              500: "#a583f9",
+              600: "#895df4",
+              700: "#713eed",
+              800: "#5a2bbe",
+              900: "#3d1889",
             },
             surface: {
               white: "#FFFFFF",
-              soft: "#F9F8FF",
-              muted: "#F3F0FF",
+              soft: "#F8FAFC",
+              muted: "#F1F5F9",
             }
           },
           boxShadow: {
-            'purple': '0 10px 30px -10px rgba(109, 40, 217, 0.1)',
-            'glass': '0 8px 32px 0 rgba(109, 40, 217, 0.05)',
+            'erp': '0 1px 3px 0 rgba(0, 0, 0, 0.05), 0 1px 2px -1px rgba(0, 0, 0, 0.05)',
+            'erp-md': '0 4px 6px -1px rgba(0, 0, 0, 0.06), 0 2px 4px -2px rgba(0, 0, 0, 0.06)',
+            'lavender': '0 4px 20px -2px rgba(124, 58, 237, 0.18)',
+            'glass': '0 8px 32px 0 rgba(15, 23, 42, 0.04)',
           },
           animation: {
             "slide-up": "slideUp 0.4s cubic-bezier(0.16, 1, 0.3, 1)",
@@ -214,40 +230,42 @@
       :class="isSidebarCollapsed ? 'w-20' : 'w-64'">
 
       <!-- Sidebar Header -->
-      <div class="py-8 border-b border-slate-100/50 transition-all duration-300"
-        :class="isSidebarCollapsed ? 'px-4' : 'px-6'">
+      <div class="py-4 border-b border-slate-100 transition-all duration-300"
+        :class="isSidebarCollapsed ? 'px-4' : 'px-5'">
         <div class="flex items-center gap-3 cursor-pointer" @click="toggleSidebar()">
           <div
-            class="w-10 h-10 rounded-lg bg-primary-600 flex items-center justify-center text-white shadow-sm flex-shrink-0">
-            <i class="fas fa-shop text-sm"></i>
+            class="w-8 h-8 rounded-lg bg-gradient-to-tr from-primary-700 to-primary-600 flex items-center justify-center text-white shadow-sm flex-shrink-0">
+            <i class="fas fa-boxes-stacked text-xs"></i>
           </div>
           <div class="flex flex-col transition-all duration-300 overflow-hidden"
             :class="isSidebarCollapsed ? 'w-0 opacity-0' : 'w-auto opacity-100'">
-            <span class="text-xl font-bold tracking-tight text-slate-900 leading-none whitespace-nowrap">Astr</span>
-            <span class="text-[9px] font-bold text-primary-500 uppercase tracking-widest mt-1 whitespace-nowrap">Shop Manager v<%= version %></span>
+            <div class="flex items-center gap-1.5 leading-none">
+              <span class="text-base font-black tracking-tight text-slate-900 whitespace-nowrap">Astr</span>
+              <span class="px-1.5 py-0.5 rounded text-[8px] font-black uppercase tracking-wider bg-primary-100 text-primary-700">ERP</span>
+            </div>
+            <span class="text-[9px] font-semibold text-slate-400 uppercase tracking-wider mt-1 whitespace-nowrap">Enterprise Suite v<%= version %></span>
           </div>
         </div>
       </div>
 
       <!-- Navigation -->
-      <nav class="flex-1 px-3 py-6 space-y-1 overflow-y-auto custom-scrollbar">
+      <nav class="flex-1 px-2.5 py-4 space-y-1 overflow-y-auto custom-scrollbar">
         <template x-for="group in menuGroups" :key="group.title">
-          <div class="mb-6">
-            <div x-show="!isSidebarCollapsed" class="px-4 mb-2 text-[10px] font-bold text-slate-400 uppercase tracking-widest" x-text="group.title"></div>
-            <div class="space-y-1">
+          <div class="mb-5">
+            <div x-show="!isSidebarCollapsed" class="px-3 mb-1.5 text-[9px] font-black text-slate-400 uppercase tracking-widest" x-text="group.title"></div>
+            <div class="space-y-0.5">
               <template x-for="item in group.items" :key="item.href">
                 <template x-if="hasPermission(item.permission)">
                   <a :href="item.href"
-                    class="flex items-center px-4 py-2.5 rounded-lg transition-all group relative overflow-hidden"
+                    class="flex items-center px-3 py-2 rounded-lg transition-all group relative overflow-hidden"
                     :class="[
-                      isActive(item.href) ? 'bg-primary-50 text-primary-700' : 'text-slate-500 hover:bg-slate-50 hover:text-slate-900',
+                      isActive(item.href) ? 'bg-primary-50 text-primary-700 font-semibold shadow-2xs' : 'text-slate-600 hover:bg-slate-100/70 hover:text-slate-900',
                       isSidebarCollapsed ? 'justify-center px-2' : ''
                     ]">
-                    <div class="w-6 flex justify-center flex-shrink-0" :class="isActive(item.href) ? 'text-primary-600' : 'text-slate-400 group-hover:text-slate-600'">
-                      <i :class="item.icon" class="text-sm"></i>
+                    <div class="w-5 flex justify-center flex-shrink-0" :class="isActive(item.href) ? 'text-primary-600' : 'text-slate-400 group-hover:text-slate-600'">
+                      <i :class="item.icon" class="text-xs"></i>
                     </div>
-                    <span x-show="!isSidebarCollapsed" class="ml-3 text-sm font-medium tracking-tight" x-text="item.label"></span>
-                    <div x-show="isActive(item.href) && !isSidebarCollapsed" class="absolute right-0 top-1/2 -translate-y-1/2 w-1 h-4 bg-primary-600 rounded-l-full"></div>
+                    <span x-show="!isSidebarCollapsed" class="ml-2.5 text-xs font-medium tracking-tight" x-text="item.label"></span>
                   </a>
                 </template>
               </template>
@@ -257,12 +275,12 @@
       </nav>
 
       <!-- Sidebar Footer -->
-      <div class="p-4 border-t border-slate-100">
+      <div class="p-3 border-t border-slate-100">
         <button @click="logout()"
-          class="w-full flex items-center p-3 rounded-lg text-slate-500 hover:bg-red-50 hover:text-red-600 transition-all"
+          class="w-full flex items-center p-2.5 rounded-lg text-slate-500 hover:bg-rose-50 hover:text-rose-600 transition-all text-xs"
           :class="isSidebarCollapsed ? 'justify-center px-2' : ''">
-          <i class="fas fa-power-off text-sm"></i>
-          <span x-show="!isSidebarCollapsed" class="ml-3 text-sm font-medium">Log Out</span>
+          <i class="fas fa-power-off text-xs"></i>
+          <span x-show="!isSidebarCollapsed" class="ml-2.5 text-xs font-medium">Log Out</span>
         </button>
       </div>
     </aside>
@@ -271,10 +289,10 @@
     <div class="flex-1 flex flex-col h-full overflow-hidden">
       
       <!-- Top Header (Desktop & Mobile) -->
-      <header class="h-16 bg-white border-b border-slate-200 flex items-center justify-between px-6 flex-shrink-0 z-20">
+      <header class="h-14 bg-white border-b border-slate-200/80 flex items-center justify-between px-6 flex-shrink-0 z-20">
         <!-- Search -->
         <div class="relative flex-1 max-w-md hidden md:block" @click.away="showSearchDropdown = false">
-          <div class="flex items-center bg-slate-50 rounded-lg px-4 py-2 border border-slate-100 group focus-within:bg-white focus-within:border-primary-200 focus-within:shadow-sm transition-all">
+          <div class="flex items-center bg-slate-50 rounded-lg px-3.5 py-1.5 border border-slate-200/80 group focus-within:bg-white focus-within:border-primary-300 focus-within:ring-1 focus-within:ring-primary-100 transition-all">
             <i class="fas fa-search text-slate-400 text-sm group-focus-within:text-primary-500" x-show="!isSearching"></i>
             <i class="fas fa-circle-notch fa-spin text-primary-500 text-sm" x-show="isSearching" style="display: none;"></i>
             
@@ -302,6 +320,27 @@
             
             <div class="max-h-[480px] overflow-y-auto custom-scrollbar p-2 space-y-4">
               
+              <!-- Invoices Section -->
+              <template x-if="searchResults.invoices && searchResults.invoices.length > 0">
+                <div>
+                  <div class="px-3 py-1 text-[9px] font-black text-slate-400 uppercase tracking-widest bg-slate-50/50 rounded-lg mb-1">Invoices & Quotations</div>
+                  <div class="space-y-0.5">
+                    <template x-for="item in searchResults.invoices" :key="item.id">
+                      <a :href="item.url" class="flex items-start gap-3 p-3 rounded-lg hover:bg-primary-50 group transition-all">
+                        <div class="w-8 h-8 rounded bg-indigo-50 text-indigo-600 flex items-center justify-center flex-shrink-0">
+                          <i class="fas fa-file-invoice-dollar text-xs"></i>
+                        </div>
+                        <div class="min-w-0">
+                          <p class="text-sm font-bold text-slate-900 truncate group-hover:text-primary-700" x-text="item.title"></p>
+                          <p class="text-[10px] font-medium text-slate-400 truncate" x-text="item.subtitle"></p>
+                        </div>
+                        <span class="ml-auto px-2 py-0.5 text-[8px] font-black uppercase rounded bg-slate-100 text-slate-600" x-text="item.status"></span>
+                      </a>
+                    </template>
+                  </div>
+                </div>
+              </template>
+
               <!-- Tickets Section -->
               <template x-if="searchResults.tickets.length > 0">
                 <div>
@@ -420,7 +459,17 @@
         </button>
 
         <!-- Right Side: User & Notifications -->
-        <div class="flex items-center gap-4">
+        <div class="flex items-center gap-3">
+          <!-- AI Copilot Quick Button -->
+          <a href="/chat" 
+             title="Open AI Copilot"
+             class="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-gradient-to-tr from-primary-700 to-primary-600 text-white shadow-sm hover:shadow-lavender transition-all text-xs font-semibold active:scale-95">
+            <svg class="w-3.5 h-3.5 text-lavender-200" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09z"/>
+            </svg>
+            <span class="hidden sm:inline">AI Copilot</span>
+          </a>
+
           <!-- Notification Dropdown -->
           <div class="relative" @click.away="showNotificationsDropdown = false">
             <button @click="showNotificationsDropdown = !showNotificationsDropdown" 
@@ -769,14 +818,16 @@
             title: 'General',
             icon: 'fas fa-th-large',
             items: [
-              { label: 'Main Dashboard', href: '/dashboard', icon: 'fas fa-home' }
+              { label: 'Main Dashboard', href: '/dashboard', icon: 'fas fa-home' },
+              { label: 'AI Copilot', href: '/chat', icon: 'fas fa-wand-magic-sparkles' }
             ]
           },
           {
-            title: 'Repairs & Bills',
+            title: 'Repairs & Billing',
             icon: 'fas fa-tools',
             items: [
               { label: 'New Repairs', href: '/service-tickets', icon: 'fas fa-wrench', permission: 'tickets:read' },
+              { label: 'Sales & Invoices', href: '/invoices', icon: 'fas fa-file-invoice-dollar', permission: 'accounting:read' },
               { label: 'Shop Accounts', href: '/accounting', icon: 'fas fa-indian-rupee-sign', permission: 'accounting:read' }
             ]
           },
@@ -801,7 +852,7 @@
             icon: 'fas fa-gear',
             items: [
               { label: 'My Workers', href: '/team', icon: 'fas fa-users-gear', permission: 'settings:manage' },
-              { label: 'WhatsApp Link', href: '/whatsapp/link', icon: 'fab fa-whatsapp', permission: 'settings:manage' },
+              { label: 'WhatsApp Device Link', href: '/whatsapp/link', icon: 'fab fa-whatsapp', permission: 'settings:manage' },
               { label: 'Shop Settings', href: '/settings', icon: 'fas fa-sliders-h', permission: 'settings:manage' }
             ]
           }
@@ -827,10 +878,27 @@
           // Check for unauthorized access
           this.checkPagePermission();
 
-          // Global Keyboard Listener for Search
+          // Global ERP Keyboard Listeners
+          let gKeyTimer = null;
           window.addEventListener('keydown', (e) => {
+            const isEditing = ['INPUT', 'TEXTAREA', 'SELECT'].includes(e.target.tagName) || e.target.isContentEditable;
+
+            // Prevent default browser Ctrl+S / Cmd+S save dialog
+            if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 's') {
+              if (window.location.pathname.includes('/invoices/create')) {
+                e.preventDefault();
+              }
+            }
+
+            // Quick Create Invoice shortcut: Alt+N
+            if (e.altKey && e.key.toLowerCase() === 'n') {
+              e.preventDefault();
+              window.location.href = '/invoices/create';
+              return;
+            }
+
             // '/' or 'Cmd+K' / 'Ctrl+K'
-            if ((e.key === '/' && e.target.tagName !== 'INPUT' && e.target.tagName !== 'TEXTAREA') || 
+            if ((e.key === '/' && !isEditing) || 
                 ((e.metaKey || e.ctrlKey) && e.key === 'k')) {
               e.preventDefault();
               const searchInput = document.getElementById('globalSearchInput');
@@ -839,8 +907,30 @@
                 this.showSearchDropdown = true;
               }
             }
+
             if (e.key === 'Escape') {
               this.showSearchDropdown = false;
+            }
+
+            // ERP Quick-Jump sequences: 'g' then <key>
+            if (!isEditing && !e.ctrlKey && !e.metaKey && !e.altKey) {
+              if (e.key.toLowerCase() === 'g') {
+                if (gKeyTimer) clearTimeout(gKeyTimer);
+                gKeyTimer = setTimeout(() => { gKeyTimer = null; }, 1200);
+                return;
+              }
+
+              if (gKeyTimer) {
+                clearTimeout(gKeyTimer);
+                gKeyTimer = null;
+                const k = e.key.toLowerCase();
+                if (k === 'i') window.location.href = '/invoices';
+                else if (k === 'a') window.location.href = '/accounting';
+                else if (k === 't') window.location.href = '/service-tickets';
+                else if (k === 'p') window.location.href = '/products';
+                else if (k === 'd') window.location.href = '/dashboard';
+                else if (k === 'c') window.location.href = '/contacts';
+              }
             }
           });
         },

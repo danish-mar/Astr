@@ -1,193 +1,559 @@
-<div class="space-y-6" x-data="leadsData()">
-    <!-- SHARP MINIMAL HEADER -->
-    <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+<div class="space-y-6" x-data="leadsData()" x-init="init()">
+    <!-- SHARP HEADER WITH TAB SWITCHER -->
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-2 border-b border-slate-200/80">
         <div>
-            <h1 class="text-2xl font-bold text-slate-900 tracking-tight uppercase">Leads Gateway</h1>
-            <p class="text-[9px] font-black text-slate-400 mt-1 uppercase tracking-widest">Track Customer Interest</p>
+            <div class="flex items-center gap-2.5">
+                <h1 class="text-2xl font-bold text-slate-900 tracking-tight uppercase">New Deals & Leads Gateway</h1>
+                <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-md text-[11px] font-bold bg-purple-50 text-purple-700 border border-purple-200/60">
+                    <span class="w-2 h-2 rounded-full" :class="whatsapp.agentStatus.isReady ? 'bg-emerald-500 animate-pulse' : 'bg-amber-400'"></span>
+                    <span x-text="whatsapp.agentStatus.isReady ? 'AI Agent Active' : 'Agent Standby'"></span>
+                </span>
+            </div>
+            <p class="text-[10px] font-black text-slate-400 mt-0.5 uppercase tracking-widest">Autonomous Customer Negotiations & CRM Pipeline</p>
         </div>
-        <button @click="openAddModal()"
-            class="inline-flex items-center px-6 py-2 bg-primary-600 text-white text-[10px] font-black uppercase tracking-widest rounded-xl hover:bg-primary-700 shadow-xl shadow-primary-200 transition-all active:scale-95 gap-2">
-            <i class="fas fa-plus text-xs"></i>
-            <span>Add Lead</span>
-        </button>
-    </div>
 
-    <!-- Stats Overview -->
-    <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
-        <div class="bg-white border border-slate-200 p-6 rounded-[24px] shadow-sm hover:shadow-lg transition-all">
-            <div class="flex items-center gap-4">
-                <div class="w-12 h-12 rounded-xl bg-slate-50 flex items-center justify-center text-slate-600">
-                    <i class="fas fa-bullseye text-lg"></i>
-                </div>
-                <div>
-                    <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest">Total Leads</p>
-                    <p class="text-2xl font-bold text-slate-900" x-text="stats.total || 0"></p>
-                </div>
+        <!-- Right Controls -->
+        <div class="flex items-center gap-3">
+            <!-- Tabs -->
+            <div class="inline-flex items-center p-1 bg-slate-100 rounded-xl border border-slate-200/60 text-xs font-bold">
+                <button type="button" @click="activeTab = 'whatsapp'"
+                    :class="activeTab === 'whatsapp' ? 'bg-white text-purple-700 shadow-xs' : 'text-slate-500 hover:text-slate-800'"
+                    class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg transition-all">
+                    <i class="fab fa-whatsapp text-emerald-600"></i>
+                    <span>WhatsApp Deals</span>
+                    <span class="ml-1 px-1.5 py-0.2 rounded-full text-[10px] bg-purple-100 text-purple-800" x-text="whatsapp.metrics.totalDeals"></span>
+                </button>
+                <button type="button" @click="activeTab = 'manual'"
+                    :class="activeTab === 'manual' ? 'bg-white text-slate-900 shadow-xs' : 'text-slate-500 hover:text-slate-800'"
+                    class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg transition-all">
+                    <i class="fas fa-bullseye text-slate-500"></i>
+                    <span>Manual Leads</span>
+                    <span class="ml-1 px-1.5 py-0.2 rounded-full text-[10px] bg-slate-200 text-slate-700" x-text="totalLeads"></span>
+                </button>
             </div>
-        </div>
-        <div class="bg-white border border-slate-200 p-6 rounded-[24px] shadow-sm hover:shadow-lg transition-all">
-            <div class="flex items-center gap-4">
-                <div class="w-12 h-12 rounded-xl bg-emerald-50 flex items-center justify-center text-emerald-600">
-                    <i class="fas fa-check-circle text-lg"></i>
-                </div>
-                <div>
-                    <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest">Won</p>
-                    <p class="text-2xl font-bold text-slate-900" x-text="stats.won || 0"></p>
-                </div>
-            </div>
-        </div>
-        <div class="bg-white border border-slate-200 p-6 rounded-[24px] shadow-sm hover:shadow-lg transition-all">
-            <div class="flex items-center gap-4">
-                <div class="w-12 h-12 rounded-xl bg-rose-50 flex items-center justify-center text-rose-600">
-                    <i class="fas fa-times-circle text-lg"></i>
-                </div>
-                <div>
-                    <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest">Lost</p>
-                    <p class="text-2xl font-bold text-slate-900" x-text="stats.lost || 0"></p>
-                </div>
-            </div>
-        </div>
-        <div class="bg-white border border-slate-200 p-6 rounded-[24px] shadow-sm hover:shadow-lg transition-all">
-            <div class="flex items-center gap-4">
-                <div class="w-12 h-12 rounded-xl bg-primary-50 flex items-center justify-center text-primary-600">
-                    <i class="fas fa-percentage text-lg"></i>
-                </div>
-                <div>
-                    <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest">Conversion</p>
-                    <p class="text-2xl font-bold text-slate-900" x-text="(stats.conversionRatio || '0.00') + '%'"></p>
-                </div>
-            </div>
+
+            <!-- Add Lead Button (only shown for manual CRM) -->
+            <template x-if="activeTab === 'manual'">
+                <button @click="openAddModal()"
+                    class="inline-flex items-center px-4 py-2 bg-primary-600 text-white text-[10px] font-black uppercase tracking-widest rounded-xl hover:bg-primary-700 shadow-md shadow-primary-200 transition-all active:scale-95 gap-2">
+                    <i class="fas fa-plus text-xs"></i>
+                    <span>Add Lead</span>
+                </button>
+            </template>
+
+            <!-- Refresh WhatsApp Data button -->
+            <template x-if="activeTab === 'whatsapp'">
+                <button type="button" @click="fetchWhatsAppSales()"
+                    class="w-9 h-9 rounded-xl bg-white border border-slate-200 text-slate-600 hover:bg-slate-50 flex items-center justify-center shadow-2xs transition-colors"
+                    title="Refresh Live Data">
+                    <i class="fas fa-rotate text-xs"></i>
+                </button>
+            </template>
         </div>
     </div>
 
-    <!-- Filters & Search -->
-    <div class="bg-white border border-slate-200 p-4 rounded-xl shadow-sm flex flex-col md:flex-row gap-4 items-center">
-        <div class="relative flex-1 w-full">
-            <i class="fas fa-search absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 text-sm"></i>
-            <input type="text" x-model="search" @input.debounce.300ms="fetchLeads()"
-                placeholder="Search leads by ID, notes, source..."
-                class="w-full pl-12 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-lg focus:ring-2 focus:ring-primary-200 focus:border-primary-300 outline-none transition-all text-sm">
-        </div>
-        <div class="flex items-center gap-3 w-full md:w-auto flex-wrap">
-            <select x-model="filterStatus" @change="fetchLeads()"
-                class="flex-1 md:w-44 px-4 py-3 bg-slate-50 border border-slate-200 rounded-lg focus:ring-2 focus:ring-primary-200 outline-none transition-all text-sm">
-                <option value="All">All Status</option>
-                <option value="New">New</option>
-                <option value="Contacted">Contacted</option>
-                <option value="Qualified">Qualified</option>
-                <option value="Negotiation">Negotiation</option>
-                <option value="Closed Won">Closed Won</option>
-                <option value="Closed Lost">Closed Lost</option>
-            </select>
-            <input type="date" x-model="filterDate" @change="fetchLeads()"
-                class="px-4 py-3 bg-slate-50 border border-slate-200 rounded-lg focus:ring-2 focus:ring-primary-200 outline-none transition-all text-sm w-44"
-                placeholder="Filter by Date">
-            <button @click="clearFilters()" 
-                class="px-4 py-3 bg-slate-100 text-slate-600 rounded-lg text-[9px] font-black uppercase tracking-widest hover:bg-slate-200 transition-all">
-                <i class="fas fa-times mr-1"></i> Clear
-            </button>
-        </div>
-    </div>
+    <!-- ══════════════════════════════════════════════════════════════════════════
+         TAB 1: WHATSAPP AI DEALS & PIPELINE
+    ════════════════════════════════════════════════════════════════════════════ -->
+    <div x-show="activeTab === 'whatsapp'" class="space-y-6">
+        <!-- Live AI KPI Cards -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div class="bg-white border border-slate-200/80 p-5 rounded-2xl shadow-xs flex items-center justify-between">
+                <div>
+                    <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Closed Deals</p>
+                    <div class="flex items-baseline gap-2 mt-1">
+                        <span class="text-2xl font-bold text-slate-900" x-text="whatsapp.metrics.totalDeals">0</span>
+                        <span class="text-xs font-semibold text-emerald-600" x-text="'+' + whatsapp.metrics.todayDeals + ' today'"></span>
+                    </div>
+                    <p class="text-[11px] text-slate-400 mt-0.5">Confirmed customer orders</p>
+                </div>
+                <div class="w-12 h-12 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center text-xl shrink-0">
+                    <i class="fas fa-handshake"></i>
+                </div>
+            </div>
 
-    <!-- Leads Table -->
-    <div class="bg-white border border-slate-200 rounded-[24px] shadow-sm overflow-hidden">
-        <div class="overflow-x-auto">
-            <table class="w-full text-left border-collapse">
-                <thead>
-                    <tr class="border-b border-slate-100 bg-slate-50">
-                        <th class="px-6 py-4 text-[9px] font-black text-slate-400 uppercase tracking-widest">Lead ID</th>
-                        <th class="px-6 py-4 text-[9px] font-black text-slate-400 uppercase tracking-widest">Customer</th>
-                        <th class="px-6 py-4 text-[9px] font-black text-slate-400 uppercase tracking-widest">Product</th>
-                        <th class="px-6 py-4 text-[9px] font-black text-slate-400 uppercase tracking-widest">Value</th>
-                        <th class="px-6 py-4 text-[9px] font-black text-slate-400 uppercase tracking-widest">Status</th>
-                        <th class="px-6 py-4 text-[9px] font-black text-slate-400 uppercase tracking-widest">Date</th>
-                        <th class="px-6 py-4 text-[9px] font-black text-slate-400 uppercase tracking-widest">Actions</th>
-                    </tr>
-                </thead>
-                <tbody class="divide-y divide-slate-100">
-                    <template x-for="lead in leads" :key="lead._id">
-                        <tr class="hover:bg-slate-50 transition-colors group">
-                            <td class="px-6 py-4">
-                                <span class="text-sm font-bold text-slate-900" x-text="'#' + lead.leadID"></span>
-                            </td>
-                            <td class="px-6 py-4">
-                                <div class="flex flex-col">
-                                    <span class="text-sm font-semibold text-slate-900" x-text="lead.customer.name"></span>
-                                    <span class="text-[11px] text-slate-400" x-text="lead.customer.phone"></span>
-                                </div>
-                            </td>
-                            <td class="px-6 py-4">
-                                <div class="flex flex-col">
-                                    <span class="text-sm font-medium text-slate-700" x-text="lead.product.name"></span>
-                                    <span class="text-[11px] text-slate-400" x-text="lead.product.productID"></span>
-                                </div>
-                            </td>
-                            <td class="px-6 py-4">
-                                <span class="text-sm font-bold text-slate-900"
-                                    x-text="'₹' + (lead.estimatedValue || 0).toLocaleString()"></span>
-                            </td>
-                            <td class="px-6 py-4">
-                                <span :class="{
-                                    'bg-slate-100 text-slate-600': lead.status === 'New',
-                                    'bg-primary-50 text-primary-600': lead.status === 'Contacted' || lead.status === 'Qualified',
-                                    'bg-amber-50 text-amber-600': lead.status === 'Negotiation',
-                                    'bg-emerald-50 text-emerald-600': lead.status === 'Closed Won',
-                                    'bg-rose-50 text-rose-600': lead.status === 'Closed Lost',
-                                }" class="px-3 py-1 rounded-lg text-[9px] font-black uppercase tracking-wider"
-                                    x-text="lead.status"></span>
-                            </td>
-                            <td class="px-6 py-4">
-                                <span class="text-[11px] text-slate-500 font-medium"
-                                    x-text="new Date(lead.createdAt).toLocaleDateString('en-IN', {day: '2-digit', month: 'short', year: 'numeric'})"></span>
-                            </td>
-                            <td class="px-6 py-4">
-                                <div class="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                                    <button @click="openEditModal(lead)"
-                                        class="w-8 h-8 rounded-lg bg-slate-50 flex items-center justify-center text-slate-600 hover:bg-primary-600 hover:text-white transition-all">
-                                        <i class="fas fa-edit text-[10px]"></i>
-                                    </button>
-                                    <button @click="deleteLead(lead._id)"
-                                        class="w-8 h-8 rounded-lg bg-slate-50 flex items-center justify-center text-rose-400 hover:bg-rose-500 hover:text-white transition-all">
-                                        <i class="fas fa-trash text-[10px]"></i>
-                                    </button>
-                                </div>
-                            </td>
+            <div class="bg-white border border-slate-200/80 p-5 rounded-2xl shadow-xs flex items-center justify-between">
+                <div>
+                    <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Sales Revenue</p>
+                    <div class="flex items-baseline gap-2 mt-1">
+                        <span class="text-2xl font-bold text-slate-900" x-text="formatCurrency(whatsapp.metrics.totalSales)">₹0</span>
+                    </div>
+                    <p class="text-[11px] text-emerald-600 font-medium mt-0.5" x-text="formatCurrency(whatsapp.metrics.todaySales) + ' today'"></p>
+                </div>
+                <div class="w-12 h-12 rounded-xl bg-purple-50 text-purple-600 flex items-center justify-center text-xl shrink-0">
+                    <i class="fas fa-indian-rupee-sign"></i>
+                </div>
+            </div>
+
+            <div class="bg-white border border-slate-200/80 p-5 rounded-2xl shadow-xs flex items-center justify-between">
+                <div>
+                    <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Gross Profit</p>
+                    <div class="flex items-baseline gap-2 mt-1">
+                        <span class="text-2xl font-bold text-slate-900" x-text="formatCurrency(whatsapp.metrics.totalProfit)">₹0</span>
+                    </div>
+                    <p class="text-[11px] text-indigo-600 font-medium mt-0.5" x-text="formatCurrency(whatsapp.metrics.todayProfit) + ' today'"></p>
+                </div>
+                <div class="w-12 h-12 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center text-xl shrink-0">
+                    <i class="fas fa-chart-line-up"></i>
+                </div>
+            </div>
+
+            <div class="bg-white border border-slate-200/80 p-5 rounded-2xl shadow-xs flex items-center justify-between">
+                <div>
+                    <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest">AI Status</p>
+                    <div class="flex items-center gap-2 mt-1">
+                        <span class="w-2.5 h-2.5 rounded-full" :class="whatsapp.agentStatus.isReady ? 'bg-emerald-500 animate-pulse' : 'bg-slate-300'"></span>
+                        <span class="text-base font-bold text-slate-900" x-text="whatsapp.agentStatus.isReady ? 'Active & Quoting' : 'Standby'"></span>
+                    </div>
+                    <p class="text-[11px] text-slate-500 mt-0.5" x-text="whatsapp.metrics.todayInquiries + ' inquiries handled today'"></p>
+                </div>
+                <div class="w-12 h-12 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center text-xl shrink-0">
+                    <i class="fas fa-robot"></i>
+                </div>
+            </div>
+        </div>
+
+        <!-- Deals & Inquiries Table Container -->
+        <div class="bg-white border border-slate-200/80 rounded-2xl shadow-xs overflow-hidden">
+            <!-- Filter & Search Bar -->
+            <div class="p-4 sm:p-5 border-b border-slate-100 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                <div class="flex items-center gap-2.5">
+                    <div class="w-8 h-8 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center text-sm font-bold">
+                        <i class="fab fa-whatsapp"></i>
+                    </div>
+                    <div>
+                        <h2 class="text-sm font-bold text-slate-900">WhatsApp Deals & Customer Pipeline</h2>
+                        <p class="text-xs text-slate-500">Autonomous quotations, vendor wholesale rates, and closed customer orders</p>
+                    </div>
+                </div>
+
+                <!-- Status Filter Pills -->
+                <div class="flex items-center gap-1.5 bg-slate-100/80 p-1 rounded-xl text-xs font-semibold">
+                    <button type="button" @click="whatsapp.filterStatus = 'all'"
+                        :class="whatsapp.filterStatus === 'all' ? 'bg-white text-slate-900 shadow-2xs' : 'text-slate-500 hover:text-slate-800'"
+                        class="px-3 py-1.5 rounded-lg transition-all">
+                        All (<span x-text="whatsapp.inquiries.length"></span>)
+                    </button>
+                    <button type="button" @click="whatsapp.filterStatus = 'deal_agreed'"
+                        :class="whatsapp.filterStatus === 'deal_agreed' ? 'bg-white text-emerald-700 shadow-2xs' : 'text-slate-500 hover:text-slate-800'"
+                        class="px-3 py-1.5 rounded-lg transition-all">
+                        🎉 Deals Closed
+                    </button>
+                    <button type="button" @click="whatsapp.filterStatus = 'quoted'"
+                        :class="whatsapp.filterStatus === 'quoted' ? 'bg-white text-purple-700 shadow-2xs' : 'text-slate-500 hover:text-slate-800'"
+                        class="px-3 py-1.5 rounded-lg transition-all">
+                        💬 Quoted
+                    </button>
+                    <button type="button" @click="whatsapp.filterStatus = 'awaiting_vendor'"
+                        :class="whatsapp.filterStatus === 'awaiting_vendor' ? 'bg-white text-amber-700 shadow-2xs' : 'text-slate-500 hover:text-slate-800'"
+                        class="px-3 py-1.5 rounded-lg transition-all">
+                        ⏳ Awaiting Supplier
+                    </button>
+                </div>
+            </div>
+
+            <!-- Table -->
+            <div class="overflow-x-auto">
+                <table class="w-full text-left border-collapse">
+                    <thead>
+                        <tr class="bg-slate-50/70 border-b border-slate-100 text-[11px] font-bold text-slate-500 uppercase tracking-wider">
+                            <th class="py-3 px-5">Customer (Actual Number)</th>
+                            <th class="py-3 px-5">Requested Hardware / Build</th>
+                            <th class="py-3 px-5">Supplier Rate</th>
+                            <th class="py-3 px-5">Customer Quoted Price</th>
+                            <th class="py-3 px-5">Gross Profit</th>
+                            <th class="py-3 px-5">Status</th>
+                            <th class="py-3 px-5 text-right">Actions</th>
                         </tr>
-                    </template>
-                </tbody>
-            </table>
-        </div>
+                    </thead>
+                    <tbody class="divide-y divide-slate-100 text-xs">
+                        <template x-for="inq in filteredWhatsAppInquiries" :key="inq._id">
+                            <tr class="hover:bg-slate-50/80 transition-colors">
+                                <!-- Customer Info -->
+                                <td class="py-3.5 px-5">
+                                    <div class="font-bold text-slate-900" x-text="inq.customerName || 'Customer'"></div>
+                                    <!-- Verified Actual Customer Phone (Never LID digits) -->
+                                    <div class="text-[11px] font-mono text-primary-700 font-semibold mt-0.5" x-text="formatCustomerPhone(inq)"></div>
+                                </td>
 
-        <!-- Empty State -->
-        <div x-show="leads.length === 0" class="py-20 text-center">
-            <div class="w-20 h-20 rounded-xl bg-slate-50 flex items-center justify-center mx-auto mb-4 text-slate-200">
-                <i class="fas fa-bullseye text-3xl"></i>
-            </div>
-            <h3 class="text-lg font-bold text-slate-900 uppercase tracking-tight">No Leads Found</h3>
-            <p class="text-slate-500 text-sm max-w-xs mx-auto mt-1">Start tracking potential customers by adding your first lead.</p>
-        </div>
+                                <!-- Product Info -->
+                                <td class="py-3.5 px-5 max-w-sm">
+                                    <div class="font-medium text-slate-900 line-clamp-2" x-text="inq.requestedProduct"></div>
+                                    <template x-if="inq.items && inq.items.length > 1">
+                                        <span class="inline-flex items-center gap-1 mt-1 px-2 py-0.5 rounded text-[10px] font-semibold bg-purple-50 text-purple-700 border border-purple-200/50">
+                                            <i class="fas fa-layer-group text-[9px]"></i>
+                                            <span x-text="inq.items.length + ' itemized components'"></span>
+                                        </span>
+                                    </template>
+                                </td>
 
-        <!-- Pagination -->
-        <div class="px-6 py-4 border-t border-slate-100 flex items-center justify-between">
-            <span class="text-[9px] font-black text-slate-400 uppercase tracking-widest"
-                x-text="'Total: ' + totalLeads"></span>
-            <div class="flex items-center gap-2">
-                <button @click="page--" :disabled="page === 1"
-                    class="w-9 h-9 rounded-lg border border-slate-200 flex items-center justify-center text-slate-400 hover:bg-slate-50 disabled:opacity-50 transition-all">
-                    <i class="fas fa-chevron-left text-[10px]"></i>
-                </button>
-                <div class="px-4 py-2 rounded-lg bg-slate-50 border border-slate-200">
-                    <span class="text-xs font-bold text-slate-900" x-text="page"></span>
-                </div>
-                <button @click="page++" :disabled="page * limit >= totalLeads"
-                    class="w-9 h-9 rounded-lg border border-slate-200 flex items-center justify-center text-slate-400 hover:bg-slate-50 disabled:opacity-50 transition-all">
-                    <i class="fas fa-chevron-right text-[10px]"></i>
-                </button>
+                                <!-- Supplier Rate -->
+                                <td class="py-3.5 px-5">
+                                    <div class="font-semibold text-slate-700" x-text="inq.vendorPrice ? formatCurrency(inq.vendorPrice) : 'Checking...'"></div>
+                                    <div class="text-[10px] text-slate-400" x-text="inq.vendorName ? ('via ' + inq.vendorName) : 'Store / Pending'"></div>
+                                </td>
+
+                                <!-- Quoted Customer Price -->
+                                <td class="py-3.5 px-5">
+                                    <div class="font-bold text-slate-900" x-text="inq.quotedPrice ? formatCurrency(inq.quotedPrice) : '—'"></div>
+                                    <div class="text-[10px] text-slate-500" x-text="inq.marginPercent ? (inq.marginPercent + '% markup applied') : ''"></div>
+                                </td>
+
+                                <!-- Gross Profit -->
+                                <td class="py-3.5 px-5">
+                                    <template x-if="inq.quotedPrice && inq.vendorPrice">
+                                        <span class="font-bold text-emerald-600" x-text="'+' + formatCurrency(inq.quotedPrice - inq.vendorPrice)"></span>
+                                    </template>
+                                    <template x-if="!inq.quotedPrice || !inq.vendorPrice">
+                                        <span class="text-slate-400">—</span>
+                                    </template>
+                                </td>
+
+                                <!-- Status Badge -->
+                                <td class="py-3.5 px-5">
+                                    <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold"
+                                        :class="{
+                                            'bg-emerald-50 text-emerald-700 border border-emerald-200': inq.status === 'deal_agreed',
+                                            'bg-purple-50 text-purple-700 border border-purple-200': inq.status === 'quoted',
+                                            'bg-amber-50 text-amber-700 border border-amber-200': inq.status === 'awaiting_vendor',
+                                            'bg-slate-100 text-slate-700': inq.status === 'inquiry' || inq.status === 'closed'
+                                        }">
+                                        <span class="w-1.5 h-1.5 rounded-full"
+                                            :class="{
+                                                'bg-emerald-500': inq.status === 'deal_agreed',
+                                                'bg-purple-500': inq.status === 'quoted',
+                                                'bg-amber-500 animate-pulse': inq.status === 'awaiting_vendor',
+                                                'bg-slate-400': inq.status === 'inquiry' || inq.status === 'closed'
+                                            }"></span>
+                                        <span x-text="inq.status === 'deal_agreed' ? 'Deal Closed' : inq.status === 'quoted' ? 'Quoted' : inq.status === 'awaiting_vendor' ? 'Supplier Checking' : inq.status"></span>
+                                    </span>
+                                </td>
+
+                                <!-- Details Action -->
+                                <td class="py-3.5 px-5 text-right">
+                                    <button type="button" @click="openCostingModal(inq)"
+                                        class="px-3 py-1.5 bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 rounded-lg text-xs font-semibold shadow-2xs transition-colors">
+                                        <span>Costing</span>
+                                        <i class="fas fa-chevron-right text-[10px] ml-1 text-slate-400"></i>
+                                    </button>
+                                </td>
+                            </tr>
+                        </template>
+
+                        <template x-if="filteredWhatsAppInquiries.length === 0">
+                            <tr>
+                                <td colspan="7" class="py-16 text-center text-slate-400">
+                                    <i class="fas fa-comments text-3xl mb-2 text-slate-300"></i>
+                                    <p class="text-xs font-medium">No WhatsApp inquiries or deals in this filter yet.</p>
+                                </td>
+                            </tr>
+                        </template>
+                    </tbody>
+                </table>
             </div>
         </div>
     </div>
 
-    <!-- Add/Edit Lead Modal (LANDSCAPE DUAL-VIEW) -->
+    <!-- ══════════════════════════════════════════════════════════════════════════
+         TAB 2: MANUAL CRM LEADS
+    ════════════════════════════════════════════════════════════════════════════ -->
+    <div x-show="activeTab === 'manual'" class="space-y-6">
+        <!-- Stats Overview -->
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
+            <div class="bg-white border border-slate-200 p-6 rounded-[24px] shadow-sm hover:shadow-lg transition-all">
+                <div class="flex items-center gap-4">
+                    <div class="w-12 h-12 rounded-xl bg-slate-50 flex items-center justify-center text-slate-600">
+                        <i class="fas fa-bullseye text-lg"></i>
+                    </div>
+                    <div>
+                        <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest">Total Leads</p>
+                        <p class="text-2xl font-bold text-slate-900" x-text="stats.total || 0"></p>
+                    </div>
+                </div>
+            </div>
+            <div class="bg-white border border-slate-200 p-6 rounded-[24px] shadow-sm hover:shadow-lg transition-all">
+                <div class="flex items-center gap-4">
+                    <div class="w-12 h-12 rounded-xl bg-emerald-50 flex items-center justify-center text-emerald-600">
+                        <i class="fas fa-check-circle text-lg"></i>
+                    </div>
+                    <div>
+                        <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest">Won</p>
+                        <p class="text-2xl font-bold text-slate-900" x-text="stats.won || 0"></p>
+                    </div>
+                </div>
+            </div>
+            <div class="bg-white border border-slate-200 p-6 rounded-[24px] shadow-sm hover:shadow-lg transition-all">
+                <div class="flex items-center gap-4">
+                    <div class="w-12 h-12 rounded-xl bg-rose-50 flex items-center justify-center text-rose-600">
+                        <i class="fas fa-times-circle text-lg"></i>
+                    </div>
+                    <div>
+                        <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest">Lost</p>
+                        <p class="text-2xl font-bold text-slate-900" x-text="stats.lost || 0"></p>
+                    </div>
+                </div>
+            </div>
+            <div class="bg-white border border-slate-200 p-6 rounded-[24px] shadow-sm hover:shadow-lg transition-all">
+                <div class="flex items-center gap-4">
+                    <div class="w-12 h-12 rounded-xl bg-primary-50 flex items-center justify-center text-primary-600">
+                        <i class="fas fa-percentage text-lg"></i>
+                    </div>
+                    <div>
+                        <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest">Conversion</p>
+                        <p class="text-2xl font-bold text-slate-900" x-text="(stats.conversionRatio || '0.00') + '%'"></p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Filters & Search -->
+        <div class="bg-white border border-slate-200 p-4 rounded-xl shadow-sm flex flex-col md:flex-row gap-4 items-center">
+            <div class="relative flex-1 w-full">
+                <i class="fas fa-search absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 text-sm"></i>
+                <input type="text" x-model="search" @input.debounce.300ms="fetchLeads()"
+                    placeholder="Search leads by ID, notes, source..."
+                    class="w-full pl-12 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-lg focus:ring-2 focus:ring-primary-200 focus:border-primary-300 outline-none transition-all text-sm">
+            </div>
+            <div class="flex items-center gap-3 w-full md:w-auto flex-wrap">
+                <select x-model="filterStatus" @change="fetchLeads()"
+                    class="flex-1 md:w-44 px-4 py-3 bg-slate-50 border border-slate-200 rounded-lg focus:ring-2 focus:ring-primary-200 outline-none transition-all text-sm">
+                    <option value="All">All Status</option>
+                    <option value="New">New</option>
+                    <option value="Contacted">Contacted</option>
+                    <option value="Qualified">Qualified</option>
+                    <option value="Negotiation">Negotiation</option>
+                    <option value="Closed Won">Closed Won</option>
+                    <option value="Closed Lost">Closed Lost</option>
+                </select>
+                <input type="date" x-model="filterDate" @change="fetchLeads()"
+                    class="px-4 py-3 bg-slate-50 border border-slate-200 rounded-lg focus:ring-2 focus:ring-primary-200 outline-none transition-all text-sm w-44"
+                    placeholder="Filter by Date">
+                <button @click="clearFilters()" 
+                    class="px-4 py-3 bg-slate-100 text-slate-600 rounded-lg text-[9px] font-black uppercase tracking-widest hover:bg-slate-200 transition-all">
+                    <i class="fas fa-times mr-1"></i> Clear
+                </button>
+            </div>
+        </div>
+
+        <!-- Leads Table -->
+        <div class="bg-white border border-slate-200 rounded-[24px] shadow-sm overflow-hidden">
+            <div class="overflow-x-auto">
+                <table class="w-full text-left border-collapse">
+                    <thead>
+                        <tr class="border-b border-slate-100 bg-slate-50">
+                            <th class="px-6 py-4 text-[9px] font-black text-slate-400 uppercase tracking-widest">Lead ID</th>
+                            <th class="px-6 py-4 text-[9px] font-black text-slate-400 uppercase tracking-widest">Customer</th>
+                            <th class="px-6 py-4 text-[9px] font-black text-slate-400 uppercase tracking-widest">Product</th>
+                            <th class="px-6 py-4 text-[9px] font-black text-slate-400 uppercase tracking-widest">Value</th>
+                            <th class="px-6 py-4 text-[9px] font-black text-slate-400 uppercase tracking-widest">Status</th>
+                            <th class="px-6 py-4 text-[9px] font-black text-slate-400 uppercase tracking-widest">Date</th>
+                            <th class="px-6 py-4 text-[9px] font-black text-slate-400 uppercase tracking-widest">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-100">
+                        <template x-for="lead in leads" :key="lead._id">
+                            <tr class="hover:bg-slate-50 transition-colors group">
+                                <td class="px-6 py-4">
+                                    <span class="text-sm font-bold text-slate-900" x-text="'#' + lead.leadID"></span>
+                                </td>
+                                <td class="px-6 py-4">
+                                    <div class="flex flex-col">
+                                        <span class="text-sm font-semibold text-slate-900" x-text="lead.customer.name"></span>
+                                        <span class="text-[11px] text-slate-400" x-text="lead.customer.phone"></span>
+                                    </div>
+                                </td>
+                                <td class="px-6 py-4">
+                                    <div class="flex flex-col">
+                                        <span class="text-sm font-medium text-slate-700" x-text="lead.product.name"></span>
+                                        <span class="text-[11px] text-slate-400" x-text="lead.product.productID"></span>
+                                    </div>
+                                </td>
+                                <td class="px-6 py-4">
+                                    <span class="text-sm font-bold text-slate-900"
+                                        x-text="'₹' + (lead.estimatedValue || 0).toLocaleString()"></span>
+                                </td>
+                                <td class="px-6 py-4">
+                                    <span :class="{
+                                        'bg-slate-100 text-slate-600': lead.status === 'New',
+                                        'bg-primary-50 text-primary-600': lead.status === 'Contacted' || lead.status === 'Qualified',
+                                        'bg-amber-50 text-amber-600': lead.status === 'Negotiation',
+                                        'bg-emerald-50 text-emerald-600': lead.status === 'Closed Won',
+                                        'bg-rose-50 text-rose-600': lead.status === 'Closed Lost',
+                                    }" class="px-3 py-1 rounded-lg text-[9px] font-black uppercase tracking-wider"
+                                        x-text="lead.status"></span>
+                                </td>
+                                <td class="px-6 py-4">
+                                    <span class="text-[11px] text-slate-500 font-medium"
+                                        x-text="new Date(lead.createdAt).toLocaleDateString('en-IN', {day: '2-digit', month: 'short', year: 'numeric'})"></span>
+                                </td>
+                                <td class="px-6 py-4">
+                                    <div class="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                        <button @click="openEditModal(lead)"
+                                            class="w-8 h-8 rounded-lg bg-slate-50 flex items-center justify-center text-slate-600 hover:bg-primary-600 hover:text-white transition-all">
+                                            <i class="fas fa-edit text-[10px]"></i>
+                                        </button>
+                                        <button @click="deleteLead(lead._id)"
+                                            class="w-8 h-8 rounded-lg bg-slate-50 flex items-center justify-center text-rose-400 hover:bg-rose-500 hover:text-white transition-all">
+                                            <i class="fas fa-trash text-[10px]"></i>
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                        </template>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Empty State -->
+            <div x-show="leads.length === 0" class="py-20 text-center">
+                <div class="w-20 h-20 rounded-xl bg-slate-50 flex items-center justify-center mx-auto mb-4 text-slate-200">
+                    <i class="fas fa-bullseye text-3xl"></i>
+                </div>
+                <h3 class="text-lg font-bold text-slate-900 uppercase tracking-tight">No Leads Found</h3>
+                <p class="text-slate-500 text-sm max-w-xs mx-auto mt-1">Start tracking potential customers by adding your first lead.</p>
+            </div>
+
+            <!-- Pagination -->
+            <div class="px-6 py-4 border-t border-slate-100 flex items-center justify-between">
+                <span class="text-[9px] font-black text-slate-400 uppercase tracking-widest"
+                    x-text="'Total: ' + totalLeads"></span>
+                <div class="flex items-center gap-2">
+                    <button @click="page--" :disabled="page === 1"
+                        class="w-9 h-9 rounded-lg border border-slate-200 flex items-center justify-center text-slate-400 hover:bg-slate-50 disabled:opacity-50 transition-all">
+                        <i class="fas fa-chevron-left text-[10px]"></i>
+                    </button>
+                    <div class="px-4 py-2 rounded-lg bg-slate-50 border border-slate-200">
+                        <span class="text-xs font-bold text-slate-900" x-text="page"></span>
+                    </div>
+                    <button @click="page++" :disabled="page * limit >= totalLeads"
+                        class="w-9 h-9 rounded-lg border border-slate-200 flex items-center justify-center text-slate-400 hover:bg-slate-50 disabled:opacity-50 transition-all">
+                        <i class="fas fa-chevron-right text-[10px]"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ══════════════════════════════════════════════════════════════════════════
+         MODAL: PER-COMPONENT COSTING & BREAKDOWN (WHATSAPP DEALS)
+    ════════════════════════════════════════════════════════════════════════════ -->
+    <div x-show="whatsapp.selectedInquiry" x-cloak class="fixed inset-0 z-[80] overflow-y-auto" role="dialog" aria-modal="true">
+        <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+            <!-- Backdrop -->
+            <div x-show="whatsapp.selectedInquiry" 
+                x-transition:enter="ease-out duration-300"
+                x-transition:enter-start="opacity-0"
+                x-transition:enter-end="opacity-100"
+                x-transition:leave="ease-in duration-200"
+                x-transition:leave-start="opacity-100"
+                x-transition:leave-end="opacity-0"
+                class="fixed inset-0 bg-slate-900/40 backdrop-blur-xs transition-opacity" 
+                @click="closeCostingModal()"></div>
+
+            <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
+
+            <div x-show="whatsapp.selectedInquiry"
+                x-transition:enter="ease-out duration-300"
+                x-transition:enter-start="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
+                x-transition:enter-end="opacity-100 translate-y-0 sm:scale-100"
+                x-transition:leave="ease-in duration-200"
+                x-transition:leave-start="opacity-100 translate-y-0 sm:scale-100"
+                x-transition:leave-end="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
+                class="inline-block align-bottom bg-white rounded-2xl text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-2xl sm:w-full border border-slate-200">
+                
+                <!-- Modal Header -->
+                <div class="p-6 bg-slate-50 border-b border-slate-200/80 flex items-start justify-between">
+                    <div>
+                        <div class="flex items-center gap-2">
+                            <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase"
+                                :class="{
+                                    'bg-emerald-100 text-emerald-800': whatsapp.selectedInquiry?.status === 'deal_agreed',
+                                    'bg-purple-100 text-purple-800': whatsapp.selectedInquiry?.status === 'quoted',
+                                    'bg-amber-100 text-amber-800': whatsapp.selectedInquiry?.status === 'awaiting_vendor',
+                                    'bg-slate-100 text-slate-800': whatsapp.selectedInquiry?.status === 'inquiry' || whatsapp.selectedInquiry?.status === 'closed'
+                                }" x-text="whatsapp.selectedInquiry?.status === 'deal_agreed' ? 'Confirmed Deal' : whatsapp.selectedInquiry?.status"></span>
+                            <span class="text-xs text-slate-400" x-text="formatDate(whatsapp.selectedInquiry?.updatedAt)"></span>
+                        </div>
+                        <h3 class="text-base font-bold text-slate-900 mt-1" x-text="whatsapp.selectedInquiry?.requestedProduct"></h3>
+                        <p class="text-xs text-slate-500 mt-0.5">
+                            Customer: <strong class="text-slate-800" x-text="whatsapp.selectedInquiry?.customerName || 'Customer'"></strong> 
+                            — Phone: <strong class="text-primary-700 font-mono" x-text="formatCustomerPhone(whatsapp.selectedInquiry)"></strong>
+                        </p>
+                    </div>
+                    <button type="button" @click="closeCostingModal()" class="text-slate-400 hover:text-slate-600 p-1">
+                        <i class="fas fa-times text-base"></i>
+                    </button>
+                </div>
+
+                <!-- Modal Body: Component Table -->
+                <div class="p-6 space-y-5">
+                    <template x-if="whatsapp.selectedInquiry?.items && whatsapp.selectedInquiry.items.length > 0">
+                        <div>
+                            <h4 class="text-xs font-bold text-slate-900 uppercase tracking-wider mb-2.5">
+                                🧩 Component Breakdown & Pricing (<span x-text="whatsapp.selectedInquiry.items.length"></span> items)
+                            </h4>
+                            <div class="border border-slate-200 rounded-xl overflow-hidden">
+                                <table class="w-full text-left text-xs border-collapse">
+                                    <thead>
+                                        <tr class="bg-slate-50 text-[11px] font-bold text-slate-500 uppercase border-b border-slate-200">
+                                            <th class="py-2.5 px-3">Component</th>
+                                            <th class="py-2.5 px-3 text-right">Wholesale Cost</th>
+                                            <th class="py-2.5 px-3 text-right">Margin</th>
+                                            <th class="py-2.5 px-3 text-right">Selling Price</th>
+                                            <th class="py-2.5 px-3 text-right">Profit</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody class="divide-y divide-slate-100">
+                                        <template x-for="(it, idx) in whatsapp.selectedInquiry.items" :key="idx">
+                                            <tr class="hover:bg-slate-50/50">
+                                                <td class="py-2.5 px-3 font-medium text-slate-800" x-text="it.name"></td>
+                                                <td class="py-2.5 px-3 text-right text-slate-600 font-mono" x-text="it.vendorPrice ? formatCurrency(it.vendorPrice) : 'Pending'"></td>
+                                                <td class="py-2.5 px-3 text-right text-slate-500" x-text="(it.marginPercent || whatsapp.selectedInquiry.marginPercent || 20) + '%'"></td>
+                                                <td class="py-2.5 px-3 text-right font-bold text-slate-900 font-mono" x-text="it.quotedPrice ? formatCurrency(it.quotedPrice) : '—'"></td>
+                                                <td class="py-2.5 px-3 text-right font-bold text-emerald-600 font-mono" x-text="(it.quotedPrice && it.vendorPrice) ? ('+' + formatCurrency(it.quotedPrice - it.vendorPrice)) : '—'"></td>
+                                            </tr>
+                                        </template>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </template>
+
+                    <!-- Financial Summary Box -->
+                    <div class="grid grid-cols-3 gap-3 p-4 bg-slate-50 border border-slate-200 rounded-xl text-center">
+                        <div>
+                            <span class="text-[11px] text-slate-500 uppercase font-semibold">Total Cost</span>
+                            <p class="text-base font-bold text-slate-900 mt-0.5" x-text="formatCurrency(whatsapp.selectedInquiry?.vendorPrice)"></p>
+                            <span class="text-[10px] text-slate-400" x-text="'Vendor: ' + (whatsapp.selectedInquiry?.vendorName || 'Store')"></span>
+                        </div>
+                        <div>
+                            <span class="text-[11px] text-slate-500 uppercase font-semibold">Quoted Selling</span>
+                            <p class="text-base font-bold text-primary-600 mt-0.5" x-text="formatCurrency(whatsapp.selectedInquiry?.quotedPrice)"></p>
+                            <span class="text-[10px] text-slate-500" x-text="(whatsapp.selectedInquiry?.marginPercent || 20) + '% Margin'"></span>
+                        </div>
+                        <div>
+                            <span class="text-[11px] text-slate-500 uppercase font-semibold">Gross Profit</span>
+                            <p class="text-base font-bold text-emerald-600 mt-0.5" 
+                                x-text="(whatsapp.selectedInquiry?.quotedPrice && whatsapp.selectedInquiry?.vendorPrice) ? formatCurrency(whatsapp.selectedInquiry.quotedPrice - whatsapp.selectedInquiry.vendorPrice) : '—'"></p>
+                            <span class="text-[10px] text-emerald-600 font-medium">Earned Margin</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Modal Footer -->
+                <div class="p-4 bg-slate-50 border-t border-slate-200/80 flex justify-end">
+                    <button type="button" @click="closeCostingModal()"
+                        class="px-4 py-2 bg-slate-900 text-white rounded-xl text-xs font-semibold hover:bg-slate-800 transition-colors shadow-xs">
+                        Close
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ══════════════════════════════════════════════════════════════════════════
+         MODAL: ADD/EDIT LEAD (MANUAL CRM)
+    ════════════════════════════════════════════════════════════════════════════ -->
     <div x-show="modalOpen" class="fixed inset-0 z-[70] flex items-center justify-center px-4" style="display: none;">
         <div x-show="modalOpen" x-transition:enter="transition ease-out duration-300"
             x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100"

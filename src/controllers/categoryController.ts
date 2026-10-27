@@ -39,7 +39,7 @@ export const getCategoryById = async (req: Request, res: Response) => {
 // Create new category
 export const createCategory = async (req: Request, res: Response) => {
   try {
-    const { name, description, specificationsTemplate } = req.body;
+    const { name, description, specificationsTemplate, marginPercent } = req.body;
 
     // Validate required fields
     const missing = validateRequiredFields(req.body, ["name"]);
@@ -55,6 +55,7 @@ export const createCategory = async (req: Request, res: Response) => {
     const category = new Category({
       name,
       description,
+      marginPercent: marginPercent !== undefined ? Number(marginPercent) : 20,
       specificationsTemplate: specificationsTemplate || [],
     });
 
@@ -70,7 +71,7 @@ export const createCategory = async (req: Request, res: Response) => {
 export const updateCategory = async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
-    const { name, description, specificationsTemplate } = req.body;
+    const { name, description, specificationsTemplate, marginPercent } = req.body;
 
     if (!isValidObjectId(id)) {
       return sendError(res, "Invalid category ID", 400);
@@ -85,6 +86,7 @@ export const updateCategory = async (req: Request, res: Response) => {
     // Update fields
     if (name) category.name = name;
     if (description !== undefined) category.description = description;
+    if (marginPercent !== undefined) category.marginPercent = Number(marginPercent);
     if (specificationsTemplate)
       category.specificationsTemplate = specificationsTemplate;
 

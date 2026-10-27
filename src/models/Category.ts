@@ -13,6 +13,7 @@ export interface ICategory extends Document {
   _id: Types.ObjectId;
   name: string;
   description?: string;
+  marginPercent?: number;
   specificationsTemplate: ISpecificationField[];
   createdAt: Date;
   updatedAt: Date;
@@ -37,6 +38,11 @@ const categorySchema = new Schema<ICategory>(
     description: {
       type: String,
       trim: true,
+    },
+    marginPercent: {
+      type: Number,
+      default: 20,
+      min: [0, "Margin cannot be negative"],
     },
     specificationsTemplate: [
       {

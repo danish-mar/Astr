@@ -10,6 +10,7 @@ import statisticsRoutes from "./routes/statisticsRoutes";
 import { getPublicShelf } from "./controllers/shelfController";
 import { renderReviewPage, handleInstagramRedirect } from "./controllers/reviewController";
 import pkg from "../package.json";
+import { Invoice } from "./models";
 
 dotenv.config();
 
@@ -125,6 +126,44 @@ app.get("/leads", (req: Request, res: Response) => {
 // Accounting (Formerly Expenditures)
 app.get("/accounting", (req: Request, res: Response) => {
   res.render("accounting", { title: "Astr - Accounting" });
+});
+
+// Sales, Invoices & Quotations
+app.get("/invoices", (req: Request, res: Response) => {
+  res.render("invoices", { title: "Astr - Sales & Invoicing" });
+});
+
+app.get("/invoices/create", (req: Request, res: Response) => {
+  res.render("invoice-create", { title: "Astr - New Invoice / Quotation" });
+});
+
+app.get("/invoices/:id", (req: Request, res: Response) => {
+  res.render("invoice-view", { title: "Astr - Invoice Details" });
+});
+
+app.get("/invoices/:id/edit", (req: Request, res: Response) => {
+  res.render("invoice-create", { title: "Astr - Edit Document" });
+});
+
+app.get("/invoices/:id/print", async (req: Request, res: Response) => {
+  let docTitle = "Print Document";
+  try {
+    const inv = await Invoice.findById(req.params.id);
+    if (inv && inv.customerName && inv.docNumber) {
+      docTitle = `${inv.customerName} - ${inv.docNumber}`;
+    }
+  } catch (err) {
+    // fallback
+  }
+  res.render("invoice-print", { title: docTitle, docTitle, layout: false });
+});
+
+// AI ERP Copilot / Assistant Chat
+app.get("/chat", (req: Request, res: Response) => {
+  res.render("chat", { title: "Astr - AI Copilot" });
+});
+app.get("/assistant", (req: Request, res: Response) => {
+  res.redirect("/chat");
 });
 
 app.get("/product/:productId", getPublicShelf);

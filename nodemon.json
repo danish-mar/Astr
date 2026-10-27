@@ -1,0 +1,14 @@
+{
+  "watch": ["src"],
+  "ext": "ts,ejs",
+  "ignore": [
+    ".wwebjs_auth/**",
+    ".wwebjs_cache/**",
+    "node_modules/**",
+    "dist/**",
+    "public/**",
+    "*.log"
+  ],
+  "delay": "1500",
+  "exec": "ts-node src/server.ts"
+}

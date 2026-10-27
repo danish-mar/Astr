@@ -155,14 +155,14 @@
                     const product = productRes.data;
 
                     this.formData = {
-                        name: product.name,
-                        price: product.price,
-                        category: product.category._id || product.category, // handle populated or unpopulated
-                        source: product.source._id || product.source,
+                        name: product.name || '',
+                        price: product.price || '',
+                        category: product.category ? (product.category._id || product.category) : '',
+                        source: product.source ? (product.source._id || product.source) : '',
                         specifications: product.specifications || {},
                         tags: product.tags || [],
                         notes: product.notes || '',
-                        productID: product.productID
+                        productID: product.productID || ''
                     };
 
                     this.existingImages = product.images || [];

@@ -1,362 +1,622 @@
-<div x-data="serviceTicketsData" x-init="init()" class="space-y-6">
+<script src="/js/pages/service-tickets.js"></script>
+
+<div x-data="serviceTicketsData" x-init="init()" class="space-y-6 pb-20 animate__animated animate__fadeIn">
     
-    <!-- Header with Gradient Card -->
-    <div class="bg-gradient-to-br from-primary-600 to-primary-700 rounded-xl p-6 shadow-lg">
-        <div class="flex items-center justify-between">
-            <div class="text-white">
-                <div class="flex items-center gap-3 mb-2">
-                    <div class="w-10 h-10 bg-white/20 rounded-lg flex items-center justify-center backdrop-blur-sm">
-                        <i class="fas fa-wrench text-white text-lg"></i>
-                    </div>
-                    <div>
-                        <h1 class="text-2xl font-bold">Repairs</h1>
-                        <p class="text-primary-100 text-sm" x-text="`${pagination.total} active tickets`"></p>
-                    </div>
-                </div>
+    <!-- Header -->
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-200/80 pb-5">
+        <div>
+            <div class="flex items-center gap-2.5">
+                <h1 class="text-2xl font-bold text-slate-900 tracking-tight font-display">New Repairs & Service Desk</h1>
+                <span class="inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-black uppercase tracking-wider bg-purple-50 text-purple-700 border border-purple-200/60">
+                    Workshop
+                </span>
             </div>
+            <p class="text-xs text-slate-500 mt-0.5">Manage intake registry, diagnostic bench progress, and client device handovers</p>
+        </div>
+
+        <div class="flex items-center gap-2.5">
+            <button @click="loadTickets(); loadStats()" title="Refresh"
+                class="w-9 h-9 rounded-xl bg-white border border-slate-200 text-slate-600 hover:bg-slate-50 flex items-center justify-center transition-colors shadow-2xs">
+                <i class="fas fa-rotate text-xs" :class="loading ? 'fa-spin text-primary-600' : ''"></i>
+            </button>
+
             <a href="/service-tickets/add"
-                class="bg-white text-primary-600 px-5 py-2.5 rounded-lg font-semibold shadow-lg hover:shadow-xl transition-all flex items-center gap-2 hover:scale-105">
-                <i class="fas fa-plus text-sm"></i>
-                <span>New Ticket</span>
+                class="px-3.5 py-2 bg-white border border-slate-200 text-slate-700 hover:border-primary-300 hover:text-primary-600 rounded-xl text-xs font-bold transition-all shadow-2xs flex items-center gap-1.5 active:scale-95">
+                <i class="fas fa-clipboard-list text-slate-400"></i>
+                <span>Intake Form</span>
             </a>
+
+            <button @click="openAddModal()"
+                class="px-4 py-2 bg-primary-600 hover:bg-primary-700 text-white rounded-xl text-xs font-bold transition-all shadow-md shadow-primary-200 flex items-center gap-2 active:scale-95">
+                <i class="fas fa-plus text-xs"></i>
+                <span>New Ticket</span>
+            </button>
         </div>
     </div>
 
-    <!-- Filters -->
-    <div class="bg-white border border-slate-200 rounded-xl p-5 shadow-sm space-y-4">
-        <div class="flex gap-3">
-            <div class="flex-1 relative group">
-                <i class="fas fa-search absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-primary-500 transition-colors"></i>
-                <input type="text" x-model="filters.search" @input.debounce.300ms="loadTickets()"
-                    placeholder="Search tickets..."
-                    class="w-full pl-11 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-lg focus:ring-2 focus:ring-primary-100 focus:bg-white focus:border-primary-300 outline-none transition-all text-sm">
+    <!-- Spacious 4-Card KPI Summary (Styled after Astr leads.ejs) -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <!-- Active Repairs -->
+        <div class="bg-white border border-slate-200/80 p-5 rounded-2xl shadow-xs flex items-center justify-between">
+            <div>
+                <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Active Repairs</p>
+                <div class="flex items-baseline gap-2 mt-1">
+                    <span class="text-2xl font-bold text-slate-900" x-text="metrics.pending + metrics.inProgress">0</span>
+                    <span class="text-xs font-semibold text-amber-600">in shop</span>
+                </div>
+                <p class="text-[11px] text-slate-400 mt-0.5" x-text="`${metrics.pending} pending, ${metrics.inProgress} on bench`"></p>
             </div>
-            <div class="flex items-center gap-2 bg-slate-100 p-1.5 rounded-lg">
-                <button @click="viewMode = 'grid'"
-                    :class="viewMode === 'grid' ? 'bg-white text-primary-600 shadow-sm' : 'text-slate-500'"
-                    class="w-10 h-10 rounded-md flex items-center justify-center transition-all hover:text-primary-600">
-                    <i class="fas fa-th"></i>
-                </button>
-                <button @click="viewMode = 'list'"
-                    :class="viewMode === 'list' ? 'bg-white text-primary-600 shadow-sm' : 'text-slate-500'"
-                    class="w-10 h-10 rounded-md flex items-center justify-center transition-all hover:text-primary-600">
-                    <i class="fas fa-list"></i>
-                </button>
+            <div class="w-12 h-12 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center text-xl shrink-0">
+                <i class="fas fa-wrench"></i>
             </div>
         </div>
 
-        <div class="flex items-center gap-2 overflow-x-auto pb-1">
-            <template x-for="status in ['All', 'Pending', 'In Progress', 'Completed', 'Delivered', 'Cancelled']" :key="status">
-                <button @click="filters.status = status; loadTickets()"
-                    :class="filters.status === status ? 'bg-primary-600 text-white shadow-md' : 'bg-slate-50 text-slate-600 hover:bg-slate-100'"
-                    class="px-4 py-2 rounded-lg text-xs font-semibold transition-all whitespace-nowrap"
-                    x-text="status">
+        <!-- On Bench (Diagnostics) -->
+        <div class="bg-white border border-slate-200/80 p-5 rounded-2xl shadow-xs flex items-center justify-between">
+            <div>
+                <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest">On Bench</p>
+                <div class="flex items-baseline gap-2 mt-1">
+                    <span class="text-2xl font-bold text-blue-600" x-text="metrics.inProgress">0</span>
+                    <span class="text-xs font-semibold text-blue-500">diagnosing</span>
+                </div>
+                <p class="text-[11px] text-slate-400 mt-0.5">Under active repair</p>
+            </div>
+            <div class="w-12 h-12 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center text-xl shrink-0">
+                <i class="fas fa-microchip"></i>
+            </div>
+        </div>
+
+        <!-- Ready for Pickup -->
+        <div class="bg-white border border-slate-200/80 p-5 rounded-2xl shadow-xs flex items-center justify-between">
+            <div>
+                <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Ready for Pickup</p>
+                <div class="flex items-baseline gap-2 mt-1">
+                    <span class="text-2xl font-bold text-emerald-600" x-text="metrics.completed">0</span>
+                    <span class="text-xs font-semibold text-emerald-500">completed</span>
+                </div>
+                <p class="text-[11px] text-slate-400 mt-0.5">Awaiting client collection</p>
+            </div>
+            <div class="w-12 h-12 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center text-xl shrink-0">
+                <i class="fas fa-circle-check"></i>
+            </div>
+        </div>
+
+        <!-- Total Service Revenue -->
+        <div class="bg-white border border-slate-200/80 p-5 rounded-2xl shadow-xs flex items-center justify-between">
+            <div>
+                <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Service Revenue</p>
+                <div class="flex items-baseline gap-1 mt-1 font-mono">
+                    <span class="text-slate-400 font-bold text-base">₹</span>
+                    <span class="text-2xl font-bold text-slate-900" x-text="formatCurrency(metrics.totalRevenue)">0</span>
+                </div>
+                <p class="text-[11px] text-purple-600 font-semibold mt-0.5">Realized billing</p>
+            </div>
+            <div class="w-12 h-12 rounded-xl bg-purple-50 text-purple-600 flex items-center justify-center text-xl shrink-0">
+                <i class="fas fa-indian-rupee-sign"></i>
+            </div>
+        </div>
+    </div>
+
+    <!-- Clean Filter & Search Controls (Separated & Spacious) -->
+    <div class="space-y-3">
+        <!-- Status Tabs -->
+        <div class="flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-none text-xs">
+            <button @click="filters.status = 'All'; pagination.page = 1; loadTickets()"
+                :class="filters.status === 'All' ? 'bg-slate-900 text-white font-bold shadow-xs' : 'bg-white text-slate-600 hover:bg-slate-50 border border-slate-200/80'"
+                class="px-3.5 py-1.5 rounded-xl transition-all whitespace-nowrap flex items-center gap-1.5">
+                <span>All</span>
+                <span class="px-1.5 py-0.2 rounded-full text-[10px] font-mono"
+                    :class="filters.status === 'All' ? 'bg-slate-700 text-white' : 'bg-slate-100 text-slate-700'"
+                    x-text="metrics.total"></span>
+            </button>
+
+            <button @click="filters.status = 'Pending'; pagination.page = 1; loadTickets()"
+                :class="filters.status === 'Pending' ? 'bg-amber-500 text-white font-bold shadow-xs' : 'bg-white text-slate-700 hover:bg-slate-50 border border-slate-200/80'"
+                class="px-3.5 py-1.5 rounded-xl transition-all whitespace-nowrap flex items-center gap-1.5">
+                <span>Intake Pending</span>
+                <span class="px-1.5 py-0.2 rounded-full text-[10px] font-mono"
+                    :class="filters.status === 'Pending' ? 'bg-amber-600 text-white' : 'bg-amber-50 text-amber-700'"
+                    x-text="metrics.pending"></span>
+            </button>
+
+            <button @click="filters.status = 'In Progress'; pagination.page = 1; loadTickets()"
+                :class="filters.status === 'In Progress' ? 'bg-blue-600 text-white font-bold shadow-xs' : 'bg-white text-slate-700 hover:bg-slate-50 border border-slate-200/80'"
+                class="px-3.5 py-1.5 rounded-xl transition-all whitespace-nowrap flex items-center gap-1.5">
+                <span>On Bench</span>
+                <span class="px-1.5 py-0.2 rounded-full text-[10px] font-mono"
+                    :class="filters.status === 'In Progress' ? 'bg-blue-700 text-white' : 'bg-blue-50 text-blue-700'"
+                    x-text="metrics.inProgress"></span>
+            </button>
+
+            <button @click="filters.status = 'Completed'; pagination.page = 1; loadTickets()"
+                :class="filters.status === 'Completed' ? 'bg-emerald-600 text-white font-bold shadow-xs' : 'bg-white text-slate-700 hover:bg-slate-50 border border-slate-200/80'"
+                class="px-3.5 py-1.5 rounded-xl transition-all whitespace-nowrap flex items-center gap-1.5">
+                <span>Ready for Pickup</span>
+                <span class="px-1.5 py-0.2 rounded-full text-[10px] font-mono"
+                    :class="filters.status === 'Completed' ? 'bg-emerald-700 text-white' : 'bg-emerald-50 text-emerald-700'"
+                    x-text="metrics.completed"></span>
+            </button>
+
+            <button @click="filters.status = 'Delivered'; pagination.page = 1; loadTickets()"
+                :class="filters.status === 'Delivered' ? 'bg-slate-800 text-white font-bold shadow-xs' : 'bg-white text-slate-700 hover:bg-slate-50 border border-slate-200/80'"
+                class="px-3.5 py-1.5 rounded-xl transition-all whitespace-nowrap flex items-center gap-1.5">
+                <span>Delivered</span>
+                <span class="px-1.5 py-0.2 rounded-full text-[10px] font-mono"
+                    :class="filters.status === 'Delivered' ? 'bg-slate-900 text-white' : 'bg-slate-100 text-slate-700'"
+                    x-text="metrics.delivered"></span>
+            </button>
+        </div>
+
+        <!-- Search & Control Row -->
+        <div class="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
+            <div class="relative flex-1">
+                <i class="fas fa-search absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i>
+                <input type="text" x-model="filters.search" @input.debounce.300ms="pagination.page = 1; loadTickets()"
+                    placeholder="Search by ticket #, client name, phone, or device description..."
+                    class="w-full pl-9 pr-8 py-2.5 bg-white border border-slate-200/80 rounded-xl text-xs font-medium text-slate-900 placeholder:text-slate-400 focus:border-primary-500 focus:ring-1 focus:ring-primary-500/20 outline-none transition-all shadow-2xs">
+                <button x-show="filters.search" @click="filters.search = ''; pagination.page = 1; loadTickets()"
+                    class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 text-xs">
+                    <i class="fas fa-times-circle"></i>
                 </button>
-            </template>
+            </div>
+
+            <div class="flex items-center gap-2">
+                <!-- Technician Dropdown -->
+                <select x-model="filters.technician" @change="pagination.page = 1; loadTickets()"
+                    class="px-3 py-2.5 bg-white border border-slate-200/80 rounded-xl text-xs font-medium text-slate-700 focus:border-primary-500 outline-none transition-all shadow-2xs">
+                    <option value="">All Technicians</option>
+                    <template x-for="tech in technicians" :key="tech._id">
+                        <option :value="tech._id" x-text="tech.name || tech.username"></option>
+                    </template>
+                </select>
+
+                <!-- Sort Dropdown -->
+                <select x-model="filters.sortBy" @change="loadTickets()"
+                    class="px-3 py-2.5 bg-white border border-slate-200/80 rounded-xl text-xs font-medium text-slate-700 focus:border-primary-500 outline-none transition-all shadow-2xs">
+                    <option value="newest">Newest First</option>
+                    <option value="oldest">Oldest First</option>
+                    <option value="chargeHigh">Highest Fee</option>
+                </select>
+
+                <!-- Mode Toggle -->
+                <div class="flex items-center bg-white p-1 rounded-xl border border-slate-200/80 shadow-2xs">
+                    <button @click="viewMode = 'grid'" title="Card View"
+                        :class="viewMode === 'grid' ? 'bg-slate-100 text-slate-900 font-bold' : 'text-slate-400 hover:text-slate-700'"
+                        class="px-2.5 py-1.5 rounded-lg text-xs transition-all flex items-center gap-1.5">
+                        <i class="fas fa-grid-2 text-xs"></i>
+                        <span class="text-[11px] hidden md:inline">Cards</span>
+                    </button>
+                    <button @click="viewMode = 'list'" title="Table Ledger View"
+                        :class="viewMode === 'list' ? 'bg-slate-100 text-slate-900 font-bold' : 'text-slate-400 hover:text-slate-700'"
+                        class="px-2.5 py-1.5 rounded-lg text-xs transition-all flex items-center gap-1.5">
+                        <i class="fas fa-list text-xs"></i>
+                        <span class="text-[11px] hidden md:inline">Table</span>
+                    </button>
+                </div>
+            </div>
         </div>
     </div>
 
     <!-- Loading -->
-    <div x-show="loading" class="flex flex-col items-center justify-center py-20">
-        <div class="w-12 h-12 border-4 border-slate-200 border-t-primary-600 rounded-full animate-spin mb-4"></div>
-        <p class="text-sm text-slate-500 font-medium">Loading tickets...</p>
+    <div x-show="loading" class="flex flex-col items-center justify-center py-20 space-y-3">
+        <div class="w-9 h-9 border-3 border-slate-200 border-t-primary-600 rounded-full animate-spin"></div>
+        <p class="text-xs text-slate-400 uppercase tracking-widest font-semibold">Loading repairs...</p>
     </div>
 
     <!-- Empty State -->
-    <div x-show="!loading && tickets.length === 0" class="bg-gradient-to-br from-slate-50 to-white border border-slate-200 rounded-xl p-16 text-center shadow-sm">
-        <div class="w-16 h-16 bg-gradient-to-br from-primary-100 to-primary-50 rounded-xl flex items-center justify-center mx-auto mb-4">
-            <i class="fas fa-wrench text-primary-600 text-2xl"></i>
+    <div x-show="!loading && tickets.length === 0" class="bg-white border border-slate-200/80 rounded-2xl p-12 text-center shadow-xs">
+        <div class="w-12 h-12 rounded-2xl bg-primary-50 text-primary-600 flex items-center justify-center mx-auto mb-3">
+            <i class="fas fa-screwdriver-wrench text-lg"></i>
         </div>
-        <h3 class="text-lg font-bold text-slate-900 mb-2">No Tickets Found</h3>
-        <p class="text-sm text-slate-500 mb-6">Start by creating your first repair ticket</p>
-        <a href="/service-tickets/add"
-            class="inline-flex items-center gap-2 px-6 py-3 bg-primary-600 text-white rounded-lg font-semibold shadow-lg hover:shadow-xl hover:bg-primary-700 transition-all hover:scale-105">
-            <i class="fas fa-plus"></i>
-            <span>Create Ticket</span>
-        </a>
+        <h3 class="text-sm font-bold text-slate-900">No Tickets Found</h3>
+        <p class="text-xs text-slate-500 max-w-sm mx-auto mt-1 mb-4">No repair jobs matching current filter criteria.</p>
+        <button @click="openAddModal()"
+            class="inline-flex items-center gap-1.5 px-4 py-2 bg-primary-600 text-white rounded-xl text-xs font-bold hover:bg-primary-700 transition-all shadow-xs">
+            <i class="fas fa-plus text-[10px]"></i>
+            <span>Log Device Intake</span>
+        </button>
     </div>
 
-    <!-- Content -->
-    <div x-show="!loading && tickets.length > 0">
+    <!-- Content: Cards or Table -->
+    <div x-show="!loading && tickets.length > 0" class="space-y-4">
         
-        <!-- Grid View -->
-        <div x-show="viewMode === 'grid'" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
+        <!-- 1. AIRY & SPACIOUS CARDS VIEW -->
+        <div x-show="viewMode === 'grid'" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             <template x-for="ticket in tickets" :key="ticket._id">
-                <div class="bg-white border border-slate-200 rounded-xl p-6 shadow-sm hover:shadow-lg hover:border-primary-200 transition-all group cursor-pointer">
-                    <div class="flex items-start justify-between mb-4">
-                        <div class="flex items-center gap-3">
-                            <div class="w-10 h-10 rounded-lg flex items-center justify-center transition-all"
-                                :class="{
-                                    'bg-amber-100 text-amber-600': ticket.status === 'Pending',
-                                    'bg-blue-100 text-blue-600': ticket.status === 'In Progress',
-                                    'bg-emerald-100 text-emerald-600': ticket.status === 'Completed',
-                                    'bg-slate-900 text-white': ticket.status === 'Delivered',
-                                    'bg-red-100 text-red-600': ticket.status === 'Cancelled'
-                                }">
-                                <i class="fas fa-wrench text-sm"></i>
+                <div class="bg-white border border-slate-200/80 rounded-2xl p-5 shadow-2xs hover:shadow-md hover:border-primary-200 transition-all cursor-pointer flex flex-col justify-between group"
+                    @click="viewTicket(ticket)">
+                    
+                    <div class="space-y-3">
+                        <!-- Top Bar: Tag & Status -->
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center gap-2">
+                                <span class="font-mono text-xs font-bold text-slate-700" x-text="'#' + ticket.ticketNumber"></span>
+                                <span class="text-[10px] text-slate-400 font-semibold" x-text="formatDate(ticket.createdAt)"></span>
                             </div>
-                            <div>
-                                <p class="text-xs text-slate-500 font-medium" x-text="'#' + ticket.ticketNumber"></p>
-                                <h3 class="text-sm font-bold text-slate-900" x-text="ticket.customer?.name || 'Customer'"></h3>
-                            </div>
+
+                            <span class="px-2.5 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider"
+                                :class="getStatusBadgeClass(ticket.status)"
+                                x-text="ticket.status"></span>
                         </div>
-                        <span class="px-2.5 py-1 rounded-lg text-[10px] font-bold uppercase"
-                            :class="{
-                                'bg-amber-100 text-amber-700': ticket.status === 'Pending',
-                                'bg-blue-100 text-blue-700': ticket.status === 'In Progress',
-                                'bg-emerald-100 text-emerald-700': ticket.status === 'Completed',
-                                'bg-slate-900 text-white': ticket.status === 'Delivered',
-                                'bg-red-100 text-red-700': ticket.status === 'Cancelled'
-                            }" x-text="ticket.status"></span>
+
+                        <!-- Device / Job Title -->
+                        <div>
+                            <h3 class="text-sm font-bold text-slate-900 group-hover:text-primary-600 transition-colors line-clamp-2 leading-snug"
+                                x-text="ticket.deviceDetails"></h3>
+                            <p x-show="ticket.notes" class="text-xs text-slate-400 italic mt-1 line-clamp-1" x-text="ticket.notes"></p>
+                        </div>
+
+                        <!-- 3rd Party / Outsourced Badges -->
+                        <template x-if="ticket.outsourcedRepair?.isOutsourced">
+                            <div class="flex items-center gap-1.5 flex-wrap pt-1">
+                                <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-bold"
+                                    :class="{
+                                        'bg-purple-50 text-purple-700 border border-purple-200': ticket.outsourcedRepair.custodyLocation === 'At Partner Shop',
+                                        'bg-slate-100 text-slate-700 border border-slate-200': ticket.outsourcedRepair.custodyLocation === 'In-House',
+                                        'bg-emerald-50 text-emerald-700 border border-emerald-200': ticket.outsourcedRepair.custodyLocation === 'Received Back'
+                                    }">
+                                    <i class="fas" :class="ticket.outsourcedRepair.custodyLocation === 'At Partner Shop' ? 'fa-truck-fast text-purple-600' : 'fa-warehouse text-slate-500'"></i>
+                                    <span x-text="ticket.outsourcedRepair.custodyLocation === 'At Partner Shop' ? ('At ' + (ticket.outsourcedRepair.partnerShopName || 'Partner')) : ticket.outsourcedRepair.custodyLocation"></span>
+                                </span>
+                                <span x-show="ticket.outsourcedRepair.repairOutcome && ticket.outsourcedRepair.repairOutcome !== 'Pending'"
+                                    class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-bold"
+                                    :class="{
+                                        'bg-emerald-50 text-emerald-700 border border-emerald-200': ticket.outsourcedRepair.repairOutcome === 'Repaired',
+                                        'bg-rose-50 text-rose-700 border border-rose-200': ticket.outsourcedRepair.repairOutcome === 'Cant Repair',
+                                        'bg-amber-50 text-amber-700 border border-amber-200': ticket.outsourcedRepair.repairOutcome === 'Not Repaired',
+                                        'bg-blue-50 text-blue-700 border border-blue-200': ticket.outsourcedRepair.repairOutcome === 'In Progress'
+                                    }">
+                                    <i class="fas" :class="{
+                                        'fa-check': ticket.outsourcedRepair.repairOutcome === 'Repaired',
+                                        'fa-ban': ticket.outsourcedRepair.repairOutcome === 'Cant Repair',
+                                        'fa-rotate-left': ticket.outsourcedRepair.repairOutcome === 'Not Repaired',
+                                        'fa-spinner fa-spin': ticket.outsourcedRepair.repairOutcome === 'In Progress'
+                                    }"></i>
+                                    <span x-text="ticket.outsourcedRepair.repairOutcome === 'Cant Repair' ? 'Can\'t Repair' : ticket.outsourcedRepair.repairOutcome"></span>
+                                </span>
+                            </div>
+                        </template>
                     </div>
 
-                    <p class="text-sm text-slate-600 mb-4 line-clamp-2 min-h-[40px]" x-text="ticket.deviceDetails"></p>
-
-                    <div class="flex items-center justify-between pt-4 border-t border-slate-100">
-                        <div class="flex items-center gap-2 text-xs text-slate-500">
-                            <i class="fas fa-calendar text-slate-400"></i>
-                            <span x-text="new Date(ticket.createdAt).toLocaleDateString('en-IN', { month: 'short', day: 'numeric' })"></span>
+                    <!-- Customer & Fee Footer -->
+                    <div class="pt-4 border-t border-slate-100 mt-4 flex items-center justify-between text-xs">
+                        <!-- Customer -->
+                        <div class="flex items-center gap-2">
+                            <div class="w-6 h-6 rounded-full bg-slate-100 text-slate-700 flex items-center justify-center text-[10px] font-bold"
+                                x-text="ticket.customer?.name ? ticket.customer.name.charAt(0).toUpperCase() : 'C'"></div>
+                            <div>
+                                <p class="font-semibold text-slate-800 truncate max-w-[120px]" x-text="ticket.customer?.name || 'Walk-in'"></p>
+                            </div>
                         </div>
-                        <div class="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                            <a :href="`/service-tickets/${ticket._id}`"
-                                class="w-8 h-8 rounded-lg bg-primary-50 hover:bg-primary-100 text-primary-600 flex items-center justify-center transition-all">
-                                <i class="fas fa-eye text-xs"></i>
-                            </a>
-                            <button @click="editTicket(ticket)"
-                                class="w-8 h-8 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-600 flex items-center justify-center transition-all">
-                                <i class="fas fa-edit text-xs"></i>
-                            </button>
+
+                        <!-- Fee & Tech -->
+                        <div class="text-right">
+                            <div class="font-mono font-bold text-slate-900 text-xs" x-text="'₹' + formatCurrency(ticket.serviceCharge)"></div>
+                            <span class="text-[10px] text-slate-400 truncate max-w-[100px] block" x-text="getTechnicianName(ticket.assignedTechnician)"></span>
                         </div>
                     </div>
                 </div>
             </template>
         </div>
 
-        <!-- List View -->
-        <div x-show="viewMode === 'list'" class="bg-white border border-slate-200 rounded-xl overflow-hidden shadow-sm">
-            <table class="w-full">
-                <thead>
-                    <tr class="bg-gradient-to-r from-slate-50 to-slate-100/50 border-b border-slate-200">
-                        <th class="px-6 py-4 text-left text-xs font-bold text-slate-600 uppercase tracking-wider">Ticket</th>
-                        <th class="px-6 py-4 text-left text-xs font-bold text-slate-600 uppercase tracking-wider">Customer</th>
-                        <th class="px-6 py-4 text-left text-xs font-bold text-slate-600 uppercase tracking-wider hidden lg:table-cell">Device</th>
-                        <th class="px-6 py-4 text-left text-xs font-bold text-slate-600 uppercase tracking-wider">Status</th>
-                        <th class="px-6 py-4 text-right text-xs font-bold text-slate-600 uppercase tracking-wider">Actions</th>
-                    </tr>
-                </thead>
-                <tbody class="divide-y divide-slate-100">
-                    <template x-for="ticket in tickets" :key="ticket._id">
-                        <tr class="hover:bg-slate-50 transition-colors group">
-                            <td class="px-6 py-4">
-                                <div class="flex items-center gap-3">
-                                    <div class="w-8 h-8 rounded-lg flex items-center justify-center"
-                                        :class="{
-                                            'bg-amber-100 text-amber-600': ticket.status === 'Pending',
-                                            'bg-blue-100 text-blue-600': ticket.status === 'In Progress',
-                                            'bg-emerald-100 text-emerald-600': ticket.status === 'Completed',
-                                            'bg-slate-900 text-white': ticket.status === 'Delivered',
-                                            'bg-red-100 text-red-600': ticket.status === 'Cancelled'
-                                        }">
-                                        <i class="fas fa-wrench text-xs"></i>
-                                    </div>
-                                    <div>
-                                        <p class="text-sm font-bold text-slate-900" x-text="'#' + ticket.ticketNumber"></p>
-                                        <p class="text-xs text-slate-500" x-text="new Date(ticket.createdAt).toLocaleDateString('en-IN')"></p>
-                                    </div>
-                                </div>
-                            </td>
-                            <td class="px-6 py-4">
-                                <p class="text-sm font-semibold text-slate-900" x-text="ticket.customer?.name || 'Customer'"></p>
-                                <p class="text-xs text-slate-500" x-text="ticket.customer?.phone || '-'"></p>
-                            </td>
-                            <td class="px-6 py-4 hidden lg:table-cell">
-                                <p class="text-sm text-slate-600 truncate max-w-md" x-text="ticket.deviceDetails"></p>
-                            </td>
-                            <td class="px-6 py-4">
-                                <span class="px-3 py-1.5 rounded-lg text-[10px] font-bold uppercase inline-flex items-center gap-1.5"
-                                    :class="{
-                                        'bg-amber-100 text-amber-700': ticket.status === 'Pending',
-                                        'bg-blue-100 text-blue-700': ticket.status === 'In Progress',
-                                        'bg-emerald-100 text-emerald-700': ticket.status === 'Completed',
-                                        'bg-slate-900 text-white': ticket.status === 'Delivered',
-                                        'bg-red-100 text-red-700': ticket.status === 'Cancelled'
-                                    }">
-                                    <div class="w-1.5 h-1.5 rounded-full bg-current"></div>
-                                    <span x-text="ticket.status"></span>
-                                </span>
-                            </td>
-                            <td class="px-6 py-4 text-right">
-                                <div class="flex items-center justify-end gap-2">
-                                    <a :href="`/service-tickets/${ticket._id}`"
-                                        class="w-8 h-8 rounded-lg bg-primary-50 hover:bg-primary-100 text-primary-600 flex items-center justify-center transition-all">
-                                        <i class="fas fa-eye text-xs"></i>
-                                    </a>
-                                    <button @click="editTicket(ticket)"
-                                        class="w-8 h-8 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-600 flex items-center justify-center transition-all">
-                                        <i class="fas fa-edit text-xs"></i>
-                                    </button>
-                                </div>
-                            </td>
+        <!-- 2. CLEAN TABLE LEDGER VIEW -->
+        <div x-show="viewMode === 'list'" class="bg-white border border-slate-200/80 rounded-2xl overflow-hidden shadow-2xs">
+            <div class="overflow-x-auto">
+                <table class="w-full text-left text-xs">
+                    <thead>
+                        <tr class="bg-slate-50/70 border-b border-slate-200/80 text-slate-500 font-bold uppercase tracking-wider text-[10px]">
+                            <th class="px-5 py-3.5">Ticket #</th>
+                            <th class="px-5 py-3.5">Device & Job Description</th>
+                            <th class="px-5 py-3.5">Customer</th>
+                            <th class="px-5 py-3.5">Technician</th>
+                            <th class="px-5 py-3.5">Service Fee</th>
+                            <th class="px-5 py-3.5">Status</th>
+                            <th class="px-5 py-3.5 text-right">Action</th>
                         </tr>
-                    </template>
-                </tbody>
-            </table>
+                    </thead>
+                    <tbody class="divide-y divide-slate-100">
+                        <template x-for="ticket in tickets" :key="ticket._id">
+                            <tr class="hover:bg-slate-50/60 transition-colors cursor-pointer group"
+                                @click="viewTicket(ticket)">
+                                
+                                <td class="px-5 py-3.5">
+                                    <span class="font-mono font-bold text-slate-900 block" x-text="'#' + ticket.ticketNumber"></span>
+                                    <span class="text-[10px] text-slate-400" x-text="formatDate(ticket.createdAt)"></span>
+                                </td>
+
+                                <td class="px-5 py-3.5 max-w-sm">
+                                    <p class="font-semibold text-slate-900 truncate" x-text="ticket.deviceDetails"></p>
+                                    <p x-show="ticket.notes" class="text-[10px] text-slate-400 italic truncate" x-text="ticket.notes"></p>
+                                </td>
+
+                                <td class="px-5 py-3.5">
+                                    <p class="font-semibold text-slate-800" x-text="ticket.customer?.name || 'Walk-in'"></p>
+                                    <p class="text-[10px] font-mono text-slate-400" x-text="ticket.customer?.phone || '—'"></p>
+                                </td>
+
+                                <td class="px-5 py-3.5">
+                                    <span class="text-[11px] text-slate-600 bg-slate-100 px-2 py-0.5 rounded-md"
+                                        x-text="getTechnicianName(ticket.assignedTechnician)"></span>
+                                </td>
+
+                                <td class="px-5 py-3.5 font-mono font-bold text-slate-900">
+                                    <span x-text="'₹' + formatCurrency(ticket.serviceCharge)"></span>
+                                </td>
+
+                                <td class="px-5 py-3.5 space-y-1">
+                                    <div>
+                                        <span class="px-2.5 py-1 rounded text-[10px] font-bold uppercase tracking-wider"
+                                            :class="getStatusBadgeClass(ticket.status)"
+                                            x-text="ticket.status"></span>
+                                    </div>
+                                    <div x-show="ticket.outsourcedRepair?.isOutsourced" class="flex items-center gap-1 flex-wrap">
+                                        <span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[9px] font-bold bg-purple-50 text-purple-700 border border-purple-200"
+                                            x-show="ticket.outsourcedRepair?.custodyLocation === 'At Partner Shop'">
+                                            <i class="fas fa-truck-fast text-[8px]"></i>
+                                            <span x-text="'At ' + (ticket.outsourcedRepair?.partnerShopName || 'Partner')"></span>
+                                        </span>
+                                        <span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[9px] font-bold"
+                                            x-show="ticket.outsourcedRepair?.repairOutcome && ticket.outsourcedRepair?.repairOutcome !== 'Pending'"
+                                            :class="{
+                                                'bg-emerald-50 text-emerald-700 border border-emerald-200': ticket.outsourcedRepair?.repairOutcome === 'Repaired',
+                                                'bg-rose-50 text-rose-700 border border-rose-200': ticket.outsourcedRepair?.repairOutcome === 'Cant Repair',
+                                                'bg-amber-50 text-amber-700 border border-amber-200': ticket.outsourcedRepair?.repairOutcome === 'Not Repaired',
+                                                'bg-blue-50 text-blue-700 border border-blue-200': ticket.outsourcedRepair?.repairOutcome === 'In Progress'
+                                            }"
+                                            x-text="ticket.outsourcedRepair?.repairOutcome === 'Cant Repair' ? 'Can\'t Repair' : ticket.outsourcedRepair?.repairOutcome">
+                                        </span>
+                                    </div>
+                                </td>
+
+                                <td class="px-5 py-3.5 text-right" @click.stop>
+                                    <button type="button" @click="viewTicket(ticket)"
+                                        class="px-3 py-1 bg-slate-100 hover:bg-primary-50 hover:text-primary-600 text-slate-700 rounded-lg text-xs font-semibold transition-all">
+                                        View
+                                    </button>
+                                </td>
+                            </tr>
+                        </template>
+                    </tbody>
+                </table>
+            </div>
         </div>
 
         <!-- Pagination -->
-        <div x-show="pagination.total > 0" class="bg-white border border-slate-200 rounded-xl px-6 py-4 shadow-sm">
-            <div class="flex items-center justify-between">
-                <p class="text-sm text-slate-600">
-                    <span class="font-bold text-slate-900" x-text="(pagination.page - 1) * pagination.limit + 1"></span>-<span class="font-bold text-slate-900" x-text="Math.min(pagination.page * pagination.limit, pagination.total)"></span>
-                    of <span class="font-bold text-slate-900" x-text="pagination.total"></span> tickets
-                </p>
-                <div class="flex gap-2">
-                    <button @click="changePage(pagination.page - 1)" :disabled="pagination.page === 1"
-                        class="px-5 py-2.5 bg-slate-100 text-slate-700 rounded-lg text-sm font-semibold hover:bg-slate-200 disabled:opacity-40 disabled:cursor-not-allowed transition-all">
-                        Previous
-                    </button>
-                    <button @click="changePage(pagination.page + 1)" :disabled="pagination.page * pagination.limit >= pagination.total"
-                        class="px-5 py-2.5 bg-primary-600 text-white rounded-lg text-sm font-semibold hover:bg-primary-700 shadow-md disabled:opacity-40 disabled:cursor-not-allowed transition-all">
-                        Next
-                    </button>
-                </div>
+        <div class="bg-white border border-slate-200/80 rounded-2xl px-5 py-3 shadow-2xs flex flex-col sm:flex-row items-center justify-between gap-3 text-xs">
+            <p class="text-slate-500">
+                Showing <strong class="text-slate-800" x-text="((pagination.page - 1) * pagination.limit) + 1"></strong> to 
+                <strong class="text-slate-800" x-text="Math.min(pagination.page * pagination.limit, pagination.total)"></strong> of 
+                <strong class="text-slate-800" x-text="pagination.total"></strong> tickets
+            </p>
+
+            <div class="flex items-center gap-2">
+                <button @click="changePage(pagination.page - 1)" :disabled="pagination.page <= 1"
+                    class="px-3 py-1 bg-slate-100 text-slate-700 rounded-lg font-semibold hover:bg-slate-200 disabled:opacity-40 disabled:cursor-not-allowed transition-all">
+                    Prev
+                </button>
+                <span class="px-2 font-mono text-slate-600 font-bold" x-text="`Page ${pagination.page} of ${Math.ceil(pagination.total / pagination.limit) || 1}`"></span>
+                <button @click="changePage(pagination.page + 1)" :disabled="pagination.page * pagination.limit >= pagination.total"
+                    class="px-3 py-1 bg-primary-600 text-white rounded-lg font-semibold hover:bg-primary-700 shadow-2xs disabled:opacity-40 disabled:cursor-not-allowed transition-all">
+                    Next
+                </button>
             </div>
         </div>
     </div>
 
-    <!-- Modal -->
-    <div x-show="showModal" x-transition:enter="transition ease-out duration-200" x-transition:enter-start="opacity-0"
-        x-transition:enter-end="opacity-100" x-transition:leave="transition ease-in duration-150"
-        x-transition:leave-start="opacity-100" x-transition:leave-end="opacity-0"
-        class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center p-4"
-        @click.self="closeModal()" style="display: none;">
-
-        <div x-show="showModal" x-transition:enter="transition ease-out duration-200 transform"
-            x-transition:enter-start="opacity-0 scale-95" x-transition:enter-end="opacity-100 scale-100"
-            class="bg-white rounded-xl shadow-2xl w-full max-w-3xl max-h-[85vh] overflow-hidden flex flex-col">
-
-            <div class="px-6 py-5 border-b border-slate-200 flex items-center justify-between bg-gradient-to-r from-slate-50 to-white">
-                <div class="flex items-center gap-3">
-                    <div class="w-10 h-10 bg-primary-100 rounded-lg flex items-center justify-center">
-                        <i class="fas fa-wrench text-primary-600"></i>
-                    </div>
-                    <h3 class="text-lg font-bold text-slate-900" x-text="editMode ? 'Edit Ticket' : 'New Ticket'"></h3>
+    <!-- PRINT SLIP MODAL -->
+    <template x-teleport="body">
+        <div x-show="showPrintModal" x-cloak
+            class="fixed inset-0 z-[9999] overflow-y-auto flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs"
+            @keydown.window.escape="showPrintModal = false">
+            
+            <div class="bg-white rounded-2xl shadow-2xl w-full max-w-sm overflow-hidden border border-slate-200"
+                @click.outside="showPrintModal = false">
+                
+                <div class="px-5 py-3 bg-slate-900 text-white flex items-center justify-between">
+                    <span class="text-xs font-bold uppercase tracking-wider">Service Intake Slip</span>
+                    <button type="button" @click="showPrintModal = false" class="text-slate-400 hover:text-white">
+                        <i class="fas fa-times text-xs"></i>
+                    </button>
                 </div>
-                <button @click="closeModal()" class="text-slate-400 hover:text-slate-600 transition-colors">
-                    <i class="fas fa-times text-xl"></i>
-                </button>
-            </div>
 
-            <div class="p-6 overflow-y-auto flex-1">
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
-                    <div class="md:col-span-2">
-                        <label class="block text-xs font-bold text-slate-700 mb-2 uppercase tracking-wider">Customer</label>
-                        <div x-data="{ searchQuery: '', showResults: false }">
-                            <div x-show="selectedCustomer" class="flex items-center justify-between p-4 bg-gradient-to-r from-primary-50 to-primary-100/50 border border-primary-200 rounded-lg">
-                                <div class="flex items-center gap-3">
-                                    <div class="w-10 h-10 rounded-full bg-primary-600 flex items-center justify-center text-white font-bold shadow-md">
-                                        <span x-text="selectedCustomer?.name?.charAt(0)"></span>
-                                    </div>
-                                    <div>
-                                        <p class="text-sm font-bold text-slate-900" x-text="selectedCustomer?.name"></p>
-                                        <p class="text-xs text-slate-600" x-text="selectedCustomer?.phone"></p>
-                                    </div>
-                                </div>
-                                <button @click="clearCustomerSelection()" class="text-slate-400 hover:text-red-500 transition-colors">
-                                    <i class="fas fa-times"></i>
-                                </button>
-                            </div>
+                <div id="service-slip-print-area" class="p-5 space-y-3 font-mono text-xs bg-white text-slate-900">
+                    <div class="text-center border-b border-dashed border-slate-300 pb-2">
+                        <h2 class="text-sm font-black uppercase font-sans" x-text="shopSettings?.shopName || 'Astr Service Desk'"></h2>
+                        <p class="text-[10px] text-slate-500 font-sans" x-text="shopSettings?.address || ''"></p>
+                        <p class="text-[10px] text-slate-500" x-text="shopSettings?.phone || ''"></p>
+                    </div>
 
-                            <div x-show="!selectedCustomer" class="relative">
-                                <i class="fas fa-search absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"></i>
-                                <input type="text" x-model="searchQuery" @input="searchContactsInModal(searchQuery)"
-                                    @focus="showResults = true" placeholder="Search customer..."
-                                    class="w-full pl-11 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-lg focus:ring-2 focus:ring-primary-100 focus:border-primary-300 outline-none transition-all">
-                                
-                                <div x-show="showResults && searchResults.length > 0" @click.away="showResults = false"
-                                    class="absolute top-full left-0 right-0 mt-2 bg-white rounded-lg shadow-xl border border-slate-200 overflow-hidden z-10 max-h-48 overflow-y-auto">
-                                    <template x-for="contact in searchResults" :key="contact._id">
-                                        <div @click="selectCustomerInModal(contact); showResults = false"
-                                            class="px-4 py-3 hover:bg-primary-50 cursor-pointer flex items-center gap-3 transition-colors">
-                                            <div class="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-slate-600 text-xs font-bold">
-                                                <span x-text="contact.name.charAt(0)"></span>
-                                            </div>
-                                            <div>
-                                                <p class="text-sm font-semibold text-slate-900" x-text="contact.name"></p>
-                                                <p class="text-xs text-slate-500" x-text="contact.phone"></p>
-                                            </div>
-                                        </div>
-                                    </template>
-                                </div>
-                            </div>
+                    <div class="flex justify-between py-1 border-b border-dashed border-slate-300">
+                        <strong x-text="'#' + (printTicketData?.ticketNumber || '')"></strong>
+                        <span x-text="formatDate(printTicketData?.createdAt)"></span>
+                    </div>
+
+                    <div class="space-y-1 py-1 border-b border-dashed border-slate-300 text-xs">
+                        <div class="flex justify-between">
+                            <span class="text-slate-500">Customer:</span>
+                            <strong x-text="printTicketData?.customer?.name || 'Walk-in'"></strong>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="text-slate-500">Phone:</span>
+                            <span x-text="printTicketData?.customer?.phone || '—'"></span>
                         </div>
                     </div>
 
-                    <div class="md:col-span-2">
-                        <label class="block text-xs font-bold text-slate-700 mb-2 uppercase tracking-wider">Device Details</label>
-                        <textarea x-model="formData.deviceDetails" placeholder="Device model, issue description..."
-                            class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-lg focus:ring-2 focus:ring-primary-100 focus:border-primary-300 outline-none transition-all min-h-[90px] resize-none"></textarea>
+                    <div class="py-1 border-b border-dashed border-slate-300">
+                        <span class="text-[9px] font-black uppercase text-slate-400 block">Job Description:</span>
+                        <p class="text-xs font-bold mt-0.5" x-text="printTicketData?.deviceDetails"></p>
                     </div>
 
-                    <div>
-                        <label class="block text-xs font-bold text-slate-700 mb-2 uppercase tracking-wider">Date Received</label>
-                        <input type="date" x-model="formData.receivedDate"
-                            class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-lg focus:ring-2 focus:ring-primary-100 focus:border-primary-300 outline-none transition-all">
+                    <div class="flex justify-between py-1 border-b border-dashed border-slate-300">
+                        <span class="text-slate-500">Est. Fee:</span>
+                        <strong x-text="'₹' + formatCurrency(printTicketData?.serviceCharge)"></strong>
                     </div>
 
+                    <p class="text-[9px] text-slate-400 text-center pt-1 font-sans">Present this slip upon collection.</p>
+                </div>
+
+                <div class="px-5 py-3 bg-slate-50 border-t border-slate-200 flex items-center justify-end gap-2">
+                    <button type="button" @click="showPrintModal = false" class="px-3 py-1.5 text-xs font-bold text-slate-600">Close</button>
+                    <button type="button" @click="printJobSlip()" class="px-4 py-1.5 bg-primary-600 text-white rounded-lg text-xs font-bold">Print</button>
+                </div>
+            </div>
+        </div>
+    </template>
+
+    <!-- INTAKE & EDIT MODAL -->
+    <template x-teleport="body">
+        <div x-show="showModal" x-cloak
+            class="fixed inset-0 z-[9999] overflow-y-auto flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-xs"
+            @click.self="closeModal()"
+            @keydown.window.escape="closeModal()">
+            
+            <div class="bg-white rounded-2xl shadow-xl w-full max-w-lg overflow-hidden border border-slate-200 flex flex-col max-h-[90vh]">
+                <div class="px-6 py-4 border-b border-slate-200 flex items-center justify-between bg-slate-50/70">
+                    <h3 class="text-sm font-bold text-slate-900 font-display" x-text="editMode ? `Edit Ticket #${formData.ticketNumber}` : 'New Repair Ticket'"></h3>
+                    <button type="button" @click="closeModal()" class="text-slate-400 hover:text-slate-600">
+                        <i class="fas fa-times text-sm"></i>
+                    </button>
+                </div>
+
+            <div class="p-6 overflow-y-auto space-y-4 text-xs">
+                <!-- Customer -->
+                <div>
+                    <label class="block text-[11px] font-bold text-slate-700 mb-1.5 uppercase tracking-wider">Customer *</label>
+                    <div x-show="selectedCustomer" class="flex items-center justify-between p-3 bg-primary-50/50 border border-primary-200 rounded-xl">
+                        <div>
+                            <p class="font-bold text-slate-900" x-text="selectedCustomer?.name"></p>
+                            <p class="text-[11px] font-mono text-slate-500" x-text="selectedCustomer?.phone || 'No phone'"></p>
+                        </div>
+                        <button type="button" @click="clearCustomerSelection()" class="text-slate-400 hover:text-rose-600 text-xs">
+                            <i class="fas fa-times"></i> Change
+                        </button>
+                    </div>
+
+                    <div x-show="!selectedCustomer" class="relative" x-data="{ query: '', showDropdown: false }" @click.outside="showDropdown = false">
+                        <div class="flex gap-2">
+                            <div class="relative flex-1">
+                                <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i>
+                                <input type="text" x-model="query" @input.debounce.250ms="searchContactsInModal(query); showDropdown = true"
+                                    @focus="showDropdown = true"
+                                    placeholder="Search customer by name or phone..."
+                                    class="w-full pl-8 pr-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium outline-none focus:bg-white focus:border-primary-500">
+                            </div>
+                            <button type="button" @click="showQuickAddCustomer = !showQuickAddCustomer"
+                                class="px-3 py-2 bg-slate-900 text-white rounded-xl text-xs font-bold whitespace-nowrap">
+                                + New
+                            </button>
+                        </div>
+
+                        <div x-show="showDropdown && searchResults.length > 0"
+                            class="absolute top-full left-0 right-0 mt-1 bg-white border border-slate-200 rounded-xl shadow-lg z-30 max-h-44 overflow-y-auto divide-y divide-slate-100">
+                            <template x-for="contact in searchResults" :key="contact._id">
+                                <div @click="selectCustomerInModal(contact); showDropdown = false; query = ''"
+                                    class="p-2.5 hover:bg-primary-50 cursor-pointer flex items-center justify-between">
+                                    <div>
+                                        <p class="font-bold text-slate-900 text-xs" x-text="contact.name"></p>
+                                        <p class="font-mono text-slate-400 text-[10px]" x-text="contact.phone"></p>
+                                    </div>
+                                    <span class="text-[10px] text-primary-600 font-bold">Select</span>
+                                </div>
+                            </template>
+                        </div>
+
+                        <!-- Quick Add -->
+                        <div x-show="showQuickAddCustomer" class="mt-2.5 p-3 bg-slate-50 border border-slate-200 rounded-xl space-y-2">
+                            <input type="text" x-model="quickCustomer.name" placeholder="Full Name *"
+                                class="w-full px-2.5 py-1.5 bg-white border border-slate-200 rounded-lg text-xs outline-none">
+                            <input type="text" x-model="quickCustomer.phone" placeholder="Phone Number *"
+                                class="w-full px-2.5 py-1.5 bg-white border border-slate-200 rounded-lg text-xs outline-none">
+                            <div class="flex justify-end gap-2">
+                                <button type="button" @click="showQuickAddCustomer = false" class="text-slate-500 text-xs">Cancel</button>
+                                <button type="button" @click="saveQuickCustomer()" class="px-3 py-1 bg-primary-600 text-white rounded-lg text-xs font-bold">Save</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Device / Job -->
+                <div>
+                    <label class="block text-[11px] font-bold text-slate-700 mb-1.5 uppercase tracking-wider">Device & Job Description *</label>
+                    <textarea x-model="formData.deviceDetails" rows="2"
+                        placeholder="e.g. MacBook Pro - Display screen flickering, trackpad unresponsive..."
+                        class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium outline-none focus:bg-white focus:border-primary-500"></textarea>
+                </div>
+
+                <!-- Parameters -->
+                <div class="grid grid-cols-2 gap-3">
                     <div>
-                        <label class="block text-xs font-bold text-slate-700 mb-2 uppercase tracking-wider">Status</label>
+                        <label class="block text-[11px] font-bold text-slate-700 mb-1 uppercase tracking-wider">Status</label>
                         <select x-model="formData.status"
-                            class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-lg focus:ring-2 focus:ring-primary-100 focus:border-primary-300 outline-none transition-all">
+                            class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium outline-none focus:bg-white focus:border-primary-500">
                             <option value="Pending">Pending</option>
                             <option value="In Progress">In Progress</option>
                             <option value="Completed">Completed</option>
                             <option value="Delivered">Delivered</option>
-                            <option value="Cancelled">Cancelled</option>
                         </select>
                     </div>
 
                     <div>
-                        <label class="block text-xs font-bold text-slate-700 mb-2 uppercase tracking-wider">Technician</label>
+                        <label class="block text-[11px] font-bold text-slate-700 mb-1 uppercase tracking-wider">Technician</label>
                         <select x-model="formData.assignedTechnician"
-                            class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-lg focus:ring-2 focus:ring-primary-100 focus:border-primary-300 outline-none transition-all">
-                            <option value="">Not assigned</option>
+                            class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium outline-none focus:bg-white focus:border-primary-500">
+                            <option value="">Unassigned</option>
                             <template x-for="tech in technicians" :key="tech._id">
-                                <option :value="tech._id || tech" x-text="tech.name || tech"></option>
+                                <option :value="tech._id || tech" x-text="tech.name || tech.username || tech"></option>
                             </template>
                         </select>
                     </div>
 
                     <div>
-                        <label class="block text-xs font-bold text-slate-700 mb-2 uppercase tracking-wider">Service Charge</label>
-                        <div class="relative">
-                            <span class="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 font-bold">₹</span>
-                            <input type="number" x-model="formData.serviceCharge"
-                                class="w-full pl-9 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-lg focus:ring-2 focus:ring-primary-100 focus:border-primary-300 outline-none transition-all font-semibold">
-                        </div>
+                        <label class="block text-[11px] font-bold text-slate-700 mb-1 uppercase tracking-wider">Fee (₹)</label>
+                        <input type="number" x-model="formData.serviceCharge" min="0"
+                            class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold font-mono outline-none focus:bg-white focus:border-primary-500">
                     </div>
 
-                    <div class="md:col-span-2">
-                        <label class="block text-xs font-bold text-slate-700 mb-2 uppercase tracking-wider">Notes</label>
-                        <textarea x-model="formData.notes" placeholder="Internal notes..."
-                            class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-lg focus:ring-2 focus:ring-primary-100 focus:border-primary-300 outline-none transition-all min-h-[70px] resize-none"></textarea>
+                    <div>
+                        <label class="block text-[11px] font-bold text-slate-700 mb-1 uppercase tracking-wider">Intake Date</label>
+                        <input type="date" x-model="formData.receivedDate"
+                            class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium outline-none focus:bg-white focus:border-primary-500">
                     </div>
+                </div>
+
+                <!-- Remarks -->
+                <div>
+                    <label class="block text-[11px] font-bold text-slate-700 mb-1 uppercase tracking-wider">Internal Remarks</label>
+                    <input type="text" x-model="formData.notes" placeholder="Passcode, accessories, scratches..."
+                        class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs outline-none focus:bg-white focus:border-primary-500">
                 </div>
             </div>
 
-            <div class="px-6 py-4 bg-slate-50 border-t border-slate-200 flex items-center justify-end gap-3">
-                <button @click="closeModal()"
-                    class="px-6 py-2.5 text-slate-600 hover:text-slate-900 font-semibold transition-colors">
-                    Cancel
-                </button>
-                <button @click="saveTicket()" :disabled="saving"
-                    class="px-6 py-2.5 bg-primary-600 text-white rounded-lg font-semibold hover:bg-primary-700 shadow-lg hover:shadow-xl transition-all disabled:opacity-50 flex items-center gap-2">
-                    <i :class="saving ? 'fas fa-spinner fa-spin' : (editMode ? 'fas fa-save' : 'fas fa-plus')"></i>
-                    <span x-text="editMode ? 'Save Changes' : 'Create Ticket'"></span>
+            <div class="px-6 py-3.5 bg-slate-50 border-t border-slate-200 flex items-center justify-end gap-2">
+                <button type="button" @click="closeModal()" class="px-3.5 py-1.5 text-xs font-bold text-slate-600">Cancel</button>
+                <button type="button" @click="saveTicket()" :disabled="saving"
+                    class="px-4 py-1.5 bg-primary-600 hover:bg-primary-700 text-white rounded-xl text-xs font-bold">
+                    <span x-text="saving ? 'Saving...' : (editMode ? 'Save' : 'Create')"></span>
                 </button>
             </div>
         </div>
     </div>
+    </template>
 </div>
 
-<script src="/js/pages/service-tickets.js"></script>
+<style>
+@media print {
+    body * {
+        visibility: hidden !important;
+    }
+    #service-slip-print-area,
+    #service-slip-print-area * {
+        visibility: visible !important;
+    }
+    #service-slip-print-area {
+        position: absolute !important;
+        left: 0 !important;
+        top: 0 !important;
+        width: 100% !important;
+        max-width: 360px !important;
+        margin: 0 auto !important;
+        padding: 8px !important;
+    }
+}
+</style>

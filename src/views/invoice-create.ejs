@@ -1,0 +1,401 @@
+<script src="/js/pages/invoice-create.js"></script>
+
+<style>
+/* Distinct billing typography: tabular figures where 0 and 8 are clearly distinguishable */
+.font-mono {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif !important;
+    font-variant-numeric: tabular-nums !important;
+    font-feature-settings: "tnum" 1 !important;
+    letter-spacing: 0.01em;
+}
+</style>
+
+<div x-data="invoiceCreateData()" x-init="init()" class="space-y-6 pb-20">
+
+    <!-- Top Action Bar -->
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-200 pb-5">
+        <div class="flex items-center gap-3">
+            <a href="/invoices" class="w-9 h-9 rounded-xl bg-slate-100 hover:bg-slate-200 flex items-center justify-center text-slate-600 transition-all">
+                <i class="fas fa-arrow-left text-xs"></i>
+            </a>
+            <div>
+                <h1 class="text-xl font-black text-slate-900 tracking-tight" x-text="isEditing ? ('Edit ' + docType + ' #' + form.docNumber) : (docType === 'Invoice' ? 'Create GST Tax Invoice' : 'Create Quotation / Estimate')"></h1>
+                <p class="text-xs text-slate-400" x-text="isEditing ? 'Update existing document line items, prices, and tax breakdown.' : 'Precision ERP billing with automated GST breakdown and ledger sync.'"></p>
+            </div>
+        </div>
+
+        <div class="flex items-center gap-3">
+            <div class="flex bg-slate-100 p-1 rounded-xl" x-show="!isEditing">
+                <button type="button" @click="setDocType('Invoice')"
+                    :class="docType === 'Invoice' ? 'bg-white text-primary-700 shadow-sm font-bold' : 'text-slate-500 font-medium'"
+                    class="px-4 py-1.5 rounded-lg text-xs transition-all flex items-center gap-1.5">
+                    <i class="fas fa-file-invoice text-xs"></i>
+                    <span>Tax Invoice</span>
+                </button>
+                <button type="button" @click="setDocType('Quotation')"
+                    :class="docType === 'Quotation' ? 'bg-white text-indigo-700 shadow-sm font-bold' : 'text-slate-500 font-medium'"
+                    class="px-4 py-1.5 rounded-lg text-xs transition-all flex items-center gap-1.5">
+                    <i class="fas fa-file-contract text-xs"></i>
+                    <span>Quotation</span>
+                </button>
+            </div>
+
+            <button type="button" @click="saveDocument()" :disabled="saving"
+                class="px-6 py-2.5 bg-primary-600 text-white rounded-xl font-bold text-xs uppercase tracking-wider hover:bg-primary-700 shadow-md shadow-primary-200 transition-all flex items-center gap-2 active:scale-95 disabled:opacity-50">
+                <i class="fas fa-check" x-show="!saving"></i>
+                <i class="fas fa-circle-notch fa-spin" x-show="saving" style="display: none;"></i>
+                <span x-text="saving ? 'Saving...' : (isEditing ? 'Update ' + docType : (docType === 'Invoice' ? 'Generate Invoice' : 'Save Quotation'))"></span>
+                <span class="text-[9px] px-1.5 py-0.5 bg-primary-700 rounded text-primary-200 ml-1">⌘S</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- Document Header Details Card -->
+    <div class="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm space-y-6">
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <!-- Doc Number -->
+            <div class="space-y-1.5">
+                <label class="text-xs font-bold text-slate-500 flex items-center justify-between">
+                    <span>Document Number</span>
+                    <button type="button" @click="fetchNextNumber()" class="text-[10px] text-primary-600 font-bold hover:underline">Auto-Refill</button>
+                </label>
+                <input type="text" x-model="form.docNumber" @input="clearError('docNumber')" required
+                    :class="hasError('docNumber') ? 'border-rose-500 ring-2 ring-rose-200 bg-rose-50/20 has-field-error' : 'border-slate-200'"
+                    class="w-full px-4 py-2.5 bg-slate-50 border rounded-xl font-mono text-xs font-bold focus:bg-white focus:border-primary-500 outline-none transition-all">
+                <p x-show="hasError('docNumber')" class="text-rose-600 text-[10px] font-bold mt-1 flex items-center gap-1">
+                    <i class="fas fa-circle-exclamation text-xs"></i>
+                    <span x-text="getError('docNumber')"></span>
+                </p>
+            </div>
+
+            <!-- Issue Date -->
+            <div class="space-y-1.5">
+                <label class="text-xs font-bold text-slate-500">Issue Date</label>
+                <input type="date" x-model="form.issueDate" required
+                    class="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium focus:bg-white focus:border-primary-500 outline-none">
+            </div>
+
+            <!-- Due Date -->
+            <div class="space-y-1.5">
+                <label class="text-xs font-bold text-slate-500">Due Date / Validity</label>
+                <input type="date" x-model="form.dueDate"
+                    class="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium focus:bg-white focus:border-primary-500 outline-none">
+            </div>
+
+            <!-- Link to Ticket (Optional) -->
+            <div class="space-y-1.5">
+                <label class="text-xs font-bold text-slate-500">Link Service Ticket (Optional)</label>
+                <select x-model="form.serviceTicketId" @change="onTicketSelected()"
+                    class="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium focus:bg-white focus:border-primary-500 outline-none">
+                    <option value="">No Ticket Linked</option>
+                    <template x-for="t in tickets" :key="t._id">
+                        <option :value="t._id" x-text="'#' + t.ticketNumber + ' - ' + t.deviceDetails + ' (' + (t.customer?.name || 'Customer') + ')'"></option>
+                    </template>
+                </select>
+            </div>
+        </div>
+
+        <!-- Customer & Tax Profile -->
+        <div class="pt-4 border-t border-slate-100 grid grid-cols-1 md:grid-cols-4 gap-4">
+            <!-- Customer Picker -->
+            <div class="space-y-1.5 md:col-span-2">
+                <label class="text-xs font-bold text-slate-500">Party / Customer Selection *</label>
+                <select x-model="form.customerId" @change="onCustomerSelected(); clearError('customerId')" required
+                    :class="hasError('customerId') ? 'border-rose-500 ring-2 ring-rose-200 bg-rose-50/20 has-field-error' : 'border-slate-200'"
+                    class="w-full px-4 py-2.5 bg-slate-50 border rounded-xl text-xs font-bold focus:bg-white focus:border-primary-500 outline-none transition-all">
+                    <option value="">-- Choose Party / Customer --</option>
+                    <template x-for="c in contacts" :key="c._id">
+                        <option :value="c._id" x-text="c.name + (c.phone ? ' (' + c.phone + ')' : '') + (c.companyName ? ' - ' + c.companyName : '')"></option>
+                    </template>
+                </select>
+                <p x-show="hasError('customerId')" class="text-rose-600 text-[10px] font-bold mt-1 flex items-center gap-1">
+                    <i class="fas fa-circle-exclamation text-xs"></i>
+                    <span x-text="getError('customerId')"></span>
+                </p>
+            </div>
+
+            <!-- Customer GSTIN -->
+            <div class="space-y-1.5">
+                <label class="text-xs font-bold text-slate-500">Customer GSTIN</label>
+                <input type="text" x-model="form.customerGstin" placeholder="e.g. 27AAAAA0000A1Z5" uppercase
+                    class="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl font-mono text-xs uppercase focus:bg-white focus:border-primary-500 outline-none">
+            </div>
+
+            <!-- Place of Supply / State -->
+            <div class="space-y-1.5">
+                <label class="text-xs font-bold text-slate-500 flex items-center justify-between">
+                    <span>Place of Supply (State)</span>
+                    <span class="text-[10px] font-bold" :class="isInterState ? 'text-indigo-600' : 'text-emerald-600'"
+                        x-text="isInterState ? 'IGST Applicable' : 'CGST + SGST Applicable'"></span>
+                </label>
+                <input type="text" x-model="form.customerState" @input="recalculate()" placeholder="e.g. Maharashtra"
+                    class="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium focus:bg-white focus:border-primary-500 outline-none">
+            </div>
+        </div>
+    </div>
+
+    <!-- ERP Line Items Table Section -->
+    <div class="bg-white border border-slate-200 rounded-2xl shadow-sm overflow-hidden">
+        <div class="p-4 bg-slate-50/75 border-b border-slate-200 flex items-center justify-between">
+            <div class="flex items-center gap-2">
+                <i class="fas fa-list-ol text-slate-400 text-xs"></i>
+                <h3 class="text-xs font-black text-slate-700 uppercase tracking-wider">Line Items & GST Schedule</h3>
+            </div>
+            <div class="flex items-center gap-2">
+                <!-- Add product shortcut -->
+                <button type="button" @click="addItemRow('product')"
+                    class="px-3 py-1.5 bg-white border border-slate-200 rounded-lg text-[10px] font-bold text-slate-700 hover:border-primary-400 hover:text-primary-600 transition-all flex items-center gap-1 shadow-sm">
+                    <i class="fas fa-box text-slate-400"></i>
+                    <span>+ Inventory Product</span>
+                </button>
+                <button type="button" @click="addItemRow('custom')"
+                    class="px-3 py-1.5 bg-primary-50 border border-primary-200 rounded-lg text-[10px] font-bold text-primary-700 hover:bg-primary-100 transition-all flex items-center gap-1">
+                    <i class="fas fa-plus"></i>
+                    <span>+ Item / Service Row</span>
+                </button>
+            </div>
+        </div>
+
+        <div class="overflow-x-auto">
+            <table class="w-full text-left text-xs">
+                <thead>
+                    <tr class="bg-slate-50/40 border-b border-slate-200 text-[9px] font-black text-slate-400 uppercase tracking-widest">
+                        <th class="py-3 px-3 w-8 text-center">#</th>
+                        <th class="py-3 px-3 min-w-[220px]">Item Description</th>
+                        <th class="py-3 px-3 w-28">HSN/SAC</th>
+                        <th class="py-3 px-3 w-20 text-right">Qty</th>
+                        <th class="py-3 px-3 w-28 text-right">Unit Rate (₹)</th>
+                        <th class="py-3 px-3 w-20 text-right">Disc %</th>
+                        <th class="py-3 px-3 w-24 text-right">Taxable (₹)</th>
+                        <th class="py-3 px-3 w-24">GST %</th>
+                        <th class="py-3 px-3 w-28 text-right">Amount (₹)</th>
+                        <th class="py-3 px-2 w-8 text-center"></th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100">
+                    <template x-for="(row, idx) in form.items" :key="idx">
+                        <tr class="hover:bg-slate-50/40 transition-colors">
+                            <td class="py-2.5 px-3 text-center text-slate-400 font-mono text-[10px]" x-text="idx + 1"></td>
+
+                            <!-- Description / Product Picker -->
+                            <td class="py-2 px-3">
+                                <div class="space-y-1">
+                                    <template x-if="row.itemType === 'product'">
+                                        <select x-model="row.product" @change="onProductRowSelect(row)"
+                                            class="w-full px-2 py-1.5 bg-slate-50 border border-slate-200 rounded-lg text-xs font-semibold focus:bg-white outline-none">
+                                            <option value="">-- Choose Stock Item --</option>
+                                            <template x-for="p in availableProducts" :key="p._id">
+                                                <option :value="p._id" x-text="p.name + ' (₹' + p.price + ')'"></option>
+                                            </template>
+                                        </select>
+                                    </template>
+                                    <input type="text" x-model="row.description" @input="recalculate(); clearError('items.' + idx + '.description')" placeholder="Description of item or service..."
+                                        :class="hasError('items.' + idx + '.description') ? 'border-rose-500 ring-2 ring-rose-200 bg-rose-50/30 has-field-error' : 'border-slate-200'"
+                                        class="w-full px-2.5 py-1.5 bg-slate-50 border rounded-lg text-xs font-medium focus:bg-white focus:border-primary-400 outline-none transition-all">
+                                    <p x-show="hasError('items.' + idx + '.description')" class="text-rose-600 text-[9px] font-bold mt-0.5 flex items-center gap-1">
+                                        <i class="fas fa-circle-exclamation"></i>
+                                        <span x-text="getError('items.' + idx + '.description')"></span>
+                                    </p>
+                                </div>
+                            </td>
+
+                            <!-- HSN/SAC -->
+                            <td class="py-2 px-3">
+                                <input type="text" x-model="row.hsnSac" placeholder="e.g. 9987"
+                                    class="w-full px-2 py-1.5 bg-slate-50 border border-slate-200 rounded-lg text-xs font-mono focus:bg-white outline-none">
+                            </td>
+
+                            <!-- Qty -->
+                            <td class="py-2 px-3">
+                                <input type="number" step="1" min="1" x-model.number="row.quantity" @input="recalculate(); clearError('items.' + idx + '.quantity')"
+                                    :class="hasError('items.' + idx + '.quantity') ? 'border-rose-500 ring-2 ring-rose-200 bg-rose-50/30 has-field-error' : 'border-slate-200'"
+                                    class="w-full px-2 py-1.5 bg-slate-50 border rounded-lg text-xs font-mono text-right font-bold focus:bg-white outline-none transition-all">
+                            </td>
+
+                            <!-- Unit Price -->
+                            <td class="py-2 px-3">
+                                <input type="number" step="0.01" min="0" x-model.number="row.unitPrice" @input="recalculate(); clearError('items.' + idx + '.unitPrice')"
+                                    :class="hasError('items.' + idx + '.unitPrice') ? 'border-rose-500 ring-2 ring-rose-200 bg-rose-50/30 has-field-error' : 'border-slate-200'"
+                                    class="w-full px-2 py-1.5 bg-slate-50 border rounded-lg text-xs font-mono text-right font-bold focus:bg-white outline-none transition-all">
+                            </td>
+
+                            <!-- Discount % -->
+                            <td class="py-2 px-3">
+                                <input type="number" step="0.5" min="0" max="100" x-model.number="row.discountPercent" @input="recalculate()"
+                                    class="w-full px-2 py-1.5 bg-slate-50 border border-slate-200 rounded-lg text-xs font-mono text-right focus:bg-white outline-none">
+                            </td>
+
+                            <!-- Taxable Value (Calculated) -->
+                            <td class="py-2 px-3 text-right font-mono font-medium text-slate-700" x-text="'₹' + formatNumber(row.taxableAmount)"></td>
+
+                            <!-- GST Rate % -->
+                            <td class="py-2 px-3">
+                                <select x-model.number="row.gstRate" @change="recalculate()"
+                                    class="w-full px-2 py-1.5 bg-slate-50 border border-slate-200 rounded-lg text-xs font-bold focus:bg-white outline-none">
+                                    <option :value="0">0%</option>
+                                    <option :value="5">5%</option>
+                                    <option :value="12">12%</option>
+                                    <option :value="18">18%</option>
+                                    <option :value="28">28%</option>
+                                </select>
+                            </td>
+
+                            <!-- Line Total (Calculated) -->
+                            <td class="py-2 px-3 text-right font-mono font-bold text-slate-900" x-text="'₹' + formatNumber(row.total)"></td>
+
+                            <!-- Delete Row -->
+                            <td class="py-2 px-2 text-center">
+                                <button type="button" @click="removeRow(idx)" :disabled="form.items.length <= 1"
+                                    class="w-6 h-6 rounded text-slate-300 hover:text-rose-600 transition-colors disabled:opacity-20">
+                                    <i class="fas fa-times text-xs"></i>
+                                </button>
+                            </td>
+                        </tr>
+                    </template>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Financial Breakdown & Settlement Section -->
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+        <!-- Notes & Terms (Left) -->
+        <div class="lg:col-span-7 bg-white border border-slate-200 rounded-2xl p-6 shadow-sm space-y-4">
+            <div class="space-y-1.5">
+                <label class="text-xs font-bold text-slate-600 flex items-center gap-1.5">
+                    <i class="fas fa-comment-dots text-slate-400"></i>
+                    <span>Invoice / Quotation Notes</span>
+                </label>
+                <textarea x-model="form.notes" rows="2" placeholder="e.g. Thanks for your business! Device serial number: XYZ..."
+                    class="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium focus:bg-white outline-none"></textarea>
+            </div>
+
+            <div class="space-y-1.5">
+                <label class="text-xs font-bold text-slate-600 flex items-center gap-1.5">
+                    <i class="fas fa-shield-alt text-slate-400"></i>
+                    <span>Terms & Conditions</span>
+                </label>
+                <textarea x-model="form.terms" rows="3" placeholder="Terms printed on the bottom of the invoice..."
+                    class="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium focus:bg-white outline-none"></textarea>
+            </div>
+
+            <!-- Immediate Payment for Invoices -->
+            <template x-if="docType === 'Invoice'">
+                <div class="pt-4 border-t border-slate-100 space-y-3">
+                    <div class="flex items-center gap-2">
+                        <input type="checkbox" id="recordInitialPay" x-model="form.hasInitialPayment"
+                            class="w-4 h-4 rounded text-primary-600 focus:ring-0">
+                        <label for="recordInitialPay" class="text-xs font-bold text-slate-800 cursor-pointer">
+                            Record Advance / Immediate Payment at Creation
+                        </label>
+                    </div>
+
+                    <div x-show="form.hasInitialPayment" class="grid grid-cols-3 gap-3 p-4 bg-slate-50 rounded-xl border border-slate-200">
+                        <div class="space-y-1">
+                            <label class="text-[10px] font-bold text-slate-500 uppercase">Paid Amount (₹)</label>
+                            <input type="number" step="0.01" x-model.number="form.initialPayment.amount"
+                                class="w-full px-3 py-1.5 bg-white border border-slate-200 rounded-lg font-mono text-xs font-bold outline-none">
+                        </div>
+
+                        <div class="space-y-1">
+                            <label class="text-[10px] font-bold text-slate-500 uppercase">Payment Mode</label>
+                            <select x-model="form.initialPayment.paymentMode" class="w-full px-2 py-1.5 bg-white border border-slate-200 rounded-lg text-xs font-bold outline-none">
+                                <option value="Cash">Cash</option>
+                                <option value="UPI">UPI / QR</option>
+                                <option value="Bank">Bank Transfer</option>
+                                <option value="Cheque">Cheque</option>
+                            </select>
+                        </div>
+
+                        <div class="space-y-1">
+                            <label class="text-[10px] font-bold text-slate-500 uppercase">Deposit Account</label>
+                            <select x-model="form.initialPayment.accountId" class="w-full px-2 py-1.5 bg-white border border-slate-200 rounded-lg text-xs font-bold outline-none">
+                                <option value="">No Ledger Link</option>
+                                <template x-for="acc in accounts" :key="acc._id">
+                                    <option :value="acc._id" x-text="acc.accountName"></option>
+                                </template>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+            </template>
+        </div>
+
+        <!-- Calculations & Totals (Right) -->
+        <div class="lg:col-span-5 bg-white border border-slate-200 rounded-2xl p-6 shadow-sm space-y-4">
+            <h3 class="text-xs font-black text-slate-400 uppercase tracking-widest pb-3 border-b border-slate-100 flex items-center justify-between">
+                <span>Tax & Settlement Summary</span>
+                <span class="text-[10px] font-bold text-slate-500" x-text="isInterState ? 'Inter-State' : 'Intra-State'"></span>
+            </h3>
+
+            <div class="space-y-2.5 text-xs text-slate-600">
+                <div class="flex justify-between">
+                    <span>Gross Subtotal:</span>
+                    <span class="font-mono font-medium text-slate-800" x-text="'₹' + formatNumber(totals.subtotal)"></span>
+                </div>
+
+                <div class="flex justify-between text-emerald-600" x-show="totals.totalDiscount > 0">
+                    <span>Discount Deducted:</span>
+                    <span class="font-mono font-medium" x-text="'- ₹' + formatNumber(totals.totalDiscount)"></span>
+                </div>
+
+                <div class="flex justify-between pt-2 border-t border-slate-100">
+                    <span class="font-bold text-slate-700">Taxable Amount:</span>
+                    <span class="font-mono font-bold text-slate-900" x-text="'₹' + formatNumber(totals.taxableTotal)"></span>
+                </div>
+
+                <!-- GST Split Rows -->
+                <template x-if="!isInterState">
+                    <div class="space-y-1.5 py-2 border-y border-dashed border-slate-200">
+                        <div class="flex justify-between text-[11px] text-slate-500">
+                            <span>Central GST (CGST):</span>
+                            <span class="font-mono font-bold text-slate-800" x-text="'₹' + formatNumber(totals.cgstTotal)"></span>
+                        </div>
+                        <div class="flex justify-between text-[11px] text-slate-500">
+                            <span>State GST (SGST):</span>
+                            <span class="font-mono font-bold text-slate-800" x-text="'₹' + formatNumber(totals.sgstTotal)"></span>
+                        </div>
+                    </div>
+                </template>
+
+                <template x-if="isInterState">
+                    <div class="py-2 border-y border-dashed border-slate-200 flex justify-between text-[11px] text-indigo-600">
+                        <span>Integrated GST (IGST):</span>
+                        <span class="font-mono font-bold" x-text="'₹' + formatNumber(totals.igstTotal)"></span>
+                    </div>
+                </template>
+
+                <div class="flex justify-between text-[11px] text-slate-400">
+                    <span>Total Tax Liability:</span>
+                    <span class="font-mono font-semibold" x-text="'₹' + formatNumber(totals.taxTotal)"></span>
+                </div>
+
+                <div class="flex justify-between text-[11px] text-slate-400" x-show="totals.roundOff !== 0">
+                    <span>Round Off:</span>
+                    <span class="font-mono" x-text="(totals.roundOff > 0 ? '+ ₹' : '- ₹') + formatNumber(Math.abs(totals.roundOff))"></span>
+                </div>
+            </div>
+
+            <!-- Grand Total Display -->
+            <div class="pt-4 border-t-2 border-slate-900 flex items-baseline justify-between">
+                <div>
+                    <span class="text-xs font-black text-slate-900 uppercase tracking-wider block">Grand Total</span>
+                    <span class="text-[9px] text-slate-400">Net Payable Amount</span>
+                </div>
+                <div class="flex items-baseline gap-1">
+                    <span class="text-base font-bold text-slate-400">₹</span>
+                    <span class="text-3xl font-black text-slate-900 font-mono tracking-tight" x-text="formatNumber(totals.grandTotal)"></span>
+                </div>
+            </div>
+
+            <!-- Balance Due Preview -->
+            <template x-if="docType === 'Invoice' && form.hasInitialPayment">
+                <div class="pt-3 border-t border-slate-100 flex justify-between items-center text-xs">
+                    <span class="font-bold text-rose-600">Balance Due:</span>
+                    <span class="font-mono font-black text-rose-600 text-sm"
+                        x-text="'₹' + formatNumber(Math.max(0, totals.grandTotal - (form.initialPayment.amount || 0)))"></span>
+                </div>
+            </template>
+        </div>
+    </div>
+</div>

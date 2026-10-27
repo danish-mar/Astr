@@ -1,733 +1,465 @@
-<div x-data="productsData" x-init="init()" class="min-h-screen pb-12">
-  <!-- SHARP MINIMAL GATEWAY HEADER -->
-  <div class="bg-white border-b border-slate-200 mb-8">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-      <!-- Top Section: Title & Actions -->
-      <div class="flex flex-col md:flex-row md:items-center md:justify-between py-6 gap-4">
-        <div>
-          <h1 class="text-2xl font-bold text-slate-900 tracking-tight uppercase">
-            Inventory Gateway
-          </h1>
-          <p class="text-[9px] font-black text-slate-400 mt-1 uppercase tracking-widest">
-            Stock Management & Product Catalog
-          </p>
-        </div>
+<div x-data="productsData" x-init="init()" class="space-y-6 pb-20 animate__animated animate__fadeIn">
 
-        <div class="flex flex-wrap items-center gap-3">
-          <!-- Export Dropdown -->
-          <div
-            class="relative"
-            x-data="{ open: false }"
-            @click.away="open = false"
-          >
-            <button
-              @click="open = !open"
-              class="inline-flex items-center px-4 py-2 bg-slate-50 text-slate-700 text-[10px] font-black uppercase tracking-widest rounded-xl hover:bg-slate-100 transition-all border border-slate-200"
-            >
-              <i class="fas fa-download mr-2 text-slate-400"></i>
-              Export
-              <i
-                class="fas fa-chevron-down ml-2 text-[8px] text-slate-400 transition-transform duration-200"
-                :class="open ? 'rotate-180' : ''"
-              ></i>
-            </button>
-            <div
-              x-show="open"
-              x-transition:enter="transition ease-out duration-200"
-              x-transition:enter-start="opacity-0 scale-95 translate-y-2"
-              x-transition:enter-end="opacity-100 scale-100 translate-y-0"
-              class="absolute right-0 mt-2 w-56 bg-white rounded-xl shadow-xl border border-slate-200 z-50 overflow-hidden py-1"
-            >
-              <button
-                @click="exportProducts(false); open = false"
-                class="w-full text-left px-4 py-3 text-[10px] font-bold text-slate-700 hover:bg-slate-50 flex items-center transition-colors uppercase tracking-wider"
-              >
-                <i class="fas fa-file-csv mr-3 text-slate-300"></i>
-                Full Database (CSV)
-              </button>
-              <button
-                @click="exportToExcel(); open = false"
-                class="w-full text-left px-4 py-3 text-[10px] font-bold text-slate-700 hover:bg-slate-50 flex items-center transition-colors uppercase tracking-wider"
-              >
-                <i class="fas fa-file-excel mr-3 text-emerald-500"></i>
-                Themed Excel
-              </button>
-              <button
-                @click="exportToExcel(true); open = false"
-                class="w-full text-left px-4 py-3 text-[10px] font-bold text-primary-600 hover:bg-primary-50 flex items-center transition-colors border-t border-slate-50 uppercase tracking-wider"
-              >
-                <i class="fas fa-filter mr-3 text-primary-500"></i>
-                Filter Applied
-              </button>
+  <!-- Header -->
+  <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-200/80 pb-5">
+    <div>
+      <div class="flex items-center gap-2.5">
+        <h1 class="text-2xl font-bold text-slate-900 tracking-tight font-display">Product Catalog & Inventory</h1>
+        <span class="inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-black uppercase tracking-wider bg-purple-50 text-purple-700 border border-purple-200/60">
+          Stock Vault
+        </span>
+      </div>
+      <p class="text-xs text-slate-500 mt-0.5">Manage live hardware inventory, technical attributes, and catalog valuation</p>
+    </div>
 
-              <template x-if="filters.category">
-                <button
-                  @click="exportProducts(true); open = false"
-                  class="w-full text-left px-4 py-3 text-[10px] font-bold text-primary-600 hover:bg-primary-50 flex items-center transition-colors border-t border-slate-50 uppercase tracking-wider"
-                >
-                  <i class="fas fa-file-export mr-3 text-primary-300"></i>
-                  Category Template
-                </button>
-              </template>
-            </div>
-          </div>
-
-          <!-- Import -->
-          <button
-            @click="triggerImport()"
-            class="inline-flex items-center px-4 py-2 bg-slate-50 text-slate-700 text-[10px] font-black uppercase tracking-widest rounded-xl hover:bg-slate-100 transition-all border border-slate-200"
-          >
-            <i class="fas fa-upload mr-2 text-slate-400"></i>
-            Import
+    <!-- Header Actions -->
+    <div class="flex items-center gap-2.5">
+      <!-- Export Dropdown -->
+      <div class="relative" x-data="{ open: false }" @click.away="open = false">
+        <button @click="open = !open"
+          class="px-3.5 py-2 bg-white border border-slate-200 text-slate-700 hover:border-primary-300 hover:text-primary-600 rounded-xl text-xs font-bold transition-all shadow-2xs flex items-center gap-1.5 active:scale-95">
+          <i class="fas fa-download text-xs text-slate-400"></i>
+          <span>Export</span>
+          <i class="fas fa-chevron-down text-[9px] text-slate-400 transition-transform duration-200 ml-0.5" :class="open ? 'rotate-180' : ''"></i>
+        </button>
+        <div x-show="open" x-cloak
+          x-transition:enter="transition ease-out duration-200"
+          x-transition:enter-start="opacity-0 scale-95 translate-y-1"
+          x-transition:enter-end="opacity-100 scale-100 translate-y-0"
+          class="absolute right-0 mt-2 w-56 bg-white rounded-xl shadow-xl border border-slate-200 z-50 overflow-hidden py-1">
+          <button @click="exportProducts(false); open = false"
+            class="w-full text-left px-4 py-2.5 text-xs font-semibold text-slate-700 hover:bg-slate-50 flex items-center transition-colors">
+            <i class="fas fa-file-csv mr-2.5 text-slate-400"></i>
+            Full Database (CSV)
           </button>
-          <input
-            type="file"
-            x-ref="importFile"
-            @change="importProducts($event)"
-            class="hidden"
-            accept=".csv"
-          />
-
-          <!-- Add Product -->
-          <a
-            href="/products/add"
-            class="inline-flex items-center px-6 py-2 bg-primary-600 text-white text-[10px] font-black uppercase tracking-widest rounded-xl hover:bg-primary-700 shadow-xl shadow-primary-200 transition-all active:scale-95"
-          >
-            <i class="fas fa-plus mr-2"></i>
-            New Product
-          </a>
+          <button @click="exportToExcel(); open = false"
+            class="w-full text-left px-4 py-2.5 text-xs font-semibold text-slate-700 hover:bg-slate-50 flex items-center transition-colors">
+            <i class="fas fa-file-excel mr-2.5 text-emerald-600"></i>
+            Themed Excel
+          </button>
+          <button @click="exportToExcel(true); open = false"
+            class="w-full text-left px-4 py-2.5 text-xs font-semibold text-primary-600 hover:bg-primary-50 flex items-center transition-colors border-t border-slate-100">
+            <i class="fas fa-filter mr-2.5 text-primary-500"></i>
+            Current Filtered View
+          </button>
+          <template x-if="filters.category">
+            <button @click="exportProducts(true); open = false"
+              class="w-full text-left px-4 py-2.5 text-xs font-semibold text-primary-600 hover:bg-primary-50 flex items-center transition-colors border-t border-slate-100">
+              <i class="fas fa-file-export mr-2.5 text-primary-500"></i>
+              Category Template
+            </button>
+          </template>
         </div>
       </div>
 
-      <!-- STOCK STATUS BAR (Horizontal) -->
-      <div class="pb-6">
-        <div class="bg-slate-50 border border-slate-200 rounded-[24px] p-6">
-          <div class="grid grid-cols-2 md:grid-cols-4 gap-6">
-            <!-- Total Items -->
-            <div class="space-y-2">
-              <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest">
-                Total Items
-              </p>
-              <div class="flex items-baseline gap-2">
-                <span class="text-2xl font-bold text-slate-900" x-text="stockSummary.totalItems"></span>
-                <span class="text-[10px] font-bold text-slate-400 uppercase">Units</span>
-              </div>
-            </div>
+      <!-- Import Button -->
+      <button @click="triggerImport()"
+        class="px-3.5 py-2 bg-white border border-slate-200 text-slate-700 hover:border-primary-300 hover:text-primary-600 rounded-xl text-xs font-bold transition-all shadow-2xs flex items-center gap-1.5 active:scale-95">
+        <i class="fas fa-upload text-xs text-slate-400"></i>
+        <span>Import</span>
+      </button>
+      <input type="file" x-ref="importFile" @change="importProducts($event)" class="hidden" accept=".csv" />
 
-            <!-- Available -->
-            <div class="space-y-2">
-              <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest">
-                Available
-              </p>
-              <div class="flex items-baseline gap-2">
-                <span class="text-2xl font-bold text-emerald-600" x-text="stockSummary.available"></span>
-                <span class="text-[10px] font-bold text-emerald-400 uppercase">Active</span>
-              </div>
-            </div>
+      <!-- Add Product Button -->
+      <a href="/products/add"
+        class="px-4 py-2 bg-primary-600 hover:bg-primary-700 text-white rounded-xl text-xs font-bold transition-all shadow-md shadow-primary-200 flex items-center gap-2 active:scale-95">
+        <i class="fas fa-plus text-xs"></i>
+        <span>New Product</span>
+      </a>
+    </div>
+  </div>
 
-            <!-- Sold -->
-            <div class="space-y-2">
-              <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest">
-                Sold Out
-              </p>
-              <div class="flex items-baseline gap-2">
-                <span class="text-2xl font-bold text-slate-400" x-text="stockSummary.sold"></span>
-                <span class="text-[10px] font-bold text-slate-300 uppercase">Archived</span>
-              </div>
-            </div>
+  <!-- 4-Card KPI Metric Grid -->
+  <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+    <!-- Total Items -->
+    <div class="bg-white border border-slate-200/80 p-5 rounded-2xl shadow-xs flex items-center justify-between">
+      <div>
+        <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Total Inventory</p>
+        <div class="flex items-baseline gap-2 mt-1">
+          <span class="text-2xl font-bold text-slate-900" x-text="stockSummary.totalItems">0</span>
+          <span class="text-xs font-semibold text-slate-400">units</span>
+        </div>
+        <p class="text-[11px] text-slate-400 mt-0.5">Registered in catalog</p>
+      </div>
+      <div class="w-12 h-12 rounded-xl bg-purple-50 text-purple-600 flex items-center justify-center text-xl shrink-0">
+        <i class="fas fa-boxes-stacked"></i>
+      </div>
+    </div>
 
-            <!-- Total Value -->
-            <div class="space-y-2">
-              <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest">
-                Total Value
-              </p>
-              <div class="flex items-baseline gap-1">
-                <span class="text-sm font-bold text-slate-400">₹</span>
-                <span class="text-2xl font-bold text-slate-900" x-text="formatNumber(stockSummary.totalValue)"></span>
+    <!-- Available -->
+    <div class="bg-white border border-slate-200/80 p-5 rounded-2xl shadow-xs flex items-center justify-between">
+      <div>
+        <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Available</p>
+        <div class="flex items-baseline gap-2 mt-1">
+          <span class="text-2xl font-bold text-emerald-600" x-text="stockSummary.available">0</span>
+          <span class="text-xs font-semibold text-emerald-500">active</span>
+        </div>
+        <p class="text-[11px] text-slate-400 mt-0.5">In stock & ready to quote</p>
+      </div>
+      <div class="w-12 h-12 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center text-xl shrink-0">
+        <i class="fas fa-circle-check"></i>
+      </div>
+    </div>
+
+    <!-- Sold Out -->
+    <div class="bg-white border border-slate-200/80 p-5 rounded-2xl shadow-xs flex items-center justify-between">
+      <div>
+        <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Sold Out</p>
+        <div class="flex items-baseline gap-2 mt-1">
+          <span class="text-2xl font-bold text-slate-500" x-text="stockSummary.sold">0</span>
+          <span class="text-xs font-semibold text-slate-400">archived</span>
+        </div>
+        <p class="text-[11px] text-slate-400 mt-0.5">Fulfilled & dispatched</p>
+      </div>
+      <div class="w-12 h-12 rounded-xl bg-slate-100 text-slate-500 flex items-center justify-center text-xl shrink-0">
+        <i class="fas fa-box-archive"></i>
+      </div>
+    </div>
+
+    <!-- Total Valuation -->
+    <div class="bg-white border border-slate-200/80 p-5 rounded-2xl shadow-xs flex items-center justify-between">
+      <div>
+        <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Stock Valuation</p>
+        <div class="flex items-baseline gap-1 mt-1 font-mono">
+          <span class="text-slate-400 font-bold text-base">₹</span>
+          <span class="text-2xl font-bold text-slate-900" x-text="formatNumber(stockSummary.totalValue)">0</span>
+        </div>
+        <p class="text-[11px] text-blue-600 font-semibold mt-0.5">Available inventory worth</p>
+      </div>
+      <div class="w-12 h-12 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center text-xl shrink-0">
+        <i class="fas fa-indian-rupee-sign"></i>
+      </div>
+    </div>
+  </div>
+
+  <!-- Search & Filter Controls -->
+  <div class="bg-white border border-slate-200/80 rounded-2xl p-4 shadow-2xs space-y-3">
+    <!-- Main Controls Row -->
+    <div class="flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-3">
+      <!-- Search Input -->
+      <div class="relative flex-1 group">
+        <i class="fas fa-search absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-primary-600 transition-colors text-xs"></i>
+        <input type="text"
+          x-model="filters.search"
+          @input.debounce.400ms="resetAndLoad()"
+          placeholder="Search products by model, serial, specifications..."
+          class="w-full pl-9 pr-8 py-2 bg-slate-50/70 border border-slate-200/80 rounded-xl text-xs font-medium text-slate-800 placeholder:text-slate-400 focus:bg-white focus:border-primary-400 focus:ring-2 focus:ring-primary-100 outline-none transition-all">
+        <button x-show="filters.search" @click="filters.search = ''; resetAndLoad()" class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600">
+          <i class="fas fa-times text-xs"></i>
+        </button>
+      </div>
+
+      <!-- Category Filter -->
+      <div class="w-full sm:w-56">
+        <select x-model="filters.category" @change="resetAndLoad()"
+          :class="filters.category ? 'border-primary-400 bg-primary-50/20 text-primary-900 font-semibold' : 'border-slate-200/80 bg-slate-50/70 text-slate-700'"
+          class="w-full px-3 py-2 border rounded-xl text-xs outline-none transition-all cursor-pointer font-medium focus:bg-white focus:border-primary-400 focus:ring-2 focus:ring-primary-100">
+          <option value="">All Categories</option>
+          <template x-for="cat in categories" :key="cat._id">
+            <option :value="cat._id" x-text="cat.name" :selected="cat._id === filters.category"></option>
+          </template>
+        </select>
+      </div>
+
+      <!-- Availability Pills -->
+      <div class="flex items-center p-1 bg-slate-100 rounded-xl border border-slate-200/70 text-xs shrink-0">
+        <button type="button" @click="setAvailabilityFilter(null)"
+          :class="filters.isSold === null ? 'bg-white text-slate-900 font-bold shadow-2xs' : 'text-slate-500 hover:text-slate-800'"
+          class="px-3 py-1 rounded-lg transition-all">
+          All
+        </button>
+        <button type="button" @click="setAvailabilityFilter(false)"
+          :class="filters.isSold === false ? 'bg-white text-emerald-700 font-bold shadow-2xs' : 'text-slate-500 hover:text-slate-800'"
+          class="px-3 py-1 rounded-lg transition-all">
+          In Stock
+        </button>
+        <button type="button" @click="setAvailabilityFilter(true)"
+          :class="filters.isSold === true ? 'bg-white text-slate-700 font-bold shadow-2xs' : 'text-slate-500 hover:text-slate-800'"
+          class="px-3 py-1 rounded-lg transition-all">
+          Sold
+        </button>
+      </div>
+
+      <!-- Advanced Filters Toggle & View Switcher -->
+      <div class="flex items-center gap-2 shrink-0">
+        <button type="button" @click="showFilters = !showFilters"
+          :class="showFilters || activeFiltersCount > 0 ? 'bg-primary-50 text-primary-700 border-primary-200' : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50'"
+          class="px-3 py-2 border rounded-xl text-xs font-semibold transition-all flex items-center gap-1.5 shadow-2xs">
+          <i class="fas fa-sliders text-xs"></i>
+          <span>Specs</span>
+          <span x-show="activeFiltersCount > 0" class="px-1.5 py-0.2 rounded-full text-[10px] bg-primary-600 text-white font-mono" x-text="activeFiltersCount"></span>
+          <i class="fas fa-chevron-down text-[9px] transition-transform" :class="showFilters ? 'rotate-180' : ''"></i>
+        </button>
+
+        <!-- View Mode Switcher -->
+        <div class="flex items-center p-1 bg-slate-100 rounded-xl border border-slate-200/70 text-xs">
+          <button @click="viewMode = 'grid'" title="Card View"
+            :class="viewMode === 'grid' ? 'bg-white text-slate-900 font-bold shadow-2xs' : 'text-slate-400 hover:text-slate-700'"
+            class="px-2.5 py-1 rounded-lg transition-all flex items-center gap-1">
+            <i class="fas fa-grid-2 text-xs"></i>
+          </button>
+          <button @click="viewMode = 'list'" title="Table View"
+            :class="viewMode === 'list' ? 'bg-white text-slate-900 font-bold shadow-2xs' : 'text-slate-400 hover:text-slate-700'"
+            class="px-2.5 py-1 rounded-lg transition-all flex items-center gap-1">
+            <i class="fas fa-list text-xs"></i>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Collapsible Advanced Filters -->
+    <div x-show="showFilters" x-collapse>
+      <div class="pt-3 border-t border-slate-100 space-y-3 text-xs">
+        <!-- Price Range & Quick Clear -->
+        <div class="flex flex-wrap items-center justify-between gap-4">
+          <div class="flex items-center gap-2">
+            <span class="text-[11px] font-bold uppercase tracking-wider text-slate-400">Price Range:</span>
+            <div class="flex items-center gap-2">
+              <div class="relative w-28">
+                <span class="absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400 text-xs font-mono">₹</span>
+                <input type="number" x-model="filters.minPrice" placeholder="Min" @input.debounce.400ms="resetAndLoad()"
+                  class="w-full pl-6 pr-2 py-1.5 bg-slate-50 border border-slate-200 rounded-lg text-xs font-mono outline-none focus:border-primary-400 focus:bg-white">
+              </div>
+              <span class="text-slate-400 text-xs">—</span>
+              <div class="relative w-28">
+                <span class="absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400 text-xs font-mono">₹</span>
+                <input type="number" x-model="filters.maxPrice" placeholder="Max" @input.debounce.400ms="resetAndLoad()"
+                  class="w-full pl-6 pr-2 py-1.5 bg-slate-50 border border-slate-200 rounded-lg text-xs font-mono outline-none focus:border-primary-400 focus:bg-white">
               </div>
             </div>
+          </div>
+
+          <button x-show="activeFiltersCount > 0" @click="resetFilters()"
+            class="text-[11px] font-bold text-rose-600 hover:text-rose-700 flex items-center gap-1">
+            <i class="fas fa-rotate-left text-[10px]"></i>
+            <span>Reset All Filters</span>
+          </button>
+        </div>
+
+        <!-- Dynamic Spec Chips -->
+        <div x-show="Object.keys(availableFilters).length > 0" class="space-y-2">
+          <span class="text-[11px] font-bold uppercase tracking-wider text-slate-400 block">Specification Attributes:</span>
+          <div class="flex flex-wrap gap-2">
+            <template x-for="(values, key) in availableFilters" :key="key">
+              <div class="relative" x-data="{ open: false }" @click.away="open = false">
+                <button @click="open = !open"
+                  :class="filters.specs[key]?.length > 0 ? 'border-primary-300 bg-primary-50 text-primary-700 font-bold' : 'border-slate-200 bg-slate-50 text-slate-600 hover:bg-slate-100'"
+                  class="px-2.5 py-1.5 rounded-lg border text-xs transition-all flex items-center gap-1.5">
+                  <span x-text="formatFilterLabel(key)"></span>
+                  <template x-if="filters.specs[key]?.length > 0">
+                    <span class="px-1.5 py-0.2 rounded-full text-[9px] bg-primary-600 text-white font-mono" x-text="filters.specs[key].length"></span>
+                  </template>
+                  <i class="fas fa-chevron-down text-[8px] opacity-60 transition-transform" :class="open ? 'rotate-180' : ''"></i>
+                </button>
+                <div x-show="open" x-cloak
+                  x-transition:enter="transition ease-out duration-100"
+                  x-transition:enter-start="opacity-0 scale-95"
+                  x-transition:enter-end="opacity-100 scale-100"
+                  class="absolute left-0 mt-1.5 w-52 bg-white rounded-xl shadow-xl border border-slate-200 z-50 py-2 max-h-56 overflow-y-auto">
+                  <template x-for="value in values" :key="value">
+                    <label class="flex items-center px-3.5 py-1.5 hover:bg-slate-50 cursor-pointer text-xs">
+                      <input type="checkbox"
+                        :checked="filters.specs[key]?.includes(value)"
+                        @change="toggleFilter(key, value)"
+                        class="rounded border-slate-300 text-primary-600 focus:ring-primary-500 mr-2.5">
+                      <span class="text-slate-700 font-medium truncate" x-text="value"></span>
+                    </label>
+                  </template>
+                </div>
+              </div>
+            </template>
           </div>
         </div>
       </div>
     </div>
   </div>
 
-  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-    <!-- SHARP MINIMAL FILTERS SECTION -->
-    <div class="mb-10">
-      <div
-        class="bg-slate-50 border border-slate-200 rounded-[24px] p-6 md:p-8"
-      >
-        <div class="flex flex-col md:flex-row md:items-end gap-6">
-          <!-- Main Search -->
-          <div class="flex-1">
-            <label
-              class="block text-[9px] font-black text-slate-400 uppercase tracking-widest mb-3 ml-1"
-              >Search Inventory</label
-            >
-            <div class="relative group">
-              <i
-                class="fas fa-search absolute left-4 top-1/2 -translate-y-1/2 text-slate-300 group-focus-within:text-primary-500 transition-colors"
-              ></i>
-              <input
-                type="text"
-                x-model="filters.search"
-                @input.debounce.500ms="resetAndLoad()"
-                placeholder="Find products by name, ID, or specs..."
-                class="w-full pl-11 pr-4 py-3 bg-white border border-slate-200 rounded-xl focus:ring-4 focus:ring-primary-100 focus:border-primary-400 outline-none transition-all text-sm placeholder:text-slate-300"
-              />
+  <!-- Results Bar -->
+  <div class="flex items-center justify-between text-xs text-slate-500">
+    <p>
+      Showing <strong class="text-slate-800" x-text="products.length"></strong> products
+      <span x-show="filters.category || filters.search || filters.isSold !== null" class="text-primary-600 font-semibold">(filtered)</span>
+    </p>
+  </div>
+
+  <!-- Loading State -->
+  <div x-show="loading" class="flex flex-col items-center justify-center py-20 space-y-3">
+    <div class="w-9 h-9 border-3 border-slate-200 border-t-primary-600 rounded-full animate-spin"></div>
+    <p class="text-xs text-slate-400 uppercase tracking-widest font-semibold">Loading catalog items...</p>
+  </div>
+
+  <!-- Empty State -->
+  <div x-show="!loading && products.length === 0" class="bg-white border border-slate-200/80 rounded-2xl p-12 text-center shadow-xs">
+    <div class="w-12 h-12 rounded-2xl bg-purple-50 text-purple-600 flex items-center justify-center mx-auto mb-3">
+      <i class="fas fa-boxes-stacked text-lg"></i>
+    </div>
+    <h3 class="text-sm font-bold text-slate-900">No Products Found</h3>
+    <p class="text-xs text-slate-500 max-w-sm mx-auto mt-1 mb-4">No products match the selected criteria or search query.</p>
+    <a href="/products/add" class="inline-flex items-center gap-1.5 px-4 py-2 bg-primary-600 text-white rounded-xl text-xs font-bold hover:bg-primary-700 transition-all shadow-xs">
+      <i class="fas fa-plus text-[10px]"></i>
+      <span>Add New Product</span>
+    </a>
+  </div>
+
+  <!-- Grid View -->
+  <div x-show="!loading && viewMode === 'grid' && products.length > 0"
+    class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+    <template x-for="(product, index) in products" :key="product._id">
+      <div class="bg-white border border-slate-200/80 rounded-2xl p-5 shadow-2xs hover:shadow-md hover:border-primary-200 transition-all cursor-pointer flex flex-col justify-between group"
+        @click="viewProduct(product)">
+        <div class="space-y-3">
+          <!-- Top Tag & Status -->
+          <div class="flex items-center justify-between">
+            <span x-show="product.productID" class="font-mono text-xs font-bold text-slate-500" x-text="product.productID"></span>
+            <span x-show="!product.productID" class="text-[10px] font-bold text-slate-400 uppercase">Item</span>
+
+            <span class="px-2.5 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider"
+              :class="product.isSold ? 'bg-slate-100 text-slate-600 border border-slate-200' : 'bg-emerald-50 text-emerald-700 border border-emerald-200/80'"
+              x-text="product.isSold ? 'Sold' : 'In Stock'"></span>
+          </div>
+
+          <!-- Product Name -->
+          <div>
+            <h3 class="text-sm font-bold text-slate-900 group-hover:text-primary-600 transition-colors line-clamp-2 leading-snug"
+              x-text="product.name"></h3>
+            <div class="flex items-center gap-1.5 mt-1.5">
+              <span class="inline-flex items-center gap-1 text-[11px] text-slate-500 bg-slate-100 px-2 py-0.5 rounded-md font-medium">
+                <i class="fas fa-tag text-[9px] text-slate-400"></i>
+                <span x-text="product.category?.name || 'Uncategorized'"></span>
+              </span>
             </div>
           </div>
 
-          <!-- Category -->
-          <div class="w-full md:w-64">
-            <label
-              class="block text-[9px] font-black text-slate-400 uppercase tracking-widest mb-3 ml-1"
-              >Category</label
-            >
-            <div class="relative group">
-              <select
-                x-model="filters.category"
-                @change="resetAndLoad()"
-                :class="filters.category ? 'border-primary-400 ring-2 ring-primary-50 bg-primary-50/10' : 'border-slate-200'"
-                class="w-full px-4 py-3 bg-white border rounded-xl focus:ring-4 focus:ring-primary-100 focus:border-primary-400 outline-none transition-all text-sm appearance-none cursor-pointer font-bold"
-              >
-                <option value="">All Categories</option>
-                <template x-for="cat in categories" :key="cat._id">
-                  <option :value="cat._id" x-text="cat.name" :selected="cat._id === filters.category"></option>
-                </template>
-              </select>
-              <div
-                class="absolute right-12 top-1/2 -translate-y-1/2 pointer-events-none"
-                x-show="filters.category"
-              >
-                 <span class="text-[8px] font-black text-primary-500 uppercase tracking-tighter bg-primary-50 px-1.5 py-0.5 rounded border border-primary-100">FILTERED</span>
-              </div>
-            </div>
+          <!-- Tags -->
+          <div x-show="product.tags && product.tags.length > 0" class="flex flex-wrap gap-1 pt-1">
+            <template x-for="tag in product.tags?.slice(0, 3)" :key="tag">
+              <span class="px-2 py-0.5 bg-slate-50 border border-slate-200/70 text-slate-600 text-[10px] rounded-md font-medium" x-text="tag"></span>
+            </template>
           </div>
-
-          <!-- Toggle Filters -->
-          <button
-            @click="showFilters = !showFilters"
-            class="flex items-center justify-center px-5 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all relative"
-            :class="showFilters ? 'bg-primary-50 text-primary-600 border border-primary-200' : 'bg-white text-slate-600 border border-slate-200 hover:bg-slate-50'"
-          >
-            <i class="fas fa-sliders-h mr-2"></i>
-            Advanced
-            <span
-              x-show="activeFiltersCount > 0"
-              class="absolute -top-1 -right-1 w-5 h-5 bg-primary-600 text-white text-[9px] font-bold rounded-full flex items-center justify-center border-2 border-white"
-              x-text="activeFiltersCount"
-            ></span>
-            <i
-              class="fas fa-chevron-down ml-2 text-[8px] transition-transform"
-              :class="showFilters ? 'rotate-180' : ''"
-            ></i>
-          </button>
         </div>
 
-        <!-- Collapsible Advanced Filters -->
-        <div x-show="showFilters" x-collapse>
-          <div class="mt-8 pt-8 border-t border-slate-200 space-y-8">
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-              <!-- Status Filter -->
-              <div>
-                <label
-                  class="block text-[9px] font-black text-slate-400 uppercase tracking-widest mb-4 ml-1"
-                  >Availability</label
-                >
-                <div
-                  class="flex bg-white p-1 rounded-xl border border-slate-200 w-fit"
-                >
-                  <button
-                    @click="setAvailabilityFilter(null)"
-                    :class="filters.isSold === null ? 'bg-slate-900 text-white shadow-lg' : 'text-slate-500 hover:text-slate-800'"
-                    class="px-5 py-2 rounded-lg text-[10px] font-black uppercase tracking-wider transition-all"
-                  >
-                    All
+        <!-- Footer: Price & Actions -->
+        <div class="pt-4 border-t border-slate-100 mt-4 flex items-center justify-between" @click.stop>
+          <div class="flex items-baseline gap-0.5 font-mono">
+            <span class="text-slate-400 text-xs font-bold">₹</span>
+            <span class="text-lg font-bold text-slate-900" x-text="Number(product.price).toLocaleString('en-IN')"></span>
+          </div>
+
+          <div class="flex items-center gap-1.5">
+            <button type="button" @click="viewProduct(product)"
+              class="px-3 py-1.5 bg-primary-600 hover:bg-primary-700 text-white rounded-lg text-xs font-semibold transition-all shadow-2xs">
+              View
+            </button>
+            <a :href="`/products/edit/${product._id}`" title="Edit Product"
+              class="w-7 h-7 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-600 flex items-center justify-center transition-colors">
+              <i class="fas fa-pencil-alt text-xs"></i>
+            </a>
+            <button type="button" @click="showQROnly(product._id)" title="QR Code"
+              class="w-7 h-7 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-600 flex items-center justify-center transition-colors">
+              <i class="fas fa-qrcode text-xs"></i>
+            </button>
+            <button x-show="!product.isSold" type="button" @click="markAsSold(product._id)" title="Mark Sold"
+              class="w-7 h-7 rounded-lg bg-emerald-50 hover:bg-emerald-100 text-emerald-700 flex items-center justify-center transition-colors">
+              <i class="fas fa-check text-xs"></i>
+            </button>
+          </div>
+        </div>
+      </div>
+    </template>
+  </div>
+
+  <!-- List View (Table) -->
+  <div x-show="!loading && viewMode === 'list' && products.length > 0"
+    class="bg-white border border-slate-200/80 rounded-2xl overflow-hidden shadow-2xs">
+    <div class="overflow-x-auto">
+      <table class="w-full text-left text-xs">
+        <thead>
+          <tr class="bg-slate-50/70 border-b border-slate-200/80 text-slate-500 font-bold uppercase tracking-wider text-[10px]">
+            <th class="px-5 py-3.5">Product</th>
+            <th class="px-5 py-3.5 hidden md:table-cell">Category</th>
+            <th class="px-5 py-3.5 hidden lg:table-cell">Source</th>
+            <th class="px-5 py-3.5">Price</th>
+            <th class="px-5 py-3.5">Status</th>
+            <th class="px-5 py-3.5 text-right">Actions</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-slate-100">
+          <template x-for="product in products" :key="product._id">
+            <tr class="hover:bg-slate-50/60 transition-colors cursor-pointer group" @click="viewProduct(product)">
+              <td class="px-5 py-3.5">
+                <span class="font-semibold text-slate-900 block" x-text="product.name"></span>
+                <span x-show="product.productID" class="text-[10px] font-mono text-slate-400" x-text="product.productID"></span>
+              </td>
+              <td class="px-5 py-3.5 hidden md:table-cell">
+                <span class="text-xs text-slate-600" x-text="product.category?.name || '—'"></span>
+              </td>
+              <td class="px-5 py-3.5 hidden lg:table-cell">
+                <span class="text-xs text-slate-500" x-text="product.source?.name || '—'"></span>
+              </td>
+              <td class="px-5 py-3.5 font-mono font-bold text-slate-900">
+                ₹<span x-text="Number(product.price).toLocaleString('en-IN')"></span>
+              </td>
+              <td class="px-5 py-3.5">
+                <span class="px-2.5 py-1 rounded text-[10px] font-bold uppercase tracking-wider"
+                  :class="product.isSold ? 'bg-slate-100 text-slate-600' : 'bg-emerald-50 text-emerald-700'"
+                  x-text="product.isSold ? 'Sold' : 'Active'"></span>
+              </td>
+              <td class="px-5 py-3.5 text-right" @click.stop>
+                <div class="flex items-center justify-end gap-1.5">
+                  <button type="button" @click="viewProduct(product)"
+                    class="px-2.5 py-1 bg-slate-100 hover:bg-primary-50 hover:text-primary-600 text-slate-700 rounded-lg text-xs font-semibold transition-all">
+                    View
                   </button>
-                  <button
-                    @click="setAvailabilityFilter(false)"
-                    :class="filters.isSold === false ? 'bg-emerald-600 text-white shadow-lg shadow-emerald-100' : 'text-slate-500 hover:text-slate-800'"
-                    class="px-5 py-2 rounded-lg text-[10px] font-black uppercase tracking-wider transition-all"
-                  >
-                    Available
+                  <a :href="`/products/edit/${product._id}`"
+                    class="w-7 h-7 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-600 flex items-center justify-center transition-colors">
+                    <i class="fas fa-pencil-alt text-xs"></i>
+                  </a>
+                  <button type="button" @click="showQROnly(product._id)"
+                    class="w-7 h-7 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-600 flex items-center justify-center transition-colors">
+                    <i class="fas fa-qrcode text-xs"></i>
                   </button>
-                  <button
-                    @click="setAvailabilityFilter(true)"
-                    :class="filters.isSold === true ? 'bg-slate-400 text-white shadow-lg' : 'text-slate-500 hover:text-slate-800'"
-                    class="px-5 py-2 rounded-lg text-[10px] font-black uppercase tracking-wider transition-all"
-                  >
-                    Sold
+                  <button x-show="!product.isSold" type="button" @click="markAsSold(product._id)"
+                    class="w-7 h-7 rounded-lg bg-emerald-50 hover:bg-emerald-100 text-emerald-700 flex items-center justify-center transition-colors">
+                    <i class="fas fa-check text-xs"></i>
+                  </button>
+                  <button type="button" @click="deleteProduct(product._id)"
+                    class="w-7 h-7 rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-600 flex items-center justify-center transition-colors">
+                    <i class="fas fa-trash-alt text-xs"></i>
                   </button>
                 </div>
-              </div>
-
-              <!-- Price Inputs -->
-              <div class="lg:col-span-2">
-                <label
-                  class="block text-[9px] font-black text-slate-400 uppercase tracking-widest mb-4 ml-1"
-                  >Price Range</label
-                >
-                <div class="flex items-center gap-3">
-                  <div class="relative flex-1 max-w-[200px]">
-                    <span
-                      class="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 text-xs font-bold"
-                      >₹</span
-                    >
-                    <input
-                      type="number"
-                      x-model="filters.minPrice"
-                      placeholder="From"
-                      @input.debounce.500ms="resetAndLoad()"
-                      :class="filters.minPrice ? 'border-primary-400 bg-primary-50/10' : 'border-slate-200'"
-                      class="w-full pl-8 pr-4 py-2.5 bg-white border rounded-xl focus:ring-4 focus:ring-primary-100 focus:border-primary-400 outline-none transition-all text-sm font-bold"
-                    />
-                  </div>
-                  <div class="w-3 h-[1px] bg-slate-300"></div>
-                  <div class="relative flex-1 max-w-[200px]">
-                    <span
-                      class="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 text-xs font-bold"
-                      >₹</span
-                    >
-                    <input
-                      type="number"
-                      x-model="filters.maxPrice"
-                      placeholder="To"
-                      @input.debounce.500ms="resetAndLoad()"
-                      :class="filters.maxPrice ? 'border-primary-400 bg-primary-50/10' : 'border-slate-200'"
-                      class="w-full pl-8 pr-4 py-2.5 bg-white border rounded-xl focus:ring-4 focus:ring-primary-100 focus:border-primary-400 outline-none transition-all text-sm font-bold"
-                    />
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <!-- Dynamic Spec Filters -->
-            <div
-              x-show="Object.keys(availableFilters).length > 0"
-              class="space-y-4"
-            >
-              <label
-                class="block text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1 ml-1"
-                >Specifications</label
-              >
-              <div class="flex flex-wrap gap-3">
-                <template x-for="(values, key) in availableFilters" :key="key">
-                  <div
-                    class="relative"
-                    x-data="{ open: false }"
-                    @click.away="open = false"
-                  >
-                    <button
-                      @click="open = !open"
-                      :class="filters.specs[key]?.length > 0 ? 'border-primary-400 bg-primary-50/30 text-primary-600' : 'border-slate-200 text-slate-600'"
-                      class="flex items-center px-4 py-2 bg-white border rounded-xl text-[10px] font-black uppercase tracking-wider transition-all group"
-                    >
-                      <span x-text="key" class="mr-2"></span>
-                      <template x-if="filters.specs[key]?.length > 0">
-                        <span
-                          class="bg-primary-600 text-white text-[9px] px-1.5 py-0.5 rounded-full mr-2"
-                          x-text="filters.specs[key].length"
-                        ></span>
-                      </template>
-                      <i
-                        class="fas fa-chevron-down text-[8px] transition-transform"
-                        :class="open ? 'rotate-180' : ''"
-                      ></i>
-                    </button>
-                    <div
-                      x-show="open"
-                      x-transition:enter="transition ease-out duration-100"
-                      x-transition:enter-start="opacity-0 scale-95"
-                      x-transition:enter-end="opacity-100 scale-100"
-                      class="absolute left-0 mt-2 w-48 bg-white rounded-xl shadow-xl border border-slate-200 z-50 py-2 max-h-64 overflow-y-auto"
-                    >
-                      <template x-for="value in values" :key="value">
-                        <label
-                          class="flex items-center px-4 py-2.5 hover:bg-slate-50 cursor-pointer group"
-                        >
-                          <input
-                            type="checkbox"
-                            :checked="filters.specs[key]?.includes(value)"
-                            @change="toggleFilter(key, value)"
-                            class="rounded-md border-slate-300 text-primary-600 focus:ring-primary-500 mr-3"
-                          />
-                          <span
-                            class="text-xs text-slate-600 group-hover:text-slate-900 font-bold"
-                            x-text="value"
-                          ></span>
-                        </label>
-                      </template>
-                    </div>
-                  </div>
-                </template>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <div class="flex items-center justify-between mb-6">
-      <div class="text-[10px] font-black text-slate-500 uppercase tracking-widest">
-        <span class="text-slate-900 text-sm font-bold" x-text="products.length"></span> Items
-      </div>
-      <div class="flex bg-slate-100 p-1 rounded-xl">
-        <button
-          @click="viewMode = 'grid'"
-          :class="viewMode === 'grid' ? 'bg-white text-primary-600 shadow-sm' : 'text-slate-500 hover:text-slate-700'"
-          class="p-2 px-3 rounded-lg transition-all text-[10px] font-black uppercase tracking-wider flex items-center gap-2"
-        >
-          <i class="fas fa-th-large text-[9px]"></i>
-          Grid
-        </button>
-        <button
-          @click="viewMode = 'list'"
-          :class="viewMode === 'list' ? 'bg-white text-primary-600 shadow-sm' : 'text-slate-500 hover:text-slate-700'"
-          class="p-2 px-3 rounded-lg transition-all text-[10px] font-black uppercase tracking-wider flex items-center gap-2"
-        >
-          <i class="fas fa-list text-[9px]"></i>
-          List
-        </button>
-      </div>
-    </div>
-
-    <!-- SHARP MINIMAL LOADING STATE -->
-    <div
-      x-show="loading"
-      class="flex flex-col items-center justify-center py-24"
-    >
-      <div
-        class="w-12 h-12 border-4 border-primary-100 border-t-primary-500 rounded-full animate-spin mb-4"
-      ></div>
-      <p class="text-sm font-bold text-slate-400 uppercase tracking-wider">Loading Inventory...</p>
-    </div>
-
-    <!-- SHARP MINIMAL PRODUCT CARDS (Grid View) -->
-    <div
-      x-show="!loading && viewMode === 'grid'"
-      class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
-    >
-      <template x-for="(product, index) in products" :key="product._id">
-        <div
-          class="bg-white rounded-[24px] border border-slate-200 shadow-sm hover:shadow-xl hover:shadow-slate-200/50 transition-all duration-300 overflow-hidden group flex flex-col h-full"
-          :style="`animation: fadeInUp 0.5s ease-out forwards; animation-delay: ${index * 0.04}s`"
-        >
-          <div class="p-6 pb-4 flex-1">
-            <div class="flex items-start justify-between mb-4">
-              <span
-                x-show="product.isSold"
-                class="px-3 py-1 bg-slate-100 text-slate-500 text-[9px] font-black rounded-lg tracking-widest uppercase"
-                >Sold</span
-              >
-              <span
-                x-show="!product.isSold"
-                class="px-3 py-1 bg-emerald-50 text-emerald-600 text-[9px] font-black rounded-lg tracking-widest uppercase"
-                >Available</span
-              >
-
-              <span
-                x-show="product.productID"
-                class="text-[9px] font-mono text-slate-300 font-bold"
-                x-text="product.productID"
-              ></span>
-            </div>
-
-            <h3
-              class="text-lg font-bold text-slate-900 mb-2 leading-tight group-hover:text-primary-600 transition-colors"
-              x-text="product.name"
-            ></h3>
-
-            <div class="flex items-baseline gap-1 mb-4">
-              <span class="text-slate-400 text-xs font-bold">₹</span>
-              <span
-                class="text-2xl font-bold text-slate-900 tracking-tight"
-                x-text="Number(product.price).toLocaleString('en-IN')"
-              ></span>
-            </div>
-
-            <div
-              class="flex items-center gap-2 text-[10px] text-slate-500 mb-4 bg-slate-50 w-fit px-3 py-1.5 rounded-lg border border-slate-100"
-            >
-              <i class="fas fa-tag text-[8px] text-primary-400"></i>
-              <span class="font-bold" x-text="product.category?.name || 'Uncategorized'"></span>
-            </div>
-
-            <div
-              class="flex flex-wrap gap-1.5 opacity-60 group-hover:opacity-100 transition-opacity"
-            >
-              <template x-for="tag in product.tags?.slice(0, 3)" :key="tag">
-                <span
-                  class="px-2.5 py-1 bg-slate-100 text-slate-600 text-[9px] font-bold rounded-lg uppercase tracking-wider"
-                  x-text="tag"
-                ></span>
-              </template>
-            </div>
-          </div>
-
-          <div class="p-5 pt-0 mt-auto">
-            <div class="flex items-center gap-2">
-              <button
-                @click="viewProduct(product)"
-                class="flex-1 px-4 py-2.5 bg-slate-900 text-white text-[10px] font-black uppercase tracking-wider rounded-xl hover:bg-primary-600 transition-all active:scale-95"
-              >
-                View
-              </button>
-
-              <div class="flex gap-1">
-                <a
-                  :href="`/products/edit/${product._id}`"
-                  class="p-2.5 bg-slate-50 text-slate-400 hover:text-primary-600 hover:bg-primary-50 rounded-xl transition-all"
-                  title="Edit"
-                >
-                  <i class="fas fa-pencil-alt text-sm"></i>
-                </a>
-                <button
-                  @click="showQROnly(product._id)"
-                  class="p-2.5 bg-slate-50 text-slate-400 hover:text-primary-600 hover:bg-primary-50 rounded-xl transition-all"
-                  title="QR Code"
-                >
-                  <i class="fas fa-qrcode text-sm"></i>
-                </button>
-                <button
-                  x-show="!product.isSold"
-                  @click="markAsSold(product._id)"
-                  class="p-2.5 bg-slate-50 text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 rounded-xl transition-all"
-                  title="Mark as Sold"
-                >
-                  <i class="fas fa-check text-sm"></i>
-                </button>
-                <button
-                  @click="deleteProduct(product._id)"
-                  class="p-2.5 bg-slate-50 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-xl transition-all"
-                  title="Delete"
-                >
-                  <i class="fas fa-trash-alt text-sm"></i>
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      </template>
-    </div>
-
-    <!-- Products List View -->
-    <div
-      x-show="!loading && viewMode === 'list'"
-      class="bg-white rounded-[32px] border border-gray-100 shadow-sm overflow-hidden"
-    >
-      <div class="overflow-x-auto">
-        <table class="w-full">
-          <thead>
-            <tr class="bg-gray-50/50">
-              <th
-                class="px-8 py-5 text-left text-[11px] font-bold text-gray-400 uppercase tracking-widest"
-              >
-                Product
-              </th>
-              <th
-                class="px-8 py-5 text-left text-[11px] font-bold text-gray-400 uppercase tracking-widest hidden md:table-cell"
-              >
-                Category
-              </th>
-              <th
-                class="px-8 py-5 text-left text-[11px] font-bold text-gray-400 uppercase tracking-widest hidden lg:table-cell"
-              >
-                Source
-              </th>
-              <th
-                class="px-8 py-5 text-left text-[11px] font-bold text-gray-400 uppercase tracking-widest"
-              >
-                Price
-              </th>
-              <th
-                class="px-8 py-5 text-left text-[11px] font-bold text-gray-400 uppercase tracking-widest"
-              >
-                Status
-              </th>
-              <th
-                class="px-8 py-5 text-right text-[11px] font-bold text-gray-400 uppercase tracking-widest"
-              >
-                Actions
-              </th>
+              </td>
             </tr>
-          </thead>
-          <tbody class="divide-y divide-gray-50">
-            <template x-for="product in products" :key="product._id">
-              <tr class="group hover:bg-blue-50/20 transition-colors">
-                <td class="px-8 py-5">
-                  <div class="flex flex-col">
-                    <span
-                      class="font-bold text-gray-900 text-sm"
-                      x-text="product.name"
-                    ></span>
-                    <span
-                      x-show="product.productID"
-                      class="text-[10px] font-mono text-gray-300 mt-0.5"
-                      x-text="product.productID"
-                    ></span>
-                  </div>
-                </td>
-                <td class="px-8 py-5 hidden md:table-cell">
-                  <span
-                    class="text-xs font-medium text-gray-500"
-                    x-text="product.category?.name || '-'"
-                  ></span>
-                </td>
-                <td class="px-8 py-5 hidden lg:table-cell">
-                  <span
-                    class="text-xs font-medium text-gray-500"
-                    x-text="product.source?.name || '-'"
-                  ></span>
-                </td>
-                <td class="px-8 py-5">
-                  <span class="text-sm font-bold text-gray-900"
-                    >₹<span
-                      x-text="Number(product.price).toLocaleString('en-IN')"
-                    ></span
-                  ></span>
-                </td>
-                <td class="px-8 py-5">
-                  <span
-                    :class="product.isSold ? 'text-gray-400' : 'text-green-600 bg-green-50 px-3 py-1 rounded-full'"
-                    class="text-[10px] font-bold uppercase tracking-wider"
-                    x-text="product.isSold ? 'Sold' : 'Active'"
-                  ></span>
-                </td>
-                <td class="px-8 py-5 text-right">
-                  <div
-                    class="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity"
-                  >
-                    <button
-                      @click="viewProduct(product)"
-                      class="p-2 text-gray-400 hover:text-blue-600 transition-colors"
-                    >
-                      <i class="fas fa-eye text-sm"></i>
-                    </button>
-                    <a
-                      :href="`/products/edit/${product._id}`"
-                      class="p-2 text-gray-400 hover:text-blue-600 transition-colors"
-                    >
-                      <i class="fas fa-pencil-alt text-sm"></i>
-                    </a>
-                    <button
-                      @click="deleteProduct(product._id)"
-                      class="p-2 text-gray-400 hover:text-red-500 transition-colors"
-                    >
-                      <i class="fas fa-trash-alt text-sm"></i>
-                    </button>
-                  </div>
-                </td>
-              </tr>
-            </template>
-          </tbody>
-        </table>
-      </div>
+          </template>
+        </tbody>
+      </table>
     </div>
+  </div>
 
-    <!-- Empty State -->
-    <div
-      x-show="!loading && products.length === 0"
-      class="text-center py-24 bg-gray-50/50 rounded-[40px] border border-dashed border-gray-200"
-    >
-      <div
-        class="w-20 h-20 bg-white rounded-3xl shadow-sm flex items-center justify-center mx-auto mb-6"
-      >
-        <i class="fas fa-box-open text-3xl text-gray-200"></i>
-      </div>
-      <h3 class="text-xl font-bold text-gray-900 mb-2">No items found</h3>
-      <p class="text-sm text-gray-500 mb-8 max-w-xs mx-auto">
-        Try adjusting your filters or add a new product to your inventory.
-      </p>
-      <a
-        href="/products/add"
-        class="inline-flex items-center px-6 py-3 bg-blue-600 text-white text-sm font-semibold rounded-2xl hover:bg-blue-700 shadow-xl shadow-blue-100 transition-all"
-      >
-        <i class="fas fa-plus mr-2"></i>
-        New Product
-      </a>
+
+  <!-- Pagination -->
+  <div x-show="!loading && pagination.totalPages > 1"
+    class="bg-white border border-slate-200/80 rounded-2xl px-5 py-3 shadow-2xs flex flex-col sm:flex-row items-center justify-between gap-3 text-xs">
+    <p class="text-slate-500">
+      Showing <strong class="text-slate-800" x-text="(pagination.page - 1) * pagination.limit + 1"></strong> to 
+      <strong class="text-slate-800" x-text="Math.min(pagination.page * pagination.limit, pagination.totalItems)"></strong> of 
+      <strong class="text-slate-800" x-text="pagination.totalItems"></strong> products
+    </p>
+
+    <div class="flex items-center gap-2">
+      <button @click="prevPage()" :disabled="pagination.page <= 1"
+        class="px-3 py-1 bg-slate-100 text-slate-700 rounded-lg font-semibold hover:bg-slate-200 disabled:opacity-40 disabled:cursor-not-allowed transition-all">
+        Prev
+      </button>
+      <span class="px-2 font-mono text-slate-600 font-bold" x-text="`Page ${pagination.page} of ${pagination.totalPages || 1}`"></span>
+      <button @click="nextPage()" :disabled="pagination.page >= pagination.totalPages"
+        class="px-3 py-1 bg-primary-600 text-white rounded-lg font-semibold hover:bg-primary-700 shadow-2xs disabled:opacity-40 disabled:cursor-not-allowed transition-all">
+        Next
+      </button>
     </div>
+  </div>
 
-    <!-- Add/Edit Product Modal Removed -->
-
-    <!-- Apple-Style Pagination -->
-    <div x-show="!loading && pagination.totalPages > 1" class="mt-8 mb-12">
-      <div
-        class="flex items-center justify-between bg-white rounded-2xl shadow-sm border border-gray-200/50 px-6 py-4"
-      >
-        <!-- Results Info -->
-        <div class="text-sm text-gray-600">
-          Showing
-          <span
-            class="font-semibold"
-            x-text="(pagination.page - 1) * pagination.limit + 1"
-          ></span>
-          to
-          <span
-            class="font-semibold"
-            x-text="Math.min(pagination.page * pagination.limit, pagination.totalItems)"
-          ></span>
-          of
-          <span class="font-semibold" x-text="pagination.totalItems"></span>
-          products
-        </div>
-
-        <!-- Pagination Controls -->
-        <nav class="flex items-center space-x-2">
-          <!-- Previous Button -->
-          <button
-            @click="prevPage()"
-            :disabled="pagination.page === 1"
-            :class="pagination.page === 1 ? 'opacity-50 cursor-not-allowed' : ''"
-            class="inline-flex items-center px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus-ring-blue-500 transition-all"
-          >
-            <i class="fas fa-chevron-left mr-2"></i>
-            Previous
-          </button>
-
-          <!-- Page Numbers -->
-          <div class="hidden md:flex items-center space-x-1">
-            <template
-              x-for="page in Array.from({length: pagination.totalPages}, (_, i) => i + 1).filter(p => {
-            return p === 1 || p === pagination.totalPages || (p >= pagination.page - 1 && p <= pagination.page + 1);
-          })"
-              :key="page"
-            >
-              <div>
-                <button
-                  @click="goToPage(page)"
-                  :class="page === pagination.page ? 'bg-blue-600 text-white' : 'text-gray-700 hover:bg-gray-100'"
-                  class="w-10 h-10 flex items-center justify-center text-sm font-medium rounded-lg transition-all focus:outline-none focus:ring-2 focus:ring-blue-500 border border-gray-300"
-                  x-text="page"
-                ></button>
-              </div>
-            </template>
-          </div>
-
-          <!-- Mobile: Current Page Indicator -->
-          <div
-            class="md:hidden px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-lg"
-          >
-            Page <span x-text="pagination.page"></span> of
-            <span x-text="pagination.totalPages"></span>
-          </div>
-
-          <!-- Next Button -->
-          <button
-            @click="nextPage()"
-            :disabled="pagination.page === pagination.totalPages"
-            :class="pagination.page === pagination.totalPages ? 'opacity-50 cursor-not-allowed' : ''"
-            class="inline-flex items-center px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all"
-          >
-            Next
-            <i class="fas fa-chevron-right ml-2"></i>
-          </button>
-        </nav>
-      </div>
-    </div>
-
-    <!-- SHARP MINIMAL PRODUCT VIEW MODAL -->
+  <!-- PRODUCT VIEW MODAL -->
+  <template x-teleport="body">
     <div
       x-show="showViewModal"
       x-transition:enter="transition ease-out duration-300"
@@ -736,7 +468,7 @@
       x-transition:leave="transition ease-in duration-200"
       x-transition:leave-start="opacity-100"
       x-transition:leave-end="opacity-0"
-      class="fixed inset-0 bg-slate-900/60 z-[9999] flex items-center justify-center p-4"
+      class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-[9999] flex items-center justify-center p-4 md:p-6"
       @click.self="closeViewModal()"
       style="display: none"
     >
@@ -748,22 +480,23 @@
         x-transition:leave="transition ease-in duration-250 transform"
         x-transition:leave-start="opacity-100 scale-100"
         x-transition:leave-end="opacity-0 scale-95"
-        class="bg-white rounded-[32px] shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-hidden flex flex-col relative border border-slate-200"
+        class="bg-white rounded-2xl shadow-2xl max-w-4xl w-full max-h-[88vh] overflow-hidden flex flex-col relative border border-slate-200/90"
       >
         <!-- Modal Header -->
-        <div class="bg-slate-50 border-b border-slate-200 px-8 py-6">
-          <div class="flex items-center justify-between">
-            <div>
-              <h2 class="text-lg font-bold text-slate-900 uppercase tracking-tight">Product Details</h2>
-              <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest mt-1">Complete Specification</p>
+        <div class="bg-slate-50/70 border-b border-slate-200/80 px-6 py-4 flex items-center justify-between">
+          <div>
+            <div class="flex items-center gap-2">
+              <h2 class="text-base font-bold text-slate-900 font-display">Product Details</h2>
+              <span class="px-2 py-0.5 rounded text-[10px] font-black uppercase tracking-wider bg-purple-50 text-purple-700 border border-purple-200/60" x-text="viewData.category?.name || 'Stock Item'"></span>
             </div>
-            <button
-              @click="closeViewModal()"
-              class="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg transition-all"
-            >
-              <i class="fas fa-times text-lg"></i>
-            </button>
+            <p class="text-xs text-slate-500 mt-0.5">Comprehensive hardware specifications & inventory telemetry</p>
           </div>
+          <button
+            @click="closeViewModal()"
+            class="w-8 h-8 rounded-lg bg-white border border-slate-200 text-slate-400 hover:text-slate-700 flex items-center justify-center transition-all shadow-2xs"
+          >
+            <i class="fas fa-times text-sm"></i>
+          </button>
         </div>
 
         <!-- Modal Body -->
@@ -974,16 +707,16 @@
               </button>
             </div>
 
-            <div class="flex items-center gap-3">
+            <div class="flex items-center gap-2">
               <button
                 @click="editProductFromView()"
-                class="px-6 py-3 bg-white border border-slate-200 text-slate-900 text-[10px] font-black uppercase tracking-wider rounded-xl hover:bg-slate-50 transition-all active:scale-95"
+                class="px-4 py-2 bg-white border border-slate-200 text-slate-700 text-xs font-bold rounded-xl hover:bg-slate-50 transition-all active:scale-95 shadow-2xs"
               >
-                Edit
+                Edit Product
               </button>
               <button
                 @click="closeViewModal()"
-                class="px-8 py-3 bg-slate-100 text-slate-500 text-[10px] font-black uppercase tracking-wider rounded-xl hover:bg-slate-200 transition-all active:scale-95"
+                class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-600 text-xs font-bold rounded-xl transition-all active:scale-95"
               >
                 Close
               </button>
@@ -992,14 +725,16 @@
         </div>
       </div>
     </div>
+  </template>
 
-    <!-- QR Code Modal (Sharp Minimal) -->
+  <!-- QR Code Modal -->
+  <template x-teleport="body">
     <div
       x-show="showQRModal"
       x-transition:enter="transition ease-out duration-200"
       x-transition:enter-start="opacity-0"
       x-transition:enter-end="opacity-100"
-      class="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-60 px-4"
+      class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center z-[9999] px-4"
       @click.self="showQRModal = false"
     >
       <div
@@ -1071,8 +806,10 @@
         </div>
       </div>
     </div>
+  </template>
 
-    <!-- Image Expand Modal (Sharp Minimal) -->
+  <!-- Image Expand Modal -->
+  <template x-teleport="body">
     <div
       x-show="expandedImage"
       x-transition:enter="transition ease-out duration-200"
@@ -1123,8 +860,10 @@
         </div>
       </template>
     </div>
+  </template>
 
-    <!-- AI Generated Ads Modal -->
+  <!-- AI Generated Ads Modal -->
+  <template x-teleport="body">
     <div
       x-show="showAdsModal"
       x-transition:enter="transition ease-out duration-300"
@@ -1133,7 +872,7 @@
       x-transition:leave="transition ease-in duration-200"
       x-transition:leave-start="opacity-100"
       x-transition:leave-end="opacity-0"
-      class="fixed inset-0 bg-black/50 backdrop-blur-sm z-[60] flex items-center justify-center p-4"
+      class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-[9999] flex items-center justify-center p-4"
       @click.self="closeAdsModal()"
       style="display: none"
     >
@@ -1329,20 +1068,26 @@
                 </div>
               </div>
             </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </template>
 
-            <!-- Import Preview Modal -->
-            <div
-              x-show="showImportPreview"
-              x-transition:enter="transition ease-out duration-300"
-              x-transition:enter-start="opacity-0"
-              x-transition:enter-end="opacity-100"
-              x-transition:leave="transition ease-in duration-200"
-              x-transition:leave-start="opacity-100"
-              x-transition:leave-end="opacity-0"
-              class="fixed inset-0 bg-gray-900/40 backdrop-blur-xl z-[60] flex items-center justify-center p-4"
-              @click.self="closeImportPreview()"
-              style="display: none"
-            >
+  <!-- Import Preview Modal -->
+  <template x-teleport="body">
+    <div
+      x-show="showImportPreview"
+      x-transition:enter="transition ease-out duration-300"
+      x-transition:enter-start="opacity-0"
+      x-transition:enter-end="opacity-100"
+      x-transition:leave="transition ease-in duration-200"
+      x-transition:leave-start="opacity-100"
+      x-transition:leave-end="opacity-0"
+      class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-[9999] flex items-center justify-center p-4"
+      @click.self="closeImportPreview()"
+      style="display: none"
+    >
               <div
                 x-show="showImportPreview"
                 x-transition:enter="transition ease-out duration-500 transform"
@@ -1600,11 +1345,7 @@
                 </div>
               </div>
             </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
+          </template>
 
   <script src="/js/pages/products.js"></script>
 </div>

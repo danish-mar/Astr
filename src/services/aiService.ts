@@ -1,6 +1,7 @@
 import { ChatGoogleGenerativeAI } from "@langchain/google-genai";
 import { ChatOpenAI } from "@langchain/openai";
 import { PromptTemplate } from "@langchain/core/prompts";
+import { SystemMessage, HumanMessage, AIMessage } from "@langchain/core/messages";
 import ShopSettings from "../models/ShopSettings";
 
 // AI Service for LangChain integration
@@ -430,6 +431,88 @@ Message:
             chain.invoke({ inputPrompt: promptText }),
             timeoutPromise
         ]);
+        return result.content ? result.content.toString().trim() : '';
+    }
+
+    /**
+     * Multi-turn chat completion supporting system prompt, message history, and tool directives
+     */
+    async chatCompletion(messages: Array<{ role: 'system' | 'user' | 'assistant'; content: string }>, timeoutMs = 25000): Promise<string> {
+        const settings = await ShopSettings.findOne().select('+aiApiKey');
+        const provider = settings?.aiProvider;
+        const apiKey = settings?.aiApiKey;
+        const baseUrl = settings?.aiBaseUrl;
+        const model = settings?.aiModel;
+
+        if (!provider || provider === 'none') {
+            throw new Error('AI is not configured. Please select an AI provider in Settings.');
+        }
+
+        if (provider === 'custom') {
+            if (!baseUrl) throw new Error('Base URL is missing for custom provider.');
+            const cleanUrl = baseUrl.trim().replace(/\/+$/, '');
+            const targetUrl = cleanUrl.endsWith('/chat/completions') ? cleanUrl : `${cleanUrl}/chat/completions`;
+
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
+
+            try {
+                const headers: Record<string, string> = {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json',
+                    'User-Agent': 'Astr-Protocol/3.3.0',
+                    'HTTP-Referer': 'https://astr.app',
+                    'X-Title': 'Astr Protocol',
+                };
+                if (apiKey && apiKey.trim() !== '') {
+                    headers['Authorization'] = `Bearer ${apiKey.trim()}`;
+                }
+
+                const payload = {
+                    model: model || 'default',
+                    messages: messages,
+                    temperature: 0.2,
+                    stream: false,
+                };
+
+                const res = await fetch(targetUrl, {
+                    method: 'POST',
+                    headers,
+                    body: JSON.stringify(payload),
+                    signal: controller.signal,
+                });
+
+                if (!res.ok) {
+                    const errText = await res.text().catch(() => res.statusText);
+                    throw new Error(`Custom provider returned ${res.status}: ${errText.slice(0, 200)}`);
+                }
+
+                const data: any = await res.json();
+                const reply = data?.choices?.[0]?.message?.content;
+                if (!reply) throw new Error('Empty response from custom AI provider.');
+                return String(reply).trim();
+            } finally {
+                clearTimeout(timeoutId);
+            }
+        }
+
+        // Gemini or OpenAI Official via LangChain
+        const llm = await this.getLLM();
+        const langchainMessages = messages.map(m => {
+            if (m.role === 'system') return new SystemMessage(m.content);
+            if (m.role === 'assistant') return new AIMessage(m.content);
+            return new HumanMessage(m.content);
+        });
+
+        const timeoutPromise = new Promise<never>((_, reject) =>
+            setTimeout(() => reject(new Error(`AI generation timed out after ${timeoutMs}ms.`)), timeoutMs)
+        );
+
+        const result: any = await Promise.race([
+            llm.invoke(langchainMessages),
+            timeoutPromise
+        ]);
+
         return result.content ? result.content.toString().trim() : '';
     }
 

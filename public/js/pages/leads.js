@@ -1,5 +1,34 @@
 function leadsData() {
     return {
+        // Tab state: 'whatsapp' (AI Deals Pipeline) vs 'manual' (Manual CRM Leads)
+        activeTab: 'whatsapp',
+
+        // WhatsApp AI Sales & Inquiries Data
+        whatsapp: {
+            metrics: {
+                todayInquiries: 0,
+                todayDeals: 0,
+                todaySales: 0,
+                todayProfit: 0,
+                totalDeals: 0,
+                totalSales: 0,
+                totalProfit: 0,
+            },
+            agentStatus: {
+                status: 'INITIALIZING',
+                isReady: false,
+                loadingPercent: 0,
+                loadingMessage: '',
+                awaitingVendorCount: 0,
+            },
+            inquiries: [],
+            filterStatus: 'all',
+            selectedInquiry: null,
+            loading: false,
+            pollingInterval: null,
+        },
+
+        // Manual CRM Leads Data
         leads: [],
         customers: [],
         products: [],
@@ -26,19 +55,30 @@ function leadsData() {
             notes: '',
         },
 
+        get filteredWhatsAppInquiries() {
+            if (this.whatsapp.filterStatus === 'all') return this.whatsapp.inquiries;
+            return this.whatsapp.inquiries.filter(i => i.status === this.whatsapp.filterStatus);
+        },
+
         async init() {
             await Promise.all([
+                this.fetchWhatsAppSales(),
                 this.fetchLeads(),
                 this.fetchStats(),
                 this.fetchReferenceData()
             ]);
+
+            // Poll WhatsApp AI status & inquiries every 3.5s
+            this.whatsapp.pollingInterval = setInterval(() => {
+                this.fetchWhatsAppSales();
+            }, 3500);
 
             // Deep linking: Open lead modal if ID is in URL or Hash
             const urlParams = new URLSearchParams(window.location.search);
             const leadId = urlParams.get('id') || urlParams.get('leadId') || window.location.hash.replace('#', '');
             
             if (leadId && leadId.length >= 24) {
-                // Find in current list or fetch fresh
+                this.activeTab = 'manual';
                 const existing = this.leads.find(l => l._id === leadId);
                 if (existing) {
                     this.openEditModal(existing);
@@ -52,6 +92,68 @@ function leadsData() {
                 }
             }
         },
+
+        // ── WhatsApp AI Sales & Inquiries ────────────────────────────────────
+
+        async fetchWhatsAppSales() {
+            try {
+                const res = await window.api.get('/whatsapp/sales');
+                if (res && res.data) {
+                    this.whatsapp.metrics = res.data.metrics || this.whatsapp.metrics;
+                    this.whatsapp.agentStatus = res.data.agentStatus || this.whatsapp.agentStatus;
+                    this.whatsapp.inquiries = res.data.inquiries || [];
+                }
+            } catch (error) {
+                // If not authenticated or service starting, fail silently in background poll
+                console.warn('WhatsApp sales poll notice:', error.message);
+            }
+        },
+
+        formatCustomerPhone(inq) {
+            if (!inq) return '—';
+            // 1. If verified real phone is present, format cleanly
+            const phone = inq.customerRealPhone || (!inq.customerPhone?.includes('@lid') ? inq.customerPhone : '');
+            if (phone) {
+                const digits = phone.replace(/\D/g, '');
+                if (digits.startsWith('91')) {
+                    const local = digits.slice(2);
+                    if (local.length === 10) {
+                        return `+91 ${local.slice(0, 5)} ${local.slice(5)}`;
+                    }
+                    return `+91 ${local}`;
+                } else if (digits === '923167255624') {
+                    return `+91 923167255624`;
+                } else if (digits.startsWith('92') && digits.length === 12) {
+                    return `+92 ${digits.slice(2, 5)} ${digits.slice(5)}`;
+                } else if (digits.length === 10) {
+                    return `+91 ${digits.slice(0, 5)} ${digits.slice(5)}`;
+                }
+                return `+${digits}`;
+            }
+
+            // Fallback when phone is protected by WhatsApp privacy
+            return 'WhatsApp Direct (Privacy Protected)';
+        },
+
+        openCostingModal(inq) {
+            this.whatsapp.selectedInquiry = inq;
+        },
+
+        closeCostingModal() {
+            this.whatsapp.selectedInquiry = null;
+        },
+
+        formatCurrency(num) {
+            return '₹' + Number(num || 0).toLocaleString('en-IN');
+        },
+
+        formatDate(dateStr) {
+            if (!dateStr) return '';
+            const d = new Date(dateStr);
+            return d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) + ', ' + d.toLocaleDateString([], { month: 'short', day: 'numeric' });
+        },
+
+        // ── Manual CRM Leads ─────────────────────────────────────────────────
 
         async fetchLeads() {
             this.loading = true;
@@ -168,6 +270,12 @@ function leadsData() {
             this.filterDate = '';
             this.page = 1;
             this.fetchLeads();
+        },
+
+        destroy() {
+            if (this.whatsapp.pollingInterval) {
+                clearInterval(this.whatsapp.pollingInterval);
+            }
         }
     };
 }

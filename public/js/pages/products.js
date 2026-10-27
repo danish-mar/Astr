@@ -24,7 +24,7 @@
             viewData: {},
             newProduct: {},
             editMode: false,
-            showFilters: true,
+            showFilters: false,
             stockSummary: {
                 totalItems: 0,
                 available: 0,
@@ -348,6 +348,24 @@
             setAvailabilityFilter(value) {
                 this.filters.isSold = value;
                 localStorage.setItem('inventoryAvailabilityFilter', JSON.stringify(value));
+                this.resetAndLoad();
+            },
+
+            formatFilterLabel(key) {
+                if (!key) return '';
+                if (key.toLowerCase() === 'cude cores') return 'CUDA Cores';
+                return key.split('_').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
+            },
+
+            resetFilters() {
+                this.filters.search = '';
+                this.filters.category = '';
+                this.filters.isSold = null;
+                this.filters.minPrice = '';
+                this.filters.maxPrice = '';
+                this.filters.specs = {};
+                localStorage.removeItem('inventoryCategoryFilter');
+                localStorage.removeItem('inventoryAvailabilityFilter');
                 this.resetAndLoad();
             },
 

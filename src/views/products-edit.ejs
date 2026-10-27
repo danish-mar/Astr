@@ -102,6 +102,7 @@
                                 <div class="relative">
                                     <select x-model="formData.category" @change="onCategoryChange()" required
                                         class="block w-full px-4 py-3 bg-white border border-slate-200 rounded-xl text-slate-900 text-sm font-bold focus:bg-slate-50 focus:border-primary-400 focus:ring-4 focus:ring-primary-100 outline-none transition-all appearance-none cursor-pointer">
+                                        <option value="" disabled>Select Category</option>
                                         <template x-for="category in categories" :key="category._id">
                                             <option :value="category._id" x-text="category.name"></option>
                                         </template>
@@ -120,6 +121,7 @@
                                     <div class="relative flex-1">
                                         <select x-model="formData.source" required
                                             class="block w-full px-4 py-3 bg-white border border-slate-200 rounded-xl text-slate-900 text-sm font-bold focus:bg-slate-50 focus:border-primary-400 focus:ring-4 focus:ring-primary-100 outline-none transition-all appearance-none cursor-pointer">
+                                            <option value="" disabled>Select Source / Supplier</option>
                                             <template x-for="contact in contacts" :key="contact._id">
                                                 <option :value="contact._id"
                                                     x-text="contact.name + ' (' + contact.contactType + ')'"></option>

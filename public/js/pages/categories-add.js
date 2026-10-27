@@ -5,6 +5,7 @@
             formData: {
                 name: '',
                 description: '',
+                marginPercent: 20,
                 specificationsTemplate: []
             },
 

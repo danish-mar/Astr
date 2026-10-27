@@ -1,5 +1,6 @@
 import { Request, Response } from "express";
 import Contact from "../models/Contact";
+import Account from "../models/Account";
 import { sendSuccess, sendError, sendPaginated, handleError } from "../utils";
 import { validateRequiredFields, isValidObjectId } from "../utils";
 
@@ -99,6 +100,19 @@ export const createContact = async (req: Request, res: Response) => {
     });
 
     await contact.save();
+
+    // Auto-create Ledger Account for customer or vendor
+    try {
+      const accountType = contact.contactType === "Customer" ? "Receivable" : "Payable";
+      await Account.create({
+        contact: contact._id,
+        accountName: `${contact.name}'s Ledger`,
+        accountType,
+        totalBalance: 0
+      });
+    } catch (accErr) {
+      console.error("Failed to auto-create ledger account for contact:", accErr);
+    }
 
     return sendSuccess(res, contact, "Contact created successfully", 201);
   } catch (error) {

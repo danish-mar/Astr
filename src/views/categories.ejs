@@ -75,10 +75,15 @@
           </div>
 
           <!-- Content -->
-          <h3
-            class="text-xl font-bold text-slate-900 tracking-tight mb-2 uppercase"
-            x-text="category.name"
-          ></h3>
+          <div class="flex items-center justify-between mb-2 gap-2">
+            <h3
+              class="text-xl font-bold text-slate-900 tracking-tight uppercase truncate"
+              x-text="category.name"
+            ></h3>
+            <span class="inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200 shrink-0">
+              <span x-text="category.marginPercent ?? 20"></span>% Margin
+            </span>
+          </div>
           <p
             class="text-slate-500 text-xs font-medium mb-6 line-clamp-2 h-8"
             x-text="category.description || 'No description provided'"

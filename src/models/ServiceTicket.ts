@@ -8,6 +8,20 @@ export interface ITicketLog {
   timestamp: Date;
 }
 
+export interface IOutsourcedRepair {
+  isOutsourced: boolean;
+  partnerShopName?: string;
+  partnerContact?: string;
+  externalJobNumber?: string;
+  sentDate?: Date;
+  expectedReturnDate?: Date;
+  receivedDate?: Date;
+  vendorCost?: number;
+  custodyLocation?: "In-House" | "At Partner Shop" | "Received Back";
+  repairOutcome?: "Pending" | "In Progress" | "Repaired" | "Not Repaired" | "Cant Repair";
+  notes?: string;
+}
+
 // 1. Define TypeScript interface for Service Ticket document
 export interface IServiceTicket extends Document {
   _id: Types.ObjectId;
@@ -26,6 +40,7 @@ export interface IServiceTicket extends Document {
   notes?: string;
   dueDate?: Date;
   completedAt?: Date;
+  outsourcedRepair?: IOutsourcedRepair;
   logs: ITicketLog[];
   createdAt: Date;
   updatedAt: Date;
@@ -97,6 +112,27 @@ const serviceTicketSchema = new Schema<IServiceTicket>(
     },
     completedAt: {
       type: Date,
+    },
+    outsourcedRepair: {
+      isOutsourced: { type: Boolean, default: false },
+      partnerShopName: { type: String, trim: true, default: "" },
+      partnerContact: { type: String, trim: true, default: "" },
+      externalJobNumber: { type: String, trim: true, default: "" },
+      sentDate: { type: Date },
+      expectedReturnDate: { type: Date },
+      receivedDate: { type: Date },
+      vendorCost: { type: Number, min: 0, default: 0 },
+      custodyLocation: {
+        type: String,
+        enum: ["In-House", "At Partner Shop", "Received Back"],
+        default: "In-House",
+      },
+      repairOutcome: {
+        type: String,
+        enum: ["Pending", "In Progress", "Repaired", "Not Repaired", "Cant Repair"],
+        default: "Pending",
+      },
+      notes: { type: String, trim: true, default: "" },
     },
     logs: [
       {

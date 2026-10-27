@@ -440,7 +440,7 @@
                                                     </div>
                                                 </div>
                                                 <div class="flex gap-2">
-                                                    <a href="/accounting"
+                                                    <a :href="'/accounting?contactId=' + (selectedContact?._id || '')"
                                                         class="px-5 py-2 bg-white/10 hover:bg-white/20 rounded-lg text-[9px] font-black uppercase tracking-widest transition-all">View Ledger</a>
                                                 </div>
                                             </div>
@@ -469,7 +469,7 @@
                                     <template x-if="contactLedgers.length === 0">
                                         <div class="py-12 flex flex-col items-center justify-center bg-slate-50 rounded-xl border border-dashed border-slate-200">
                                             <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest">No Ledger Account Linked</p>
-                                            <a href="/accounting" class="mt-4 text-[9px] font-black text-primary-600 uppercase hover:underline">Setup Ledger</a>
+                                            <a :href="'/accounting?contactId=' + (selectedContact?._id || '')" class="mt-4 text-[9px] font-black text-primary-600 uppercase hover:underline">Setup Ledger</a>
                                         </div>
                                     </template>
                                 </div>

@@ -1,25 +1,25 @@
 import { Request, Response } from "express";
 import ServiceTicket from "../models/ServiceTicket";
 import Contact from "../models/Contact";
-import { Product, Lead } from "../models";
+import { Product, Lead, Invoice } from "../models";
 import { sendSuccess, handleError } from "../utils";
 
 /**
- * Global search across ServiceTickets, Contacts, Products, and Leads
+ * Global search across ServiceTickets, Contacts, Products, Leads, and Invoices
  */
 export const globalSearch = async (req: Request, res: Response) => {
   try {
     const { q } = req.query;
 
     if (!q || typeof q !== "string") {
-      return sendSuccess(res, { tickets: [], contacts: [], products: [], leads: [] }, "Empty search query");
+      return sendSuccess(res, { tickets: [], contacts: [], products: [], leads: [], invoices: [] }, "Empty search query");
     }
 
     const searchStr = q.trim();
     const searchRegex = { $regex: searchStr, $options: "i" };
 
     // Execute concurrent searches
-    const [tickets, contacts, products, leads] = await Promise.all([
+    const [tickets, contacts, products, leads, invoices] = await Promise.all([
       // Search Tickets by number or device
       ServiceTicket.find({
         $or: [
@@ -64,9 +64,27 @@ export const globalSearch = async (req: Request, res: Response) => {
         .populate("product", "name")
         .limit(5)
         .sort({ createdAt: -1 }),
+
+      // Search Invoices & Quotations
+      Invoice.find({
+        $or: [
+          { docNumber: searchRegex },
+          { customerName: searchRegex },
+          { customerPhone: searchRegex },
+        ],
+      })
+        .limit(5)
+        .sort({ issueDate: -1 }),
     ]);
 
     const results = {
+      invoices: invoices.map(i => ({
+        id: i._id,
+        title: `${i.docType}: ${i.docNumber}`,
+        subtitle: `${i.customerName} • ₹${i.grandTotal.toLocaleString('en-IN')}`,
+        url: `/invoices/${i._id}`,
+        status: i.status,
+      })),
       tickets: tickets.map(t => ({
         id: t._id,
         title: (t as any).customer?.name || "Unknown Customer",

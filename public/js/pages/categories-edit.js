@@ -7,6 +7,7 @@
             formData: {
                 name: '',
                 description: '',
+                marginPercent: 20,
                 specificationsTemplate: []
             },
 
@@ -69,6 +70,7 @@
                     this.formData = {
                         name: category.name,
                         description: category.description || '',
+                        marginPercent: category.marginPercent !== undefined ? category.marginPercent : 20,
                         specificationsTemplate: category.specificationsTemplate.map(field => {
                             // Ensure options have proper structure for builder
                             const processedField = { ...field, id: field.id || (Date.now() + Math.random().toString(36).substr(2, 9)) };

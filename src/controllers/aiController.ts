@@ -1,6 +1,8 @@
 import { Request, Response } from "express";
 import aiService from "../services/aiService";
+import assistantService from "../services/assistantService";
 import Product from "../models/Product";
+import ShopSettings from "../models/ShopSettings";
 import { handleError, sendSuccess } from "../utils";
 
 /**
@@ -113,4 +115,52 @@ export const getModels = async (req: Request, res: Response) => {
         });
     }
 };
+
+/**
+ * Chat with AI Copilot / Assistant
+ * POST /api/v1/ai/chat
+ */
+export const chatWithAssistant = async (req: Request, res: Response) => {
+    try {
+        const { message, history } = req.body;
+
+        if (!message || typeof message !== "string" || !message.trim()) {
+            return res.status(400).json({
+                success: false,
+                message: "A prompt or message is required.",
+            });
+        }
+
+        const result = await assistantService.processChat(message.trim(), history || []);
+        return sendSuccess(res, result);
+    } catch (error: any) {
+        console.error("Assistant Chat Error:", error);
+        return handleError(error, res);
+    }
+};
+
+/**
+ * Get AI Assistant Status (configured provider and readiness)
+ * GET /api/v1/ai/status
+ */
+export const getAssistantStatus = async (req: Request, res: Response) => {
+    try {
+        const settings = await ShopSettings.getSettings();
+        const isConfigured = Boolean(
+            settings.aiProvider &&
+            settings.aiProvider !== "none" &&
+            (settings.aiProvider === "custom" || settings.aiApiKey)
+        );
+
+        return sendSuccess(res, {
+            isConfigured,
+            provider: settings.aiProvider || "none",
+            model: settings.aiModel || "Default",
+            shopName: settings.shopName,
+        });
+    } catch (error) {
+        return handleError(error, res);
+    }
+};
+
 

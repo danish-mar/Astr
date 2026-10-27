@@ -16,7 +16,26 @@ document.addEventListener('alpine:init', () => {
             aiModel: '',
             aiApiKey: '',
             hasAiApiKey: false,
-            aiEnabled: false
+            aiEnabled: false,
+            // GST & Billing
+            gstin: '',
+            state: '',
+            stateCode: '',
+            defaultGstRate: 18,
+            invoicePrefix: 'INV-',
+            invoiceNextNumber: 1001,
+            quotationPrefix: 'QTN-',
+            quotationNextNumber: 1001,
+            bankName: '',
+            bankAccountNumber: '',
+            bankIfsc: '',
+            bankBranch: '',
+            upiId: '',
+            invoiceTerms: '',
+            // WhatsApp Agent
+            whatsappAgentEnabled: true,
+            bossPhone: '',
+            defaultMarginPercent: 20
         },
         saving: false,
         showApiKey: false,

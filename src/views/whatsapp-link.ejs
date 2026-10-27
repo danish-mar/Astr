@@ -1,138 +1,520 @@
-<div x-data="whatsappLink" x-init="init()" class="space-y-8 pb-20">
-    <!-- Premium Header -->
-    <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+<script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.min.js"></script>
+<script src="/js/pages/whatsapp-link.js"></script>
+
+<div x-data="whatsappLink" x-init="init()" class="space-y-6 animate__animated animate__fadeIn pb-16">
+    <!-- Header -->
+    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 pb-3 border-b border-slate-200/80">
         <div>
-            <h1 class="text-2xl font-bold text-slate-900 tracking-tight">WhatsApp Protocol</h1>
-            <p class="text-slate-500 text-sm mt-1">Link your shop WhatsApp for automated service notifications.</p>
+            <div class="flex items-center gap-2">
+                <h1 class="text-xl font-bold text-slate-900 tracking-tight">WhatsApp AI Sales & Protocol</h1>
+                <span class="inline-flex items-center px-2 py-0.5 rounded-md text-[11px] font-medium bg-purple-50 text-purple-700 border border-purple-200/60">
+                    <i class="fas fa-robot text-[10px] mr-1.5 text-purple-600"></i> Autonomous Agent
+                </span>
+            </div>
+            <p class="text-xs text-slate-500 mt-0.5">Live monitoring of customer inquiries, supplier quotes, deals closed, and store dispatch notices</p>
         </div>
-        
-        <div class="flex items-center gap-3 bg-white border border-slate-200 p-2 rounded-2xl shadow-sm">
-            <div class="w-10 h-10 rounded-xl flex items-center justify-center transition-colors"
-                :class="status === 'READY' ? 'bg-emerald-50 text-emerald-600' : 'bg-amber-50 text-amber-600'">
-                <i :class="status === 'READY' ? 'fas fa-check-circle' : 'fas fa-unlink'" class="text-lg"></i>
+
+        <div class="flex items-center gap-2">
+            <div class="inline-flex items-center gap-2 px-3 py-1.5 bg-white border border-slate-200/80 rounded-lg text-xs shadow-xs">
+                <span class="w-2 h-2 rounded-full"
+                    :class="{
+                        'bg-emerald-500': status === 'READY',
+                        'bg-amber-500 animate-pulse': status === 'AUTHENTICATED' || status === 'INITIALIZING',
+                        'bg-rose-500': status === 'DISCONNECTED'
+                    }"></span>
+                <span class="text-slate-700 font-semibold text-xs" x-text="statusText"></span>
             </div>
-            <div class="pr-4">
-                <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Connection Status</p>
-                <p class="text-xs font-bold text-slate-900" x-text="statusText"></p>
-            </div>
+            <button type="button" @click="fetchSales()" class="px-2.5 py-1.5 bg-white border border-slate-200/80 rounded-lg text-xs text-slate-600 hover:text-slate-900 hover:bg-slate-50 shadow-2xs transition-colors" title="Refresh Sales Data">
+                <i class="fas fa-rotate text-xs"></i>
+            </button>
         </div>
     </div>
 
-    <div class="max-w-4xl mx-auto">
-        <!-- Linking State -->
-        <template x-if="status === 'INITIALIZING'">
-            <div class="bg-white border border-slate-200 p-8 md:p-12 rounded-[40px] shadow-glass space-y-10 text-center animate__animated animate__fadeIn">
-                <div class="space-y-4">
-                    <h2 class="text-2xl font-bold text-slate-900">Link your account</h2>
-                    <p class="text-slate-500 text-sm max-w-md mx-auto">
-                        Scan the QR code below using your mobile WhatsApp application (Settings > Linked Devices).
-                    </p>
+    <!-- Main Container -->
+    <div class="space-y-6">
+        <!-- 1. AWAITING SCAN / INITIALIZING -->
+        <div x-show="status === 'INITIALIZING'" x-cloak class="max-w-3xl mx-auto bg-white border border-slate-200/80 rounded-xl shadow-xs overflow-hidden">
+            <div class="px-5 py-4 bg-slate-50/70 border-b border-slate-200/80 flex items-center justify-between">
+                <div class="flex items-center gap-2.5">
+                    <div class="w-7 h-7 rounded-lg bg-primary-50 text-primary-600 flex items-center justify-center text-xs">
+                        <i class="fab fa-whatsapp text-sm"></i>
+                    </div>
+                    <div>
+                        <h2 class="text-xs font-bold text-slate-900 uppercase tracking-wider">Device Linking QR</h2>
+                        <p class="text-[11px] text-slate-500">Scan using WhatsApp on your store smartphone</p>
+                    </div>
+                </div>
+                <button type="button" @click="retry(false)"
+                    class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white border border-slate-200 text-slate-700 rounded-lg text-xs font-medium hover:bg-slate-50 transition-colors shadow-2xs">
+                    <i class="fas fa-rotate text-[11px] text-slate-400"></i>
+                    <span>Refresh QR</span>
+                </button>
+            </div>
+
+            <div class="p-6 grid grid-cols-1 md:grid-cols-12 gap-6 items-center">
+                <!-- QR Box -->
+                <div class="md:col-span-5 flex flex-col items-center justify-center p-5 bg-slate-50 border border-slate-200/80 rounded-xl text-center">
+                    <div class="bg-white p-3 rounded-xl border border-slate-200 shadow-2xs">
+                        <template x-if="qrCode">
+                            <div id="qr-container"></div>
+                        </template>
+                        <template x-if="!qrCode">
+                            <div class="w-56 h-56 flex flex-col items-center justify-center text-slate-400 gap-2">
+                                <i class="fas fa-spinner fa-spin text-2xl text-primary-600"></i>
+                                <span class="text-xs font-medium">Generating secure QR code...</span>
+                            </div>
+                        </template>
+                    </div>
+                    <span class="mt-3 text-[10px] font-bold text-slate-500 uppercase tracking-wider">Point Phone Camera Here</span>
                 </div>
 
-                <!-- QR Container -->
-                <div class="relative inline-block p-8 bg-slate-50 border border-slate-100 rounded-[32px]">
-                    <template x-if="qrCode">
-                        <div id="qr-container" class="bg-white p-4 rounded-2xl shadow-sm">
-                            <!-- QR image will be rendered here by JS -->
+                <!-- Steps -->
+                <div class="md:col-span-7 space-y-4">
+                    <div class="space-y-3">
+                        <div class="flex items-start gap-3">
+                            <span class="w-6 h-6 rounded-full bg-primary-100 text-primary-700 flex items-center justify-center text-xs font-bold shrink-0 mt-0.5">1</span>
+                            <div>
+                                <p class="text-xs font-bold text-slate-900">Open WhatsApp</p>
+                                <p class="text-[11px] text-slate-500">Launch WhatsApp on your Android or iPhone device.</p>
+                            </div>
                         </div>
-                    </template>
-                    <template x-if="!qrCode">
-                        <div class="w-64 h-64 flex flex-col items-center justify-center gap-4">
-                            <i class="fas fa-spinner fa-spin text-3xl text-primary-500"></i>
-                            <span class="text-xs font-bold text-slate-400 uppercase tracking-widest">Generating Protocol...</span>
-                        </div>
-                    </template>
 
-                    <!-- Pulse indicator -->
-                    <div class="absolute -top-2 -right-2 w-6 h-6 bg-primary-500 rounded-full border-4 border-white animate-pulse"></div>
-                </div>
+                        <div class="flex items-start gap-3">
+                            <span class="w-6 h-6 rounded-full bg-primary-100 text-primary-700 flex items-center justify-center text-xs font-bold shrink-0 mt-0.5">2</span>
+                            <div>
+                                <p class="text-xs font-bold text-slate-900">Navigate to Linked Devices</p>
+                                <p class="text-[11px] text-slate-500">Tap <strong>Settings</strong> (iOS) or <strong>⋮ Menu</strong> (Android) &gt; <strong>Linked Devices</strong>.</p>
+                            </div>
+                        </div>
 
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-6 pt-8">
-                    <div class="space-y-2">
-                        <div class="w-10 h-10 rounded-xl bg-slate-100 flex items-center justify-center mx-auto text-slate-600">
-                            <span class="font-bold">1</span>
+                        <div class="flex items-start gap-3">
+                            <span class="w-6 h-6 rounded-full bg-primary-100 text-primary-700 flex items-center justify-center text-xs font-bold shrink-0 mt-0.5">3</span>
+                            <div>
+                                <p class="text-xs font-bold text-slate-900">Scan QR Code</p>
+                                <p class="text-[11px] text-slate-500">Tap <strong>Link a Device</strong> and point your camera to authenticate.</p>
+                            </div>
                         </div>
-                        <p class="text-xs font-bold text-slate-600 uppercase">Open WhatsApp</p>
                     </div>
-                    <div class="space-y-2">
-                        <div class="w-10 h-10 rounded-xl bg-slate-100 flex items-center justify-center mx-auto text-slate-600">
-                            <span class="font-bold">2</span>
-                        </div>
-                        <p class="text-xs font-bold text-slate-600 uppercase">Tap Linked Devices</p>
-                    </div>
-                    <div class="space-y-2">
-                        <div class="w-10 h-10 rounded-xl bg-slate-100 flex items-center justify-center mx-auto text-slate-600">
-                            <span class="font-bold">3</span>
-                        </div>
-                        <p class="text-xs font-bold text-slate-600 uppercase">Scan this code</p>
+
+                    <div class="pt-2 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500">
+                        <span>Having trouble connecting?</span>
+                        <button type="button" @click="forceReset()" class="text-primary-600 font-semibold hover:underline text-[11px]">
+                            Reset Session & Regenerate
+                        </button>
                     </div>
                 </div>
             </div>
-        </template>
+        </div>
 
-        <!-- Connected State -->
-        <template x-if="status === 'READY'">
-            <div class="bg-white border border-slate-200 p-8 md:p-12 rounded-[40px] shadow-glass space-y-8 animate__animated animate__fadeIn">
-                <div class="flex flex-col items-center text-center space-y-6">
-                    <div class="w-24 h-24 rounded-[32px] bg-emerald-50 text-emerald-500 flex items-center justify-center text-4xl shadow-emerald-100 shadow-xl">
-                        <i class="fab fa-whatsapp"></i>
-                    </div>
-                    
-                    <div class="space-y-2">
-                        <h2 class="text-2xl font-bold text-slate-900">Protocol Active</h2>
-                        <p class="text-slate-500 text-sm">
-                            Your WhatsApp is successfully linked. Automated service ticket notifications are now active.
-                        </p>
-                    </div>
+        <!-- 2. AUTHENTICATED / VALIDATING & SYNCING SESSION -->
+        <div x-show="status === 'AUTHENTICATED'" x-cloak class="max-w-3xl mx-auto bg-white border border-slate-200/80 rounded-xl shadow-xs overflow-hidden text-center p-8 space-y-4">
+            <div class="w-14 h-14 rounded-2xl bg-amber-50 border border-amber-200/80 text-amber-600 flex items-center justify-center text-2xl mx-auto shadow-xs">
+                <i class="fas fa-arrows-rotate fa-spin"></i>
+            </div>
 
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 w-full pt-6">
-                        <div class="p-6 bg-slate-50 rounded-3xl border border-slate-100 text-left flex items-start gap-4">
-                            <div class="w-10 h-10 rounded-xl bg-white border border-slate-100 flex items-center justify-center text-primary-500 shadow-sm">
-                                <i class="fas fa-ticket-alt"></i>
-                            </div>
-                            <div>
-                                <h4 class="text-xs font-bold text-slate-900 uppercase">Ticket Receipts</h4>
-                                <p class="text-[10px] text-slate-500 mt-1">Sent automatically on ticket creation.</p>
-                            </div>
+            <div class="space-y-1 max-w-md mx-auto">
+                <h3 class="text-sm font-bold text-slate-900">Validating WhatsApp Session</h3>
+                <p class="text-xs text-slate-500" x-text="loadingMessage || 'Authenticated successfully. Syncing conversation indexes with WhatsApp Web...'"></p>
+            </div>
+
+            <!-- Progress bar -->
+            <div class="max-w-xs mx-auto space-y-1.5 pt-2" x-show="loadingPercent > 0">
+                <div class="flex justify-between text-[11px] font-mono text-slate-500">
+                    <span>Sync Progress</span>
+                    <span x-text="loadingPercent + '%'"></span>
+                </div>
+                <div class="w-full h-1.5 bg-slate-100 rounded-full overflow-hidden">
+                    <div class="h-full bg-primary-600 transition-all duration-300" :style="`width: ${loadingPercent}%`"></div>
+                </div>
+            </div>
+
+            <div class="pt-4 flex items-center justify-center gap-3">
+                <button type="button" @click="retry(false)"
+                    class="px-3.5 py-1.5 bg-white border border-slate-200 text-slate-700 rounded-lg text-xs font-medium hover:bg-slate-50 transition-colors shadow-2xs">
+                    <i class="fas fa-rotate text-[11px] text-slate-400 mr-1.5"></i>
+                    <span>Check Connection</span>
+                </button>
+                <button type="button" @click="forceReset()"
+                    class="px-3.5 py-1.5 bg-rose-50 border border-rose-200 text-rose-700 rounded-lg text-xs font-medium hover:bg-rose-100 transition-colors">
+                    <i class="fas fa-triangle-exclamation text-[11px] mr-1.5"></i>
+                    <span>Cancel & Re-scan QR</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- 3. DISCONNECTED STATE -->
+        <div x-show="status === 'DISCONNECTED'" x-cloak class="max-w-3xl mx-auto bg-white border border-slate-200/80 rounded-xl shadow-xs overflow-hidden text-center p-8 space-y-4">
+            <div class="w-12 h-12 rounded-xl bg-rose-50 border border-rose-200 text-rose-600 flex items-center justify-center text-xl mx-auto shadow-2xs">
+                <i class="fas fa-triangle-exclamation"></i>
+            </div>
+
+            <div class="space-y-1 max-w-sm mx-auto">
+                <h3 class="text-sm font-bold text-slate-900">WhatsApp Engine Disconnected</h3>
+                <p class="text-xs text-slate-500" x-text="loadingMessage || 'The WhatsApp messaging session was disconnected or encountered an authentication timeout.'"></p>
+            </div>
+
+            <div class="pt-2 flex items-center justify-center gap-2.5">
+                <button type="button" @click="retry(false)"
+                    class="px-3.5 py-1.5 bg-slate-900 text-white rounded-lg text-xs font-medium hover:bg-slate-800 transition-colors shadow-xs">
+                    <i class="fas fa-rotate text-[11px] mr-1.5"></i>
+                    <span>Reconnect</span>
+                </button>
+                <button type="button" @click="forceReset()"
+                    class="px-3.5 py-1.5 bg-white border border-slate-200 text-slate-700 rounded-lg text-xs font-medium hover:bg-slate-50 transition-colors shadow-2xs">
+                    <i class="fas fa-qrcode text-[11px] mr-1.5 text-slate-400"></i>
+                    <span>Wipe & Scan Fresh QR</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- 4. ACTIVE / READY STATE & SALES DASHBOARD -->
+        <div class="space-y-6">
+            <!-- Top Status & KPI Cards Grid -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                <!-- Card 1: Deals Closed -->
+                <div class="bg-white border border-slate-200/80 rounded-xl p-5 shadow-xs flex items-center justify-between">
+                    <div>
+                        <p class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Deals Closed</p>
+                        <div class="flex items-baseline gap-2 mt-1">
+                            <span class="text-2xl font-bold text-slate-900" x-text="metrics.totalDeals">0</span>
+                            <span class="text-xs font-semibold text-emerald-600" x-text="'+' + metrics.todayDeals + ' today'"></span>
                         </div>
-                        <div class="p-6 bg-slate-50 rounded-3xl border border-slate-100 text-left flex items-start gap-4">
-                            <div class="w-10 h-10 rounded-xl bg-white border border-slate-100 flex items-center justify-center text-emerald-500 shadow-sm">
-                                <i class="fas fa-sync"></i>
-                            </div>
-                            <div>
-                                <h4 class="text-xs font-bold text-slate-900 uppercase">Status Updates</h4>
-                                <p class="text-[10px] text-slate-500 mt-1">Sent automatically on status change.</p>
-                            </div>
+                        <p class="text-[11px] text-slate-400 mt-1">Confirmed customer orders</p>
+                    </div>
+                    <div class="w-12 h-12 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center text-xl shrink-0">
+                        <i class="fas fa-handshake"></i>
+                    </div>
+                </div>
+
+                <!-- Card 2: Sales Volume -->
+                <div class="bg-white border border-slate-200/80 rounded-xl p-5 shadow-xs flex items-center justify-between">
+                    <div>
+                        <p class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Sales Revenue</p>
+                        <div class="flex items-baseline gap-2 mt-1">
+                            <span class="text-2xl font-bold text-slate-900" x-text="formatCurrency(metrics.totalSales)">₹0</span>
+                        </div>
+                        <p class="text-[11px] text-emerald-600 font-medium mt-1" x-text="formatCurrency(metrics.todaySales) + ' closed today'"></p>
+                    </div>
+                    <div class="w-12 h-12 rounded-xl bg-purple-50 text-purple-600 flex items-center justify-center text-xl shrink-0">
+                        <i class="fas fa-indian-rupee-sign"></i>
+                    </div>
+                </div>
+
+                <!-- Card 3: Gross Profit -->
+                <div class="bg-white border border-slate-200/80 rounded-xl p-5 shadow-xs flex items-center justify-between">
+                    <div>
+                        <p class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Gross Profit</p>
+                        <div class="flex items-baseline gap-2 mt-1">
+                            <span class="text-2xl font-bold text-slate-900" x-text="formatCurrency(metrics.totalProfit)">₹0</span>
+                        </div>
+                        <p class="text-[11px] text-indigo-600 font-medium mt-1" x-text="formatCurrency(metrics.todayProfit) + ' profit today'"></p>
+                    </div>
+                    <div class="w-12 h-12 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center text-xl shrink-0">
+                        <i class="fas fa-chart-line-up"></i>
+                    </div>
+                </div>
+
+                <!-- Card 4: AI Agent State -->
+                <div class="bg-white border border-slate-200/80 rounded-xl p-5 shadow-xs flex items-center justify-between">
+                    <div>
+                        <p class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Sales Agent</p>
+                        <div class="flex items-center gap-2 mt-1">
+                            <span class="w-2.5 h-2.5 rounded-full"
+                                :class="status === 'READY' ? 'bg-emerald-500 animate-pulse' : 'bg-slate-300'"></span>
+                            <span class="text-base font-bold text-slate-900" x-text="status === 'READY' ? 'Active & Quoting' : 'Standby'"></span>
+                        </div>
+                        <p class="text-[11px] text-slate-500 mt-1" x-text="metrics.todayInquiries + ' inquiries handled today'"></p>
+                    </div>
+                    <div class="w-12 h-12 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center text-xl shrink-0">
+                        <i class="fas fa-robot"></i>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Inquiries & Deals Table -->
+            <div class="bg-white border border-slate-200/80 rounded-xl shadow-xs overflow-hidden">
+                <!-- Table Header & Filter Bar -->
+                <div class="p-4 sm:p-5 border-b border-slate-100 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                    <div class="flex items-center gap-3">
+                        <div class="w-8 h-8 rounded-lg bg-primary-50 text-primary-600 flex items-center justify-center text-sm font-bold">
+                            <i class="fab fa-whatsapp"></i>
+                        </div>
+                        <div>
+                            <h2 class="text-sm font-bold text-slate-900">WhatsApp Inquiries & Closed Deals</h2>
+                            <p class="text-xs text-slate-500">Autonomous quotations, vendor rates, and customer agreements</p>
                         </div>
                     </div>
 
-                    <button @click="logout()" 
-                        class="px-8 py-4 bg-rose-50 text-rose-600 rounded-2xl font-bold text-sm hover:bg-rose-100 active:scale-95 transition-all flex items-center gap-3 mt-8">
-                        <i class="fas fa-power-off"></i>
-                        Disconnect WhatsApp
+                    <!-- Filter Tabs -->
+                    <div class="flex items-center gap-1.5 bg-slate-100/80 p-1 rounded-lg text-xs font-semibold">
+                        <button type="button" @click="filterStatus = 'all'"
+                            :class="filterStatus === 'all' ? 'bg-white text-slate-900 shadow-2xs' : 'text-slate-500 hover:text-slate-800'"
+                            class="px-2.5 py-1 rounded-md transition-all">
+                            All (<span x-text="inquiries.length"></span>)
+                        </button>
+                        <button type="button" @click="filterStatus = 'deal_agreed'"
+                            :class="filterStatus === 'deal_agreed' ? 'bg-white text-emerald-700 shadow-2xs' : 'text-slate-500 hover:text-slate-800'"
+                            class="px-2.5 py-1 rounded-md transition-all">
+                            🎉 Deals Closed
+                        </button>
+                        <button type="button" @click="filterStatus = 'quoted'"
+                            :class="filterStatus === 'quoted' ? 'bg-white text-purple-700 shadow-2xs' : 'text-slate-500 hover:text-slate-800'"
+                            class="px-2.5 py-1 rounded-md transition-all">
+                            💬 Quoted
+                        </button>
+                        <button type="button" @click="filterStatus = 'awaiting_vendor'"
+                            :class="filterStatus === 'awaiting_vendor' ? 'bg-white text-amber-700 shadow-2xs' : 'text-slate-500 hover:text-slate-800'"
+                            class="px-2.5 py-1 rounded-md transition-all">
+                            ⏳ Awaiting Supplier
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Table Content -->
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse">
+                        <thead>
+                            <tr class="bg-slate-50/70 border-b border-slate-100 text-[11px] font-bold text-slate-500 uppercase tracking-wider">
+                                <th class="py-3 px-4">Customer</th>
+                                <th class="py-3 px-4">Requested Product / Hardware</th>
+                                <th class="py-3 px-4">Supplier Rate</th>
+                                <th class="py-3 px-4">Customer Price</th>
+                                <th class="py-3 px-4">Profit</th>
+                                <th class="py-3 px-4">Status</th>
+                                <th class="py-3 px-4 text-right">Details</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-slate-100 text-xs">
+                            <template x-for="inq in filteredInquiries" :key="inq._id">
+                                <tr class="hover:bg-slate-50/80 transition-colors">
+                                    <!-- Customer -->
+                                    <td class="py-3.5 px-4">
+                                        <div class="font-bold text-slate-900" x-text="inq.customerName || 'Customer'"></div>
+                                        <div class="text-[11px] text-slate-400 font-mono" x-text="formatCustomerPhone(inq)"></div>
+                                    </td>
+
+                                    <!-- Product -->
+                                    <td class="py-3.5 px-4 max-w-xs">
+                                        <div class="font-medium text-slate-900 line-clamp-2" x-text="inq.requestedProduct"></div>
+                                        <template x-if="inq.items && inq.items.length > 1">
+                                            <span class="inline-flex items-center gap-1 mt-1 px-1.5 py-0.5 rounded text-[10px] font-semibold bg-purple-50 text-purple-700 border border-purple-200/50">
+                                                <i class="fas fa-layer-group text-[9px]"></i>
+                                                <span x-text="inq.items.length + ' components'"></span>
+                                            </span>
+                                        </template>
+                                    </td>
+
+                                    <!-- Supplier Rate -->
+                                    <td class="py-3.5 px-4">
+                                        <div class="font-semibold text-slate-700" x-text="inq.vendorPrice ? formatCurrency(inq.vendorPrice) : 'Checking...'"></div>
+                                        <div class="text-[10px] text-slate-400" x-text="inq.vendorName ? ('via ' + inq.vendorName) : 'Store / Pending'"></div>
+                                    </td>
+
+                                    <!-- Customer Price -->
+                                    <td class="py-3.5 px-4">
+                                        <div class="font-bold text-slate-900" x-text="inq.quotedPrice ? formatCurrency(inq.quotedPrice) : '—'"></div>
+                                        <div class="text-[10px] text-slate-500" x-text="inq.marginPercent ? (inq.marginPercent + '% markup') : ''"></div>
+                                    </td>
+
+                                    <!-- Profit -->
+                                    <td class="py-3.5 px-4">
+                                        <template x-if="inq.quotedPrice && inq.vendorPrice">
+                                            <span class="font-bold text-emerald-600" x-text="'+' + formatCurrency(inq.quotedPrice - inq.vendorPrice)"></span>
+                                        </template>
+                                        <template x-if="!inq.quotedPrice || !inq.vendorPrice">
+                                            <span class="text-slate-400">—</span>
+                                        </template>
+                                    </td>
+
+                                    <!-- Status Badge -->
+                                    <td class="py-3.5 px-4">
+                                        <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold"
+                                            :class="{
+                                                'bg-emerald-50 text-emerald-700 border border-emerald-200': inq.status === 'deal_agreed',
+                                                'bg-purple-50 text-purple-700 border border-purple-200': inq.status === 'quoted',
+                                                'bg-amber-50 text-amber-700 border border-amber-200': inq.status === 'awaiting_vendor',
+                                                'bg-slate-100 text-slate-700': inq.status === 'inquiry' || inq.status === 'closed'
+                                            }">
+                                            <span class="w-1.5 h-1.5 rounded-full"
+                                                :class="{
+                                                    'bg-emerald-500': inq.status === 'deal_agreed',
+                                                    'bg-purple-500': inq.status === 'quoted',
+                                                    'bg-amber-500 animate-pulse': inq.status === 'awaiting_vendor',
+                                                    'bg-slate-400': inq.status === 'inquiry' || inq.status === 'closed'
+                                                }"></span>
+                                            <span x-text="inq.status === 'deal_agreed' ? 'Deal Closed' : inq.status === 'quoted' ? 'Quoted' : inq.status === 'awaiting_vendor' ? 'Supplier Checking' : inq.status"></span>
+                                        </span>
+                                    </td>
+
+                                    <!-- Details Button -->
+                                    <td class="py-3.5 px-4 text-right">
+                                        <button type="button" @click="openInquiryModal(inq)"
+                                            class="px-2.5 py-1 bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 rounded-lg text-xs font-semibold shadow-2xs transition-colors">
+                                            <span>Costing</span>
+                                            <i class="fas fa-chevron-right text-[10px] ml-1 text-slate-400"></i>
+                                        </button>
+                                    </td>
+                                </tr>
+                            </template>
+
+                            <template x-if="filteredInquiries.length === 0">
+                                <tr>
+                                    <td colspan="7" class="py-12 text-center text-slate-400">
+                                        <i class="fas fa-inbox text-3xl mb-2 text-slate-300"></i>
+                                        <p class="text-xs">No customer inquiries found for this filter yet.</p>
+                                    </td>
+                                </tr>
+                            </template>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Management & Control Bar -->
+            <div class="bg-white border border-slate-200/80 rounded-xl p-5 shadow-xs flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-xl bg-slate-50 border border-slate-200 text-slate-600 flex items-center justify-center text-base shrink-0">
+                        <i class="fas fa-sliders"></i>
+                    </div>
+                    <div>
+                        <h4 class="text-xs font-bold text-slate-900">WhatsApp Connection Controls</h4>
+                        <p class="text-[11px] text-slate-500">Autonomous agent connects using active session on the store phone</p>
+                    </div>
+                </div>
+
+                <div class="flex items-center gap-2">
+                    <button type="button" @click="retry(false)"
+                        class="px-3.5 py-1.5 bg-white border border-slate-200 text-slate-700 rounded-lg text-xs font-medium hover:bg-slate-50 transition-colors shadow-2xs">
+                        <i class="fas fa-rotate text-[11px] text-slate-400 mr-1.5"></i>
+                        <span>Sync Check</span>
+                    </button>
+                    <button type="button" @click="forceReset()"
+                        class="px-3.5 py-1.5 bg-white border border-slate-200 text-slate-700 rounded-lg text-xs font-medium hover:bg-slate-50 transition-colors shadow-2xs">
+                        <i class="fas fa-qrcode text-[11px] text-slate-400 mr-1.5"></i>
+                        <span>Re-scan QR</span>
+                    </button>
+                    <button type="button" @click="logout()"
+                        class="px-3.5 py-1.5 bg-rose-50 border border-rose-200 text-rose-700 rounded-lg text-xs font-medium hover:bg-rose-100 transition-colors shadow-2xs">
+                        <i class="fas fa-power-off text-[11px] mr-1.5"></i>
+                        <span>Disconnect</span>
                     </button>
                 </div>
             </div>
-        </template>
+        </div>
+    </div>
 
-        <!-- Error / Disconnected State -->
-        <template x-if="status === 'DISCONNECTED'">
-             <div class="bg-white border border-slate-200 p-8 md:p-12 rounded-[40px] shadow-glass text-center space-y-6">
-                <div class="w-20 h-20 rounded-3xl bg-rose-50 text-rose-500 flex items-center justify-center text-3xl mx-auto">
-                    <i class="fas fa-exclamation-triangle"></i>
+    <!-- ── MODAL: Per-Component Costing & Breakdown ───────────────────────────── -->
+    <div x-show="selectedInquiry" x-cloak class="fixed inset-0 z-50 overflow-y-auto" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+        <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+            <!-- Backdrop -->
+            <div x-show="selectedInquiry" 
+                x-transition:enter="ease-out duration-300"
+                x-transition:enter-start="opacity-0"
+                x-transition:enter-end="opacity-100"
+                x-transition:leave="ease-in duration-200"
+                x-transition:leave-start="opacity-100"
+                x-transition:leave-end="opacity-0"
+                class="fixed inset-0 bg-slate-900/40 backdrop-blur-xs transition-opacity" 
+                @click="closeInquiryModal()"></div>
+
+            <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
+
+            <div x-show="selectedInquiry"
+                x-transition:enter="ease-out duration-300"
+                x-transition:enter-start="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
+                x-transition:enter-end="opacity-100 translate-y-0 sm:scale-100"
+                x-transition:leave="ease-in duration-200"
+                x-transition:leave-start="opacity-100 translate-y-0 sm:scale-100"
+                x-transition:leave-end="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
+                class="inline-block align-bottom bg-white rounded-2xl text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-2xl sm:w-full border border-slate-200">
+                
+                <!-- Modal Header -->
+                <div class="p-6 bg-slate-50 border-b border-slate-200/80 flex items-start justify-between">
+                    <div>
+                        <div class="flex items-center gap-2">
+                            <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase"
+                                :class="{
+                                    'bg-emerald-100 text-emerald-800': selectedInquiry?.status === 'deal_agreed',
+                                    'bg-purple-100 text-purple-800': selectedInquiry?.status === 'quoted',
+                                    'bg-amber-100 text-amber-800': selectedInquiry?.status === 'awaiting_vendor',
+                                    'bg-slate-100 text-slate-800': selectedInquiry?.status === 'inquiry' || selectedInquiry?.status === 'closed'
+                                }" x-text="selectedInquiry?.status === 'deal_agreed' ? 'Confirmed Deal' : selectedInquiry?.status"></span>
+                            <span class="text-xs text-slate-400" x-text="formatDate(selectedInquiry?.updatedAt)"></span>
+                        </div>
+                        <h3 class="text-base font-bold text-slate-900 mt-1" x-text="selectedInquiry?.requestedProduct"></h3>
+                        <p class="text-xs text-slate-500 mt-0.5">
+                            Customer: <strong class="text-slate-800" x-text="selectedInquiry?.customerName || 'Customer'"></strong> 
+                            (<span x-text="formatCustomerPhone(selectedInquiry)"></span>)
+                        </p>
+                    </div>
+                    <button type="button" @click="closeInquiryModal()" class="text-slate-400 hover:text-slate-600 p-1">
+                        <i class="fas fa-times text-base"></i>
+                    </button>
                 </div>
-                <div class="space-y-2">
-                    <h2 class="text-xl font-bold text-slate-900">Connection Failed</h2>
-                    <p class="text-slate-500 text-sm">The WhatsApp engine encountered an error or was disconnected.</p>
+
+                <!-- Modal Body: Component Table -->
+                <div class="p-6 space-y-5">
+                    <template x-if="selectedInquiry?.items && selectedInquiry.items.length > 0">
+                        <div>
+                            <h4 class="text-xs font-bold text-slate-900 uppercase tracking-wider mb-2.5">
+                                🧩 Component Breakdown & Pricing (<span x-text="selectedInquiry.items.length"></span> items)
+                            </h4>
+                            <div class="border border-slate-200 rounded-xl overflow-hidden">
+                                <table class="w-full text-left text-xs border-collapse">
+                                    <thead>
+                                        <tr class="bg-slate-50 text-[11px] font-bold text-slate-500 uppercase border-b border-slate-200">
+                                            <th class="py-2.5 px-3">Component</th>
+                                            <th class="py-2.5 px-3 text-right">Wholesale Cost</th>
+                                            <th class="py-2.5 px-3 text-right">Margin</th>
+                                            <th class="py-2.5 px-3 text-right">Selling Price</th>
+                                            <th class="py-2.5 px-3 text-right">Profit</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody class="divide-y divide-slate-100">
+                                        <template x-for="(it, idx) in selectedInquiry.items" :key="idx">
+                                            <tr class="hover:bg-slate-50/50">
+                                                <td class="py-2.5 px-3 font-medium text-slate-800" x-text="it.name"></td>
+                                                <td class="py-2.5 px-3 text-right text-slate-600 font-mono" x-text="it.vendorPrice ? formatCurrency(it.vendorPrice) : 'Pending'"></td>
+                                                <td class="py-2.5 px-3 text-right text-slate-500" x-text="(it.marginPercent || selectedInquiry.marginPercent || 20) + '%'"></td>
+                                                <td class="py-2.5 px-3 text-right font-bold text-slate-900 font-mono" x-text="it.quotedPrice ? formatCurrency(it.quotedPrice) : '—'"></td>
+                                                <td class="py-2.5 px-3 text-right font-bold text-emerald-600 font-mono" x-text="(it.quotedPrice && it.vendorPrice) ? ('+' + formatCurrency(it.quotedPrice - it.vendorPrice)) : '—'"></td>
+                                            </tr>
+                                        </template>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </template>
+
+                    <!-- Financial Summary Box -->
+                    <div class="grid grid-cols-3 gap-3 p-4 bg-slate-50 border border-slate-200 rounded-xl text-center">
+                        <div>
+                            <span class="text-[11px] text-slate-500 uppercase font-semibold">Total Cost</span>
+                            <p class="text-base font-bold text-slate-900 mt-0.5" x-text="formatCurrency(selectedInquiry?.vendorPrice)"></p>
+                            <span class="text-[10px] text-slate-400" x-text="'Vendor: ' + (selectedInquiry?.vendorName || 'Store')"></span>
+                        </div>
+                        <div>
+                            <span class="text-[11px] text-slate-500 uppercase font-semibold">Quoted Selling</span>
+                            <p class="text-base font-bold text-primary-600 mt-0.5" x-text="formatCurrency(selectedInquiry?.quotedPrice)"></p>
+                            <span class="text-[10px] text-slate-500" x-text="(selectedInquiry?.marginPercent || 20) + '% Margin'"></span>
+                        </div>
+                        <div>
+                            <span class="text-[11px] text-slate-500 uppercase font-semibold">Gross Profit</span>
+                            <p class="text-base font-bold text-emerald-600 mt-0.5" 
+                                x-text="(selectedInquiry?.quotedPrice && selectedInquiry?.vendorPrice) ? formatCurrency(selectedInquiry.quotedPrice - selectedInquiry.vendorPrice) : '—'"></p>
+                            <span class="text-[10px] text-emerald-600 font-medium">Earned Margin</span>
+                        </div>
+                    </div>
                 </div>
-                <button @click="retry()" 
-                    class="px-8 py-4 bg-slate-900 text-white rounded-2xl font-bold text-sm hover:bg-black active:scale-95 transition-all shadow-lg">
-                    Retry Connection
-                </button>
+
+                <!-- Modal Footer -->
+                <div class="p-4 bg-slate-50 border-t border-slate-200/80 flex justify-end">
+                    <button type="button" @click="closeInquiryModal()"
+                        class="px-4 py-2 bg-slate-900 text-white rounded-xl text-xs font-semibold hover:bg-slate-800 transition-colors shadow-xs">
+                        Close
+                    </button>
+                </div>
             </div>
-        </template>
+        </div>
     </div>
 </div>
-
-<script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.min.js"></script>
-<script src="/js/pages/whatsapp-link.js"></script>

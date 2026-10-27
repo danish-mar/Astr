@@ -1,265 +1,490 @@
-<div x-data="settingsData" x-init="init()" class="space-y-8 pb-20">
-    <!-- Premium Header -->
-    <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+<script src="/js/pages/settings.js"></script>
+
+<div x-data="settingsData" x-init="init()" class="space-y-4 animate__animated animate__fadeIn pb-12">
+    <!-- Header -->
+    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 pb-3 border-b border-slate-200/80">
         <div>
-            <h1 class="text-2xl font-bold text-slate-900 tracking-tight">Shop Settings</h1>
-            <p class="text-slate-500 text-sm mt-1">Manage your shop identity, team, and AI configurations.</p>
-        </div>
-        <div class="flex items-center gap-3 bg-white border border-slate-200 p-2 rounded-2xl shadow-sm">
-            <div class="w-10 h-10 rounded-xl bg-emerald-50 flex items-center justify-center text-emerald-600">
-                <i class="fas fa-check-circle text-lg"></i>
+            <div class="flex items-center gap-2">
+                <h1 class="text-xl font-bold text-slate-900 tracking-tight">Shop Settings</h1>
+                <span class="inline-flex items-center px-2 py-0.5 rounded-md text-[11px] font-medium bg-primary-50 text-primary-700 border border-primary-200/60">
+                    Configuration Registry
+                </span>
             </div>
-            <div class="pr-4">
-                <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">System Status</p>
-                <p class="text-xs font-bold text-slate-900">Registry Active</p>
+            <p class="text-xs text-slate-500 mt-0.5">Manage store identity, staff access, neural AI provider, QR links, and GST invoicing parameters</p>
+        </div>
+        <div class="flex items-center gap-2">
+            <div class="inline-flex items-center gap-1.5 px-2.5 py-1.5 bg-white border border-slate-200/80 rounded-lg text-xs shadow-xs">
+                <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                <span class="text-slate-600 font-medium">Registry Active</span>
             </div>
         </div>
     </div>
 
-    <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
-        <!-- Premium Navigation -->
-        <div class="lg:col-span-3">
-            <nav class="sticky top-8 flex flex-col gap-2">
-                <button @click="activeTab = 'general'"
-                    class="w-full flex items-center gap-4 p-4 rounded-2xl transition-all group border"
-                    :class="activeTab === 'general' ? 'bg-primary-600 border-primary-600 text-white shadow-purple' : 'bg-white border-slate-200 text-slate-500 hover:border-primary-200 hover:text-primary-600'">
-                    <div class="w-10 h-10 rounded-xl flex items-center justify-center transition-colors"
-                        :class="activeTab === 'general' ? 'bg-white/10' : 'bg-slate-50 group-hover:bg-primary-50'">
-                        <i class="fas fa-store text-sm"></i>
+    <!-- Main Grid -->
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-4 items-start">
+        <!-- Sidebar Navigation -->
+        <div class="lg:col-span-3 space-y-3">
+            <div class="bg-white border border-slate-200/80 rounded-xl p-1.5 shadow-xs space-y-0.5">
+                <button type="button" @click="activeTab = 'general'"
+                    class="w-full flex items-center justify-between px-3 py-2 rounded-lg text-xs transition-colors"
+                    :class="activeTab === 'general' ? 'bg-primary-50 text-primary-700 font-semibold border border-primary-200/60 shadow-2xs' : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50 border border-transparent font-medium'">
+                    <div class="flex items-center gap-2.5 truncate">
+                        <i class="fas fa-store text-xs w-4 text-center" :class="activeTab === 'general' ? 'text-primary-600' : 'text-slate-400'"></i>
+                        <span>Shop Identity</span>
                     </div>
-                    <span class="text-sm font-semibold">Shop Identity</span>
+                    <i class="fas fa-chevron-right text-[10px]" :class="activeTab === 'general' ? 'text-primary-500 opacity-100' : 'opacity-0'"></i>
                 </button>
 
-                <button @click="activeTab = 'users'"
-                    class="w-full flex items-center gap-4 p-4 rounded-2xl transition-all group border"
-                    :class="activeTab === 'users' ? 'bg-primary-600 border-primary-600 text-white shadow-purple' : 'bg-white border-slate-200 text-slate-500 hover:border-primary-200 hover:text-primary-600'">
-                    <div class="w-10 h-10 rounded-xl flex items-center justify-center transition-colors"
-                        :class="activeTab === 'users' ? 'bg-white/10' : 'bg-slate-50 group-hover:bg-primary-50'">
-                        <i class="fas fa-users-cog text-sm"></i>
+                <button type="button" @click="activeTab = 'billing'"
+                    class="w-full flex items-center justify-between px-3 py-2 rounded-lg text-xs transition-colors"
+                    :class="activeTab === 'billing' ? 'bg-primary-50 text-primary-700 font-semibold border border-primary-200/60 shadow-2xs' : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50 border border-transparent font-medium'">
+                    <div class="flex items-center gap-2.5 truncate">
+                        <i class="fas fa-file-invoice-dollar text-xs w-4 text-center" :class="activeTab === 'billing' ? 'text-primary-600' : 'text-slate-400'"></i>
+                        <span>GST & Invoicing</span>
                     </div>
-                    <span class="text-sm font-semibold">Team Ledger</span>
+                    <i class="fas fa-chevron-right text-[10px]" :class="activeTab === 'billing' ? 'text-primary-500 opacity-100' : 'opacity-0'"></i>
                 </button>
 
-                <button @click="activeTab = 'ai'"
-                    class="w-full flex items-center gap-4 p-4 rounded-2xl transition-all group border"
-                    :class="activeTab === 'ai' ? 'bg-primary-600 border-primary-600 text-white shadow-purple' : 'bg-white border-slate-200 text-slate-500 hover:border-primary-200 hover:text-primary-600'">
-                    <div class="w-10 h-10 rounded-xl flex items-center justify-center transition-colors"
-                        :class="activeTab === 'ai' ? 'bg-white/10' : 'bg-slate-50 group-hover:bg-primary-50'">
-                        <i class="fas fa-robot text-sm"></i>
+                <button type="button" @click="activeTab = 'ai'"
+                    class="w-full flex items-center justify-between px-3 py-2 rounded-lg text-xs transition-colors"
+                    :class="activeTab === 'ai' ? 'bg-primary-50 text-primary-700 font-semibold border border-primary-200/60 shadow-2xs' : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50 border border-transparent font-medium'">
+                    <div class="flex items-center gap-2.5 truncate">
+                        <i class="fas fa-robot text-xs w-4 text-center" :class="activeTab === 'ai' ? 'text-primary-600' : 'text-slate-400'"></i>
+                        <span>AI Protocol</span>
                     </div>
-                    <span class="text-sm font-semibold">AI Protocol</span>
+                    <span x-show="settings.aiEnabled" class="px-1.5 py-0.5 rounded text-[10px] font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200/60">Active</span>
                 </button>
 
-                <button @click="activeTab = 'reviews'"
-                    class="w-full flex items-center gap-4 p-4 rounded-2xl transition-all group border"
-                    :class="activeTab === 'reviews' ? 'bg-primary-600 border-primary-600 text-white shadow-purple' : 'bg-white border-slate-200 text-slate-500 hover:border-primary-200 hover:text-primary-600'">
-                    <div class="w-10 h-10 rounded-xl flex items-center justify-center transition-colors"
-                        :class="activeTab === 'reviews' ? 'bg-white/10' : 'bg-slate-50 group-hover:bg-primary-50'">
-                        <i class="fas fa-qrcode text-sm"></i>
+                <button type="button" @click="activeTab = 'reviews'"
+                    class="w-full flex items-center justify-between px-3 py-2 rounded-lg text-xs transition-colors"
+                    :class="activeTab === 'reviews' ? 'bg-primary-50 text-primary-700 font-semibold border border-primary-200/60 shadow-2xs' : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50 border border-transparent font-medium'">
+                    <div class="flex items-center gap-2.5 truncate">
+                        <i class="fas fa-qrcode text-xs w-4 text-center" :class="activeTab === 'reviews' ? 'text-primary-600' : 'text-slate-400'"></i>
+                        <span>Review & QR Hub</span>
                     </div>
-                    <span class="text-sm font-semibold">Review & QR Hub</span>
+                    <i class="fas fa-chevron-right text-[10px]" :class="activeTab === 'reviews' ? 'text-primary-500 opacity-100' : 'opacity-0'"></i>
                 </button>
-            </nav>
+
+                <button type="button" @click="activeTab = 'whatsapp-agent'"
+                    class="w-full flex items-center justify-between px-3 py-2 rounded-lg text-xs transition-colors"
+                    :class="activeTab === 'whatsapp-agent' ? 'bg-primary-50 text-primary-700 font-semibold border border-primary-200/60 shadow-2xs' : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50 border border-transparent font-medium'">
+                    <div class="flex items-center gap-2.5 truncate">
+                        <i class="fab fa-whatsapp text-xs w-4 text-center" :class="activeTab === 'whatsapp-agent' ? 'text-primary-600' : 'text-slate-400'"></i>
+                        <span>WhatsApp Agent</span>
+                    </div>
+                    <span x-show="settings.whatsappAgentEnabled" class="px-1.5 py-0.5 rounded text-[10px] font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200/60">Active</span>
+                </button>
+
+                <button type="button" @click="activeTab = 'users'"
+                    class="w-full flex items-center justify-between px-3 py-2 rounded-lg text-xs transition-colors"
+                    :class="activeTab === 'users' ? 'bg-primary-50 text-primary-700 font-semibold border border-primary-200/60 shadow-2xs' : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50 border border-transparent font-medium'">
+                    <div class="flex items-center gap-2.5 truncate">
+                        <i class="fas fa-users-cog text-xs w-4 text-center" :class="activeTab === 'users' ? 'text-primary-600' : 'text-slate-400'"></i>
+                        <span>Team Ledger</span>
+                    </div>
+                    <i class="fas fa-chevron-right text-[10px]" :class="activeTab === 'users' ? 'text-primary-500 opacity-100' : 'opacity-0'"></i>
+                </button>
+            </div>
+
+            <!-- Shop Instance Info Card -->
+            <div class="bg-white border border-slate-200/80 rounded-xl p-3 shadow-xs space-y-2">
+                <div class="flex items-center justify-between">
+                    <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400">Shop Profile</span>
+                    <span class="w-2.5 h-2.5 rounded-full border border-white shadow-xs" :style="`background-color: ${settings.themeColor || '#7c3aed'}`"></span>
+                </div>
+                <div>
+                    <p class="text-xs font-semibold text-slate-900 truncate" x-text="settings.shopName || 'Store Identity'"></p>
+                    <p class="text-[11px] font-mono text-slate-400 truncate" x-text="settings.email || 'support@yourshop.com'"></p>
+                </div>
+                <div class="pt-2 border-t border-slate-100 flex items-center justify-between text-[11px]">
+                    <span class="text-slate-500">GST Registration</span>
+                    <span class="font-mono font-medium" :class="settings.gstin ? 'text-emerald-700 font-semibold' : 'text-slate-400'" x-text="settings.gstin ? 'Configured' : 'Unregistered'"></span>
+                </div>
+            </div>
         </div>
 
         <!-- Content Area -->
-        <div class="lg:col-span-9">
-            <!-- General Section -->
-            <div x-show="activeTab === 'general'" x-transition:enter="transition ease-out duration-300" x-transition:enter-start="opacity-0 translate-y-4" x-transition:enter-end="opacity-100 translate-y-0" class="space-y-6">
-                <div class="bg-white border border-slate-200 p-8 md:p-10 rounded-[32px] shadow-glass">
-                    <div class="flex items-center gap-4 mb-10">
-                        <div class="w-12 h-12 rounded-2xl bg-primary-50 flex items-center justify-center text-primary-600">
-                            <i class="fas fa-id-card text-xl"></i>
+        <div class="lg:col-span-9 space-y-4">
+            <!-- 1. GENERAL / SHOP IDENTITY -->
+            <div x-show="activeTab === 'general'" x-cloak class="space-y-4">
+                <div class="bg-white border border-slate-200/80 rounded-xl shadow-xs overflow-hidden">
+                    <div class="px-4 py-3 bg-slate-50/70 border-b border-slate-200/80 flex items-center justify-between">
+                        <div class="flex items-center gap-2.5">
+                            <div class="w-7 h-7 rounded-lg bg-primary-50 text-primary-600 flex items-center justify-center text-xs">
+                                <i class="fas fa-store"></i>
+                            </div>
+                            <div>
+                                <h2 class="text-xs font-bold text-slate-900 uppercase tracking-wider">Shop Identity & Profile</h2>
+                                <p class="text-[11px] text-slate-500">Public store metadata, brand accent color, and premises address</p>
+                            </div>
                         </div>
-                        <div>
-                            <h3 class="text-xl font-bold text-slate-900">Shop Identity</h3>
-                            <p class="text-slate-500 text-sm">Your public store metadata</p>
-                        </div>
+                        <button type="submit" form="general-form" :disabled="saving"
+                            class="inline-flex items-center gap-1.5 px-3.5 py-1.5 bg-primary-600 text-white rounded-lg text-xs font-medium hover:bg-primary-700 active:scale-[0.98] transition-all shadow-xs disabled:opacity-50">
+                            <i :class="saving ? 'fas fa-spinner fa-spin' : 'fas fa-save'" class="text-[11px]"></i>
+                            <span x-text="saving ? 'Saving...' : 'Save Changes'"></span>
+                        </button>
                     </div>
 
-                    <form @submit.prevent="saveSettings()" class="space-y-8">
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
-                            <div class="space-y-2">
-                                <label class="text-xs font-bold text-slate-500 ml-1">Official Shop Name</label>
-                                <input type="text" x-model="settings.shopName" required
-                                    class="block w-full px-5 py-4 bg-slate-50 border border-slate-100 rounded-2xl font-medium focus:ring-4 focus:ring-primary-500/5 focus:border-primary-500 focus:bg-white outline-none transition-all">
+                    <form id="general-form" @submit.prevent="saveSettings()" class="p-4 space-y-4">
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            <!-- Shop Name -->
+                            <div>
+                                <label class="block text-[11px] font-semibold text-slate-600 uppercase tracking-wider mb-1">
+                                    Official Shop Name <span class="text-rose-500">*</span>
+                                </label>
+                                <input type="text" x-model="settings.shopName" required placeholder="e.g. Astr Tech & Repairs"
+                                    class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-xs font-medium text-slate-900 placeholder:text-slate-400 focus:bg-white focus:border-primary-500 focus:ring-1 focus:ring-primary-500/20 outline-none transition-all">
                             </div>
 
-                            <div class="space-y-2">
-                                <label class="text-xs font-bold text-slate-500 ml-1">Primary Brand Color</label>
-                                <div class="flex items-center gap-4 bg-slate-50 p-2 border border-slate-100 rounded-2xl">
-                                    <input type="color" x-model="settings.themeColor"
-                                        class="h-10 w-16 border-none cursor-pointer bg-transparent">
-                                    <span class="text-xs font-bold text-slate-900 uppercase tracking-widest" x-text="settings.themeColor"></span>
+                            <!-- Primary Brand Color -->
+                            <div>
+                                <label class="block text-[11px] font-semibold text-slate-600 uppercase tracking-wider mb-1">
+                                    Primary Brand Color
+                                </label>
+                                <div class="flex items-center gap-2">
+                                    <div class="relative w-9 h-8 rounded-lg overflow-hidden border border-slate-200 shrink-0 bg-slate-50">
+                                        <input type="color" x-model="settings.themeColor"
+                                            class="absolute -inset-2 w-14 h-14 cursor-pointer border-none bg-transparent">
+                                    </div>
+                                    <input type="text" x-model="settings.themeColor"
+                                        class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-xs font-mono font-medium uppercase text-slate-900 focus:bg-white focus:border-primary-500 focus:ring-1 focus:ring-primary-500/20 outline-none transition-all">
                                 </div>
                             </div>
 
-                            <div class="space-y-2">
-                                <label class="text-xs font-bold text-slate-500 ml-1">Support Phone</label>
-                                <input type="tel" x-model="settings.phone"
-                                    class="block w-full px-5 py-4 bg-slate-50 border border-slate-100 rounded-2xl font-medium focus:ring-4 focus:ring-primary-500/5 focus:border-primary-500 focus:bg-white outline-none transition-all">
+                            <!-- Support Phone -->
+                            <div>
+                                <label class="block text-[11px] font-semibold text-slate-600 uppercase tracking-wider mb-1">
+                                    Support Phone
+                                </label>
+                                <input type="tel" x-model="settings.phone" placeholder="e.g. +91 98765 43210"
+                                    class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-xs font-medium text-slate-900 placeholder:text-slate-400 focus:bg-white focus:border-primary-500 focus:ring-1 focus:ring-primary-500/20 outline-none transition-all">
                             </div>
 
-                            <div class="space-y-2">
-                                <label class="text-xs font-bold text-slate-500 ml-1">Support Email</label>
-                                <input type="email" x-model="settings.email"
-                                    class="block w-full px-5 py-4 bg-slate-50 border border-slate-100 rounded-2xl font-medium focus:ring-4 focus:ring-primary-500/5 focus:border-primary-500 focus:bg-white outline-none transition-all">
+                            <!-- Support Email -->
+                            <div>
+                                <label class="block text-[11px] font-semibold text-slate-600 uppercase tracking-wider mb-1">
+                                    Support Email
+                                </label>
+                                <input type="email" x-model="settings.email" placeholder="e.g. support@yourshop.com"
+                                    class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-xs font-medium text-slate-900 placeholder:text-slate-400 focus:bg-white focus:border-primary-500 focus:ring-1 focus:ring-primary-500/20 outline-none transition-all">
                             </div>
 
-                            <div class="space-y-2">
-                                <div class="flex items-center justify-between ml-1">
-                                    <label class="text-xs font-bold text-slate-500">Instagram Username</label>
+                            <!-- Instagram Handle -->
+                            <div>
+                                <div class="flex items-center justify-between mb-1">
+                                    <label class="block text-[11px] font-semibold text-slate-600 uppercase tracking-wider">
+                                        Instagram Username
+                                    </label>
                                     <a :href="getInstagramRedirectLink()" target="_blank" x-show="settings.instagramUsername"
-                                        class="text-[10px] text-pink-600 font-bold hover:underline flex items-center gap-1">
+                                        class="text-[10px] text-pink-600 font-semibold hover:underline inline-flex items-center gap-1">
                                         <span>Test /instagram</span>
                                         <i class="fas fa-external-link-alt text-[8px]"></i>
                                     </a>
                                 </div>
-                                <div class="relative">
-                                    <span class="absolute left-5 top-1/2 -translate-y-1/2 text-slate-400 font-bold text-sm">@</span>
+                                <div class="flex rounded-lg shadow-2xs">
+                                    <span class="inline-flex items-center px-2.5 rounded-l-lg border border-r-0 border-slate-200 bg-slate-100 text-slate-500 text-xs font-mono font-bold select-none">@</span>
                                     <input type="text" x-model="settings.instagramUsername" placeholder="yourshopname"
-                                        class="block w-full pl-10 pr-5 py-4 bg-slate-50 border border-slate-100 rounded-2xl font-medium focus:ring-4 focus:ring-primary-500/5 focus:border-primary-500 focus:bg-white outline-none transition-all">
+                                        class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-r-lg text-xs font-medium text-slate-900 placeholder:text-slate-400 focus:bg-white focus:border-primary-500 focus:ring-1 focus:ring-primary-500/20 outline-none transition-all">
                                 </div>
                             </div>
 
-                            <div class="space-y-2">
-                                <label class="text-xs font-bold text-slate-500 ml-1">Google Review / Rating Link</label>
+                            <!-- Google Review Link -->
+                            <div>
+                                <label class="block text-[11px] font-semibold text-slate-600 uppercase tracking-wider mb-1">
+                                    Google Review / Rating Link
+                                </label>
                                 <input type="url" x-model="settings.reviewUrl" placeholder="https://g.page/r/your-link/review"
-                                    class="block w-full px-5 py-4 bg-slate-50 border border-slate-100 rounded-2xl font-medium focus:ring-4 focus:ring-primary-500/5 focus:border-primary-500 focus:bg-white outline-none transition-all">
+                                    class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-xs font-mono text-slate-900 placeholder:text-slate-400 focus:bg-white focus:border-primary-500 focus:ring-1 focus:ring-primary-500/20 outline-none transition-all">
                             </div>
 
-                            <div class="md:col-span-2 space-y-2">
-                                <label class="text-xs font-bold text-slate-500 ml-1">Shop Address</label>
-                                <textarea x-model="settings.address" rows="3"
-                                    class="block w-full px-5 py-4 bg-slate-50 border border-slate-100 rounded-2xl font-medium focus:ring-4 focus:ring-primary-500/5 focus:border-primary-500 focus:bg-white outline-none transition-all resize-none"></textarea>
+                            <!-- Shop Address -->
+                            <div class="sm:col-span-2">
+                                <label class="block text-[11px] font-semibold text-slate-600 uppercase tracking-wider mb-1">
+                                    Shop Address (Printed on Invoices & Receipts)
+                                </label>
+                                <textarea x-model="settings.address" rows="2" placeholder="Full address of your storefront or workshop..."
+                                    class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-xs font-medium text-slate-900 placeholder:text-slate-400 focus:bg-white focus:border-primary-500 focus:ring-1 focus:ring-primary-500/20 outline-none transition-all resize-none"></textarea>
                             </div>
-                        </div>
-
-                        <div class="flex justify-end pt-4">
-                            <button type="submit" :disabled="saving"
-                                class="px-8 py-4 bg-primary-600 text-white rounded-2xl font-bold text-sm hover:bg-primary-700 active:scale-95 transition-all shadow-purple flex items-center gap-3">
-                                <i :class="saving ? 'fas fa-spinner fa-spin' : 'fas fa-save'"></i>
-                                <span x-text="saving ? 'Saving...' : 'Save Changes'"></span>
-                            </button>
                         </div>
                     </form>
-                </div>
-            </div>
 
-            <!-- Team Section -->
-            <div x-show="activeTab === 'users'" x-transition:enter="transition ease-out duration-300" x-transition:enter-start="opacity-0 translate-y-4" x-transition:enter-end="opacity-100 translate-y-0" class="space-y-6">
-                <div class="bg-white border border-slate-200 p-8 md:p-10 rounded-[32px] shadow-glass">
-                    <div class="flex items-center gap-4 mb-10">
-                        <div class="w-12 h-12 rounded-2xl bg-indigo-50 flex items-center justify-center text-indigo-600">
-                            <i class="fas fa-users text-xl"></i>
-                        </div>
-                        <div>
-                            <h3 class="text-xl font-bold text-slate-900">Team Ledger</h3>
-                            <p class="text-slate-500 text-sm">Manage staff access and permissions</p>
-                        </div>
-                    </div>
-
-                    <div class="p-10 border-2 border-dashed border-slate-100 rounded-[28px] flex flex-col items-center justify-center text-center space-y-6 bg-slate-50/50">
-                        <div class="w-20 h-20 rounded-3xl bg-white border border-slate-100 shadow-sm flex items-center justify-center text-primary-500">
-                            <i class="fas fa-user-shield text-3xl"></i>
-                        </div>
-                        <div class="space-y-2">
-                            <h4 class="text-lg font-bold text-slate-900">Centralized Team Management</h4>
-                            <p class="text-sm text-slate-500 max-w-sm mx-auto">
-                                Staff and permission protocols are managed in a dedicated secure session.
-                            </p>
-                        </div>
-                        <a href="/team" class="px-8 py-4 bg-slate-900 text-white rounded-2xl font-bold text-sm hover:bg-black active:scale-95 transition-all shadow-lg flex items-center gap-3">
-                            Access Team Workspace <i class="fas fa-arrow-right text-xs"></i>
-                        </a>
+                    <div class="px-4 py-3 bg-slate-50/70 border-t border-slate-200/80 flex items-center justify-between text-xs">
+                        <span class="text-slate-400 text-[11px]">Branding updates synchronize across invoices, receipts, and public review links.</span>
+                        <button type="submit" form="general-form" :disabled="saving"
+                            class="inline-flex items-center gap-1.5 px-3.5 py-1.5 bg-primary-600 text-white rounded-lg text-xs font-medium hover:bg-primary-700 active:scale-[0.98] transition-all shadow-xs disabled:opacity-50">
+                            <i :class="saving ? 'fas fa-spinner fa-spin' : 'fas fa-save'" class="text-[11px]"></i>
+                            <span x-text="saving ? 'Saving...' : 'Save Changes'"></span>
+                        </button>
                     </div>
                 </div>
             </div>
 
-            <!-- AI Section -->
-            <div x-show="activeTab === 'ai'" x-transition:enter="transition ease-out duration-300" x-transition:enter-start="opacity-0 translate-y-4" x-transition:enter-end="opacity-100 translate-y-0" class="space-y-6">
-                <div class="bg-white border border-slate-200 p-8 md:p-10 rounded-[32px] shadow-glass">
-                    <div class="flex items-center gap-4 mb-10">
-                        <div class="w-12 h-12 rounded-2xl bg-purple-50 flex items-center justify-center text-purple-600">
-                            <i class="fas fa-bolt text-xl"></i>
-                        </div>
-                        <div>
-                            <h3 class="text-xl font-bold text-slate-900">AI Intelligence</h3>
-                            <p class="text-slate-500 text-sm">Configure neural content engines</p>
-                        </div>
-                    </div>
-
-                    <form @submit.prevent="saveSettings()" class="space-y-8">
-                        <div class="flex items-center justify-between p-6 bg-slate-50 border border-slate-100 rounded-3xl">
+            <!-- 2. GST & INVOICING -->
+            <div x-show="activeTab === 'billing'" x-cloak class="space-y-4">
+                <div class="bg-white border border-slate-200/80 rounded-xl shadow-xs overflow-hidden">
+                    <div class="px-4 py-3 bg-slate-50/70 border-b border-slate-200/80 flex items-center justify-between">
+                        <div class="flex items-center gap-2.5">
+                            <div class="w-7 h-7 rounded-lg bg-primary-50 text-primary-600 flex items-center justify-center text-xs">
+                                <i class="fas fa-file-invoice-dollar"></i>
+                            </div>
                             <div>
-                                <h4 class="text-sm font-bold text-slate-900">Neural Engine</h4>
-                                <p class="text-xs text-slate-500 mt-1">Enable AI for product descriptions</p>
+                                <h2 class="text-xs font-bold text-slate-900 uppercase tracking-wider">GST & Invoicing Protocol</h2>
+                                <p class="text-[11px] text-slate-500">Tax identification numbers, voucher sequences, bank settlement details, and terms</p>
+                            </div>
+                        </div>
+                        <button type="submit" form="billing-form" :disabled="saving"
+                            class="inline-flex items-center gap-1.5 px-3.5 py-1.5 bg-primary-600 text-white rounded-lg text-xs font-medium hover:bg-primary-700 active:scale-[0.98] transition-all shadow-xs disabled:opacity-50">
+                            <i :class="saving ? 'fas fa-spinner fa-spin' : 'fas fa-save'" class="text-[11px]"></i>
+                            <span x-text="saving ? 'Saving...' : 'Save Invoicing Settings'"></span>
+                        </button>
+                    </div>
+
+                    <form id="billing-form" @submit.prevent="saveSettings()" class="p-4 space-y-5">
+                        <!-- GST Parameters -->
+                        <div class="space-y-3">
+                            <div class="flex items-center gap-1.5 pb-1 border-b border-slate-100">
+                                <i class="fas fa-landmark text-primary-600 text-xs"></i>
+                                <span class="text-xs font-bold text-slate-900 uppercase tracking-wider">GST & Tax Parameters</span>
+                            </div>
+                            <div class="grid grid-cols-1 sm:grid-cols-4 gap-3">
+                                <div class="sm:col-span-2">
+                                    <label class="block text-[11px] font-semibold text-slate-600 uppercase tracking-wider mb-1">
+                                        GSTIN (15 Digits)
+                                    </label>
+                                    <input type="text" x-model="settings.gstin" placeholder="e.g. 27AAAAA0000A1Z5" maxlength="15"
+                                        class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-xs font-mono uppercase text-slate-900 placeholder:text-slate-400 focus:bg-white focus:border-primary-500 focus:ring-1 focus:ring-primary-500/20 outline-none transition-all">
+                                </div>
+                                <div>
+                                    <label class="block text-[11px] font-semibold text-slate-600 uppercase tracking-wider mb-1">
+                                        State Name
+                                    </label>
+                                    <input type="text" x-model="settings.state" placeholder="e.g. Maharashtra"
+                                        class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-xs font-medium text-slate-900 placeholder:text-slate-400 focus:bg-white focus:border-primary-500 focus:ring-1 focus:ring-primary-500/20 outline-none transition-all">
+                                </div>
+                                <div>
+                                    <label class="block text-[11px] font-semibold text-slate-600 uppercase tracking-wider mb-1">
+                                        State Code
+                                    </label>
+                                    <input type="text" x-model="settings.stateCode" placeholder="e.g. 27" maxlength="2"
+                                        class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-xs font-mono text-slate-900 placeholder:text-slate-400 focus:bg-white focus:border-primary-500 focus:ring-1 focus:ring-primary-500/20 outline-none transition-all">
+                                </div>
+                                <div class="sm:col-span-4">
+                                    <label class="block text-[11px] font-semibold text-slate-600 uppercase tracking-wider mb-1">
+                                        Default GST Rate (%)
+                                    </label>
+                                    <select x-model="settings.defaultGstRate"
+                                        class="w-full sm:w-72 px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-xs font-medium text-slate-900 focus:bg-white focus:border-primary-500 focus:ring-1 focus:ring-primary-500/20 outline-none transition-all">
+                                        <option value="0">0% (Nil / Exempted)</option>
+                                        <option value="5">5% (Essential Goods)</option>
+                                        <option value="12">12% (Standard Low)</option>
+                                        <option value="18">18% (Services & Electronics)</option>
+                                        <option value="28">28% (Luxury / High)</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Sequences & Numbering -->
+                        <div class="space-y-3 pt-3 border-t border-slate-100">
+                            <div class="flex items-center gap-1.5 pb-1 border-b border-slate-100">
+                                <i class="fas fa-hashtag text-primary-600 text-xs"></i>
+                                <span class="text-xs font-bold text-slate-900 uppercase tracking-wider">Document Sequence Counters</span>
+                            </div>
+                            <div class="grid grid-cols-1 sm:grid-cols-4 gap-3">
+                                <div>
+                                    <label class="block text-[11px] font-semibold text-slate-600 uppercase tracking-wider mb-1">
+                                        Invoice Prefix
+                                    </label>
+                                    <input type="text" x-model="settings.invoicePrefix" placeholder="INV-"
+                                        class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-xs font-mono text-slate-900 placeholder:text-slate-400 focus:bg-white focus:border-primary-500 focus:ring-1 focus:ring-primary-500/20 outline-none transition-all">
+                                </div>
+                                <div>
+                                    <label class="block text-[11px] font-semibold text-slate-600 uppercase tracking-wider mb-1">
+                                        Next Invoice #
+                                    </label>
+                                    <input type="number" x-model.number="settings.invoiceNextNumber" min="1"
+                                        class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-xs font-mono tabular-nums text-slate-900 focus:bg-white focus:border-primary-500 focus:ring-1 focus:ring-primary-500/20 outline-none transition-all">
+                                </div>
+                                <div>
+                                    <label class="block text-[11px] font-semibold text-slate-600 uppercase tracking-wider mb-1">
+                                        Quotation Prefix
+                                    </label>
+                                    <input type="text" x-model="settings.quotationPrefix" placeholder="QTN-"
+                                        class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-xs font-mono text-slate-900 placeholder:text-slate-400 focus:bg-white focus:border-primary-500 focus:ring-1 focus:ring-primary-500/20 outline-none transition-all">
+                                </div>
+                                <div>
+                                    <label class="block text-[11px] font-semibold text-slate-600 uppercase tracking-wider mb-1">
+                                        Next Quotation #
+                                    </label>
+                                    <input type="number" x-model.number="settings.quotationNextNumber" min="1"
+                                        class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-xs font-mono tabular-nums text-slate-900 focus:bg-white focus:border-primary-500 focus:ring-1 focus:ring-primary-500/20 outline-none transition-all">
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Banking Information -->
+                        <div class="space-y-3 pt-3 border-t border-slate-100">
+                            <div class="flex items-center gap-1.5 pb-1 border-b border-slate-100">
+                                <i class="fas fa-university text-primary-600 text-xs"></i>
+                                <span class="text-xs font-bold text-slate-900 uppercase tracking-wider">Settlement & Bank Details</span>
+                            </div>
+                            <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                                <div>
+                                    <label class="block text-[11px] font-semibold text-slate-600 uppercase tracking-wider mb-1">
+                                        Bank Name
+                                    </label>
+                                    <input type="text" x-model="settings.bankName" placeholder="e.g. HDFC Bank"
+                                        class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-xs font-medium text-slate-900 placeholder:text-slate-400 focus:bg-white focus:border-primary-500 focus:ring-1 focus:ring-primary-500/20 outline-none transition-all">
+                                </div>
+                                <div>
+                                    <label class="block text-[11px] font-semibold text-slate-600 uppercase tracking-wider mb-1">
+                                        Account Number
+                                    </label>
+                                    <input type="text" x-model="settings.bankAccountNumber" placeholder="e.g. 50200012345678"
+                                        class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-xs font-mono text-slate-900 placeholder:text-slate-400 focus:bg-white focus:border-primary-500 focus:ring-1 focus:ring-primary-500/20 outline-none transition-all">
+                                </div>
+                                <div>
+                                    <label class="block text-[11px] font-semibold text-slate-600 uppercase tracking-wider mb-1">
+                                        IFSC Code
+                                    </label>
+                                    <input type="text" x-model="settings.bankIfsc" placeholder="e.g. HDFC0001234" uppercase
+                                        class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-xs font-mono uppercase text-slate-900 placeholder:text-slate-400 focus:bg-white focus:border-primary-500 focus:ring-1 focus:ring-primary-500/20 outline-none transition-all">
+                                </div>
+                                <div>
+                                    <label class="block text-[11px] font-semibold text-slate-600 uppercase tracking-wider mb-1">
+                                        Branch Name
+                                    </label>
+                                    <input type="text" x-model="settings.bankBranch" placeholder="e.g. Main Branch"
+                                        class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-xs font-medium text-slate-900 placeholder:text-slate-400 focus:bg-white focus:border-primary-500 focus:ring-1 focus:ring-primary-500/20 outline-none transition-all">
+                                </div>
+                                <div class="sm:col-span-2">
+                                    <label class="block text-[11px] font-semibold text-slate-600 uppercase tracking-wider mb-1">
+                                        UPI ID (VPA)
+                                    </label>
+                                    <input type="text" x-model="settings.upiId" placeholder="e.g. yourshop@okhdfcbank"
+                                        class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-xs font-mono text-slate-900 placeholder:text-slate-400 focus:bg-white focus:border-primary-500 focus:ring-1 focus:ring-primary-500/20 outline-none transition-all">
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Terms & Conditions -->
+                        <div class="space-y-2 pt-3 border-t border-slate-100">
+                            <label class="block text-[11px] font-semibold text-slate-600 uppercase tracking-wider">
+                                Invoice Terms & Conditions (Footer)
+                            </label>
+                            <textarea x-model="settings.invoiceTerms" rows="3" placeholder="Terms printed at the bottom of customer invoices and estimates..."
+                                class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-xs font-medium text-slate-900 placeholder:text-slate-400 focus:bg-white focus:border-primary-500 focus:ring-1 focus:ring-primary-500/20 outline-none transition-all"></textarea>
+                        </div>
+                    </form>
+
+                    <div class="px-4 py-3 bg-slate-50/70 border-t border-slate-200/80 flex items-center justify-between text-xs">
+                        <span class="text-slate-400 text-[11px]">Bank details and tax credentials print directly on physical vouchers and PDF receipts.</span>
+                        <button type="submit" form="billing-form" :disabled="saving"
+                            class="inline-flex items-center gap-1.5 px-3.5 py-1.5 bg-primary-600 text-white rounded-lg text-xs font-medium hover:bg-primary-700 active:scale-[0.98] transition-all shadow-xs disabled:opacity-50">
+                            <i :class="saving ? 'fas fa-spinner fa-spin' : 'fas fa-save'" class="text-[11px]"></i>
+                            <span x-text="saving ? 'Saving...' : 'Save Invoicing Settings'"></span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 3. AI PROTOCOL -->
+            <div x-show="activeTab === 'ai'" x-cloak class="space-y-4">
+                <div class="bg-white border border-slate-200/80 rounded-xl shadow-xs overflow-hidden">
+                    <div class="px-4 py-3 bg-slate-50/70 border-b border-slate-200/80 flex items-center justify-between">
+                        <div class="flex items-center gap-2.5">
+                            <div class="w-7 h-7 rounded-lg bg-primary-50 text-primary-600 flex items-center justify-center text-xs">
+                                <i class="fas fa-robot"></i>
+                            </div>
+                            <div>
+                                <h2 class="text-xs font-bold text-slate-900 uppercase tracking-wider">AI Intelligence Protocol</h2>
+                                <p class="text-[11px] text-slate-500">Configure neural models for automated product cataloging and review generation</p>
+                            </div>
+                        </div>
+                        <button type="submit" form="ai-form" :disabled="saving" x-show="settings.aiEnabled"
+                            class="inline-flex items-center gap-1.5 px-3.5 py-1.5 bg-primary-600 text-white rounded-lg text-xs font-medium hover:bg-primary-700 active:scale-[0.98] transition-all shadow-xs disabled:opacity-50">
+                            <i :class="saving ? 'fas fa-spinner fa-spin' : 'fas fa-shield-halved'" class="text-[11px]"></i>
+                            <span x-text="saving ? 'Saving...' : 'Save AI Protocol'"></span>
+                        </button>
+                    </div>
+
+                    <form id="ai-form" @submit.prevent="saveSettings()" class="p-4 space-y-4">
+                        <!-- Toggle Switch -->
+                        <div class="p-3 bg-slate-50 border border-slate-200/80 rounded-lg flex items-center justify-between">
+                            <div>
+                                <p class="text-xs font-semibold text-slate-900">Neural Engine Activation</p>
+                                <p class="text-[11px] text-slate-500">Enable generative intelligence tools across inventory and Google review drafts</p>
                             </div>
                             <label class="relative inline-flex items-center cursor-pointer">
                                 <input type="checkbox" x-model="settings.aiEnabled" class="sr-only peer">
-                                <div class="w-14 h-8 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[4px] after:left-[4px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-6 after:w-6 after:transition-all peer-checked:bg-primary-600"></div>
+                                <div class="w-10 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary-600"></div>
                             </label>
                         </div>
 
-                        <div class="space-y-6" x-show="settings.aiEnabled">
-                            <!-- Provider Selection -->
-                            <div class="space-y-2">
-                                <label class="text-xs font-bold text-slate-500 ml-1">Intelligence Provider</label>
-                                <div class="relative">
+                        <div class="space-y-4" x-show="settings.aiEnabled">
+                            <!-- Provider Selector -->
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                <div>
+                                    <label class="block text-[11px] font-semibold text-slate-600 uppercase tracking-wider mb-1">
+                                        Intelligence Provider
+                                    </label>
                                     <select x-model="settings.aiProvider"
-                                        class="block w-full px-5 py-4 bg-slate-50 border border-slate-100 rounded-2xl font-medium focus:ring-4 focus:ring-primary-500/5 focus:border-primary-500 focus:bg-white outline-none transition-all appearance-none cursor-pointer">
+                                        class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-xs font-medium text-slate-900 focus:bg-white focus:border-primary-500 focus:ring-1 focus:ring-primary-500/20 outline-none transition-all">
                                         <option value="none">Disabled</option>
                                         <option value="gemini">Google Gemini AI</option>
                                         <option value="openai">OpenAI Official</option>
-                                        <option value="custom">Custom (OpenAI Compatible - Ollama, Groq, OpenRouter, LM Studio)</option>
+                                        <option value="custom">Custom (OpenAI-Compatible / Ollama / Groq / OpenRouter)</option>
                                     </select>
-                                    <div class="absolute right-5 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400">
-                                        <i class="fas fa-chevron-down text-xs"></i>
-                                    </div>
+                                </div>
+
+                                <div x-show="settings.aiProvider === 'custom'">
+                                    <label class="block text-[11px] font-semibold text-slate-600 uppercase tracking-wider mb-1">
+                                        Custom Provider Label
+                                    </label>
+                                    <input type="text" x-model="settings.aiCustomProviderName" placeholder="e.g. Ollama, Groq, OpenRouter"
+                                        class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-xs font-medium text-slate-900 placeholder:text-slate-400 focus:bg-white focus:border-primary-500 focus:ring-1 focus:ring-primary-500/20 outline-none transition-all">
                                 </div>
                             </div>
 
-                            <!-- Custom Provider Name (for custom provider) -->
-                            <div class="space-y-2" x-show="settings.aiProvider === 'custom'">
-                                <label class="text-xs font-bold text-slate-500 ml-1">Provider Name</label>
-                                <input type="text" x-model="settings.aiCustomProviderName"
-                                    placeholder="e.g., Ollama, Groq, OpenRouter, LocalAI"
-                                    class="block w-full px-5 py-4 bg-slate-50 border border-slate-100 rounded-2xl font-medium text-xs focus:ring-4 focus:ring-primary-500/5 focus:border-primary-500 focus:bg-white outline-none transition-all">
-                            </div>
-
-                            <!-- OpenAI URL / Base URL (for custom and optional for openai) -->
-                            <div class="space-y-2" x-show="settings.aiProvider === 'custom' || settings.aiProvider === 'openai'">
-                                <div class="flex items-center justify-between ml-1">
-                                    <label class="text-xs font-bold text-slate-500">Provider OpenAI URL / Endpoint</label>
-                                    <span class="text-[10px] text-slate-400" x-show="settings.aiProvider === 'custom'">e.g. http://localhost:11434/v1 or https://openrouter.ai/api/v1</span>
+                            <!-- Base URL (for custom or openai) -->
+                            <div x-show="settings.aiProvider === 'custom' || settings.aiProvider === 'openai'">
+                                <div class="flex items-center justify-between mb-1">
+                                    <label class="block text-[11px] font-semibold text-slate-600 uppercase tracking-wider">
+                                        Provider Endpoint / Base URL
+                                    </label>
+                                    <span class="text-[10px] text-slate-400 font-mono" x-show="settings.aiProvider === 'custom'">e.g. http://localhost:11434/v1</span>
                                 </div>
                                 <input type="text" x-model="settings.aiBaseUrl"
                                     :placeholder="settings.aiProvider === 'custom' ? 'http://localhost:11434/v1' : 'https://api.openai.com/v1 (default)'"
-                                    class="block w-full px-5 py-4 bg-slate-50 border border-slate-100 rounded-2xl font-mono text-xs focus:ring-4 focus:ring-primary-500/5 focus:border-primary-500 focus:bg-white outline-none transition-all">
+                                    class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-xs font-mono text-slate-900 placeholder:text-slate-400 focus:bg-white focus:border-primary-500 focus:ring-1 focus:ring-primary-500/20 outline-none transition-all">
                             </div>
 
                             <!-- Auth Token / API Key -->
-                            <div class="space-y-2" x-show="settings.aiProvider !== 'none'">
-                                <div class="flex items-center justify-between ml-1">
-                                    <label class="text-xs font-bold text-slate-500">Auth Token / API Key</label>
-                                    <span class="text-[10px] text-emerald-600 font-semibold" x-show="settings.hasAiApiKey && !settings.aiApiKey">Key already configured</span>
+                            <div x-show="settings.aiProvider !== 'none'">
+                                <div class="flex items-center justify-between mb-1">
+                                    <label class="block text-[11px] font-semibold text-slate-600 uppercase tracking-wider">
+                                        Auth Token / API Key
+                                    </label>
+                                    <span class="text-[10px] text-emerald-600 font-semibold" x-show="settings.hasAiApiKey && !settings.aiApiKey">Key safely saved in vault</span>
                                 </div>
                                 <div class="relative">
                                     <input :type="showApiKey ? 'text' : 'password'" x-model="settings.aiApiKey"
-                                        :placeholder="settings.hasAiApiKey ? '•••••••••••••••• (Leave blank to keep current key)' : (settings.aiProvider === 'custom' ? 'Enter API key (leave blank if not required by local endpoint)' : 'Enter your API key here...')"
-                                        class="block w-full px-5 py-4 pr-14 bg-slate-50 border border-slate-100 rounded-2xl font-mono text-xs focus:ring-4 focus:ring-primary-500/5 focus:border-primary-500 focus:bg-white outline-none transition-all">
+                                        :placeholder="settings.hasAiApiKey ? '•••••••••••••••• (Leave blank to keep existing key)' : (settings.aiProvider === 'custom' ? 'Enter token (or leave empty if local)' : 'Enter API secret key...')"
+                                        class="w-full px-3 py-2 pr-9 bg-slate-50 border border-slate-200 rounded-lg text-xs font-mono text-slate-900 placeholder:text-slate-400 focus:bg-white focus:border-primary-500 focus:ring-1 focus:ring-primary-500/20 outline-none transition-all">
                                     <button type="button" @click="showApiKey = !showApiKey"
-                                        class="absolute right-5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600">
-                                        <i :class="showApiKey ? 'fas fa-eye-slash' : 'fas fa-eye'" class="text-sm"></i>
+                                        class="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 p-1">
+                                        <i :class="showApiKey ? 'fas fa-eye-slash' : 'fas fa-eye'" class="text-xs"></i>
                                     </button>
                                 </div>
                             </div>
 
-                            <!-- Provider Model & Custom Searchable Dropdown -->
-                            <div class="space-y-2" x-show="settings.aiProvider !== 'none'">
-                                <div class="flex items-center justify-between ml-1">
-                                    <label class="text-xs font-bold text-slate-500">Provider Model</label>
-                                    <span class="text-[10px] text-purple-600 font-medium" x-show="fetchModelsMessage" x-text="fetchModelsMessage"></span>
+                            <!-- Provider Model & Searchable Dropdown -->
+                            <div x-show="settings.aiProvider !== 'none'">
+                                <div class="flex items-center justify-between mb-1">
+                                    <label class="block text-[11px] font-semibold text-slate-600 uppercase tracking-wider">
+                                        Model Identifier
+                                    </label>
+                                    <span class="text-[10px] text-primary-600 font-medium" x-show="fetchModelsMessage" x-text="fetchModelsMessage"></span>
                                 </div>
                                 <div class="flex gap-2 relative">
                                     <div class="relative flex-1" @click.outside="showModelDropdown = false">
@@ -267,240 +492,236 @@
                                             <input type="text" x-model="settings.aiModel"
                                                 @focus="if (modelsList.length > 0) showModelDropdown = true"
                                                 @input="if (modelsList.length > 0) showModelDropdown = true"
-                                                :placeholder="settings.aiProvider === 'gemini' ? 'gemini-2.5-flash' : (settings.aiProvider === 'openai' ? 'gpt-3.5-turbo' : 'e.g., llama3, mistral, deepseek-chat')"
-                                                class="block w-full px-5 py-4 pr-12 bg-slate-50 border border-slate-100 rounded-2xl font-mono text-xs focus:ring-4 focus:ring-primary-500/5 focus:border-primary-500 focus:bg-white outline-none transition-all">
-                                            
+                                                :placeholder="settings.aiProvider === 'gemini' ? 'gemini-2.5-flash' : (settings.aiProvider === 'openai' ? 'gpt-3.5-turbo' : 'e.g. llama3, mistral, deepseek-chat')"
+                                                class="w-full px-3 py-2 pr-8 bg-slate-50 border border-slate-200 rounded-lg text-xs font-mono text-slate-900 placeholder:text-slate-400 focus:bg-white focus:border-primary-500 focus:ring-1 focus:ring-primary-500/20 outline-none transition-all">
                                             <button type="button" @click="toggleModelDropdown()"
-                                                class="absolute right-4 text-slate-400 hover:text-slate-600 p-1.5 transition-colors cursor-pointer"
-                                                title="Toggle models list">
-                                                <i class="fas fa-chevron-down text-xs transition-transform duration-200"
+                                                class="absolute right-2 text-slate-400 hover:text-slate-600 p-1">
+                                                <i class="fas fa-chevron-down text-[10px] transition-transform duration-200"
                                                     :class="showModelDropdown ? 'rotate-180 text-primary-600' : ''"></i>
                                             </button>
                                         </div>
 
-                                        <!-- Custom Floating Dropdown Menu -->
+                                        <!-- Custom Dropdown Menu -->
                                         <div x-show="showModelDropdown && modelsList.length > 0"
-                                            x-transition:enter="transition ease-out duration-150"
-                                            x-transition:enter-start="opacity-0 translate-y-2"
+                                            x-transition:enter="transition ease-out duration-100"
+                                            x-transition:enter-start="opacity-0 translate-y-1"
                                             x-transition:enter-end="opacity-100 translate-y-0"
-                                            x-transition:leave="transition ease-in duration-100"
-                                            x-transition:leave-start="opacity-100 translate-y-0"
-                                            x-transition:leave-end="opacity-0 translate-y-2"
-                                            class="absolute left-0 right-0 top-full mt-2 bg-white border border-slate-200 rounded-2xl shadow-2xl z-50 max-h-64 overflow-hidden flex flex-col divide-y divide-slate-100">
-                                            
-                                            <div class="p-3 bg-slate-50 border-b border-slate-100 flex items-center justify-between text-[11px] font-semibold text-slate-500">
-                                                <span>Available Models (<span x-text="filteredModels.length"></span>)</span>
+                                            class="absolute left-0 right-0 top-full mt-1 bg-white border border-slate-200 rounded-lg shadow-lg z-50 max-h-52 overflow-hidden flex flex-col">
+                                            <div class="px-3 py-1.5 bg-slate-50 border-b border-slate-100 flex items-center justify-between text-[10px] font-semibold text-slate-500">
+                                                <span>Discovered Models (<span x-text="filteredModels.length"></span>)</span>
                                                 <button type="button" @click="showModelDropdown = false" class="text-slate-400 hover:text-slate-600">
-                                                    <i class="fas fa-times text-xs"></i>
+                                                    <i class="fas fa-times text-[10px]"></i>
                                                 </button>
                                             </div>
-
-                                            <div class="overflow-y-auto max-h-52 p-1.5 space-y-0.5 custom-scrollbar">
+                                            <div class="overflow-y-auto max-h-40 p-1 space-y-0.5 custom-scrollbar">
                                                 <template x-for="m in filteredModels" :key="m">
                                                     <button type="button" @click="selectModel(m)"
-                                                        class="w-full text-left px-3.5 py-2.5 rounded-xl text-xs font-mono transition-colors flex items-center justify-between group cursor-pointer"
-                                                        :class="settings.aiModel === m ? 'bg-primary-50 text-primary-700 font-bold' : 'text-slate-700 hover:bg-slate-100'">
+                                                        class="w-full text-left px-2.5 py-1.5 rounded-md text-xs font-mono transition-colors flex items-center justify-between"
+                                                        :class="settings.aiModel === m ? 'bg-primary-50 text-primary-700 font-semibold' : 'text-slate-700 hover:bg-slate-50'">
                                                         <span x-text="m" class="truncate pr-2"></span>
-                                                        <i class="fas fa-check text-xs text-primary-600" x-show="settings.aiModel === m"></i>
+                                                        <i class="fas fa-check text-[10px] text-primary-600" x-show="settings.aiModel === m"></i>
                                                     </button>
                                                 </template>
-                                                <div x-show="filteredModels.length === 0" class="p-4 text-center text-xs text-slate-400">
-                                                    No models matching "<span x-text="settings.aiModel"></span>". You can keep this custom name.
+                                                <div x-show="filteredModels.length === 0" class="p-3 text-center text-xs text-slate-400">
+                                                    No matching models. Custom name will be kept.
                                                 </div>
                                             </div>
                                         </div>
                                     </div>
 
                                     <button type="button" @click="fetchModels()" :disabled="fetchingModels"
-                                        class="px-5 py-4 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-2xl text-xs font-bold transition-all flex items-center gap-2 whitespace-nowrap active:scale-95 disabled:opacity-50 cursor-pointer"
-                                        title="Fetch available models from endpoint /models">
-                                        <i :class="fetchingModels ? 'fas fa-spinner fa-spin' : 'fas fa-list'"></i>
-                                        <span x-text="fetchingModels ? 'Fetching...' : 'Get Models'"></span>
+                                        class="inline-flex items-center gap-1.5 px-3 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-xs font-medium transition-colors whitespace-nowrap disabled:opacity-50">
+                                        <i :class="fetchingModels ? 'fas fa-spinner fa-spin' : 'fas fa-list'" class="text-[11px]"></i>
+                                        <span x-text="fetchingModels ? 'Fetching...' : 'Discover'"></span>
                                     </button>
                                 </div>
-                                <p class="text-[11px] text-slate-400 ml-1">Click the chevron or "Get Models" to select from list, or type any custom model identifier.</p>
                             </div>
 
-                            <!-- Connection Testing & Feedback -->
-                            <div class="flex items-center justify-between gap-4 pt-2" x-show="settings.aiProvider !== 'none'">
+                            <!-- Connection Testing -->
+                            <div class="flex items-center justify-between gap-3 pt-2 border-t border-slate-100" x-show="settings.aiProvider !== 'none'">
                                 <button type="button" @click="testAIConnection()" :disabled="testingConnection"
-                                    class="px-6 py-3 bg-white border border-slate-200 text-slate-600 rounded-2xl text-[11px] font-bold uppercase tracking-wider hover:bg-slate-50 active:scale-95 transition-all flex items-center gap-3">
-                                    <i :class="testingConnection ? 'fas fa-spinner fa-spin' : 'fas fa-plug'"></i>
-                                    <span x-text="testingConnection ? 'Testing...' : 'Test Link'"></span>
+                                    class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white border border-slate-200 text-slate-700 rounded-lg text-xs font-medium hover:bg-slate-50 active:scale-[0.98] transition-all shadow-xs disabled:opacity-50">
+                                    <i :class="testingConnection ? 'fas fa-spinner fa-spin' : 'fas fa-plug'" class="text-[11px] text-slate-500"></i>
+                                    <span x-text="testingConnection ? 'Testing Connection...' : 'Test Endpoint Connection'"></span>
                                 </button>
 
-                                <div x-show="connectionTestResult" class="flex items-center gap-2 animate__animated animate__fadeIn">
-                                    <div class="w-1.5 h-1.5 rounded-full" :class="connectionTestSuccess ? 'bg-emerald-500' : 'bg-rose-500'"></div>
-                                    <span class="text-[10px] font-bold" :class="connectionTestSuccess ? 'text-emerald-600' : 'text-rose-600'" x-text="connectionTestMessage"></span>
+                                <div x-show="connectionTestResult" class="flex items-center gap-1.5">
+                                    <span class="w-2 h-2 rounded-full" :class="connectionTestSuccess ? 'bg-emerald-500' : 'bg-rose-500'"></span>
+                                    <span class="text-xs font-medium" :class="connectionTestSuccess ? 'text-emerald-700' : 'text-rose-700'" x-text="connectionTestMessage"></span>
                                 </div>
                             </div>
                         </div>
-
-                        <div class="flex justify-end pt-4" x-show="settings.aiEnabled">
-                            <button type="submit" :disabled="saving"
-                                class="px-8 py-4 bg-purple-600 text-white rounded-2xl font-bold text-sm hover:bg-purple-700 active:scale-95 transition-all shadow-lg flex items-center gap-3">
-                                <i :class="saving ? 'fas fa-spinner fa-spin' : 'fas fa-shield-halved'"></i>
-                                <span x-text="saving ? 'Updating...' : 'Save AI Protocol'"></span>
-                            </button>
-                        </div>
                     </form>
+
+                    <div class="px-4 py-3 bg-slate-50/70 border-t border-slate-200/80 flex items-center justify-between text-xs" x-show="settings.aiEnabled">
+                        <span class="text-slate-400 text-[11px]">Models are utilized on-demand for product summaries and QR reviews.</span>
+                        <button type="submit" form="ai-form" :disabled="saving"
+                            class="inline-flex items-center gap-1.5 px-3.5 py-1.5 bg-primary-600 text-white rounded-lg text-xs font-medium hover:bg-primary-700 active:scale-[0.98] transition-all shadow-xs disabled:opacity-50">
+                            <i :class="saving ? 'fas fa-spinner fa-spin' : 'fas fa-shield-halved'" class="text-[11px]"></i>
+                            <span x-text="saving ? 'Saving...' : 'Save AI Protocol'"></span>
+                        </button>
+                    </div>
                 </div>
             </div>
 
-            <!-- Reviews & QR Hub Section -->
-            <div x-show="activeTab === 'reviews'" x-transition:enter="transition ease-out duration-300" x-transition:enter-start="opacity-0 translate-y-4" x-transition:enter-end="opacity-100 translate-y-0" class="space-y-6">
-                
-                <!-- Main Config Card -->
-                <div class="bg-white border border-slate-200 p-8 md:p-10 rounded-[32px] shadow-glass">
-                    <div class="flex items-center gap-4 mb-8">
-                        <div class="w-12 h-12 rounded-2xl bg-amber-50 flex items-center justify-center text-amber-500">
-                            <i class="fas fa-star text-xl"></i>
+            <!-- 4. REVIEW & QR HUB -->
+            <div x-show="activeTab === 'reviews'" x-cloak class="space-y-4">
+                <!-- Review Config -->
+                <div class="bg-white border border-slate-200/80 rounded-xl shadow-xs overflow-hidden">
+                    <div class="px-4 py-3 bg-slate-50/70 border-b border-slate-200/80 flex items-center justify-between">
+                        <div class="flex items-center gap-2.5">
+                            <div class="w-7 h-7 rounded-lg bg-primary-50 text-primary-600 flex items-center justify-center text-xs">
+                                <i class="fas fa-qrcode"></i>
+                            </div>
+                            <div>
+                                <h2 class="text-xs font-bold text-slate-900 uppercase tracking-wider">Review Engine & QR Hub</h2>
+                                <p class="text-[11px] text-slate-500">Automate Google reviews with personalized drafts and counter standee assets</p>
+                            </div>
                         </div>
-                        <div>
-                            <h3 class="text-xl font-bold text-slate-900">Review Engine & QR Hub</h3>
-                            <p class="text-slate-500 text-sm">Automate 5-star Google reviews with personalized AI drafts and counter QR standees</p>
-                        </div>
+                        <button type="submit" form="review-form" :disabled="saving"
+                            class="inline-flex items-center gap-1.5 px-3.5 py-1.5 bg-primary-600 text-white rounded-lg text-xs font-medium hover:bg-primary-700 active:scale-[0.98] transition-all shadow-xs disabled:opacity-50">
+                            <i :class="saving ? 'fas fa-spinner fa-spin' : 'fas fa-save'" class="text-[11px]"></i>
+                            <span x-text="saving ? 'Saving...' : 'Save Review Settings'"></span>
+                        </button>
                     </div>
 
-                    <form @submit.prevent="saveSettings()" class="space-y-6">
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            
-                            <div class="md:col-span-2 space-y-2">
-                                <div class="flex items-center justify-between ml-1">
-                                    <label class="text-xs font-bold text-slate-500">Google Business / Review URL</label>
-                                    <span class="text-[10px] text-slate-400">Where customer reviews will be posted</span>
-                                </div>
-                                <input type="url" x-model="settings.reviewUrl"
-                                    placeholder="https://g.page/r/your-shop/review or Google Maps review link"
-                                    class="block w-full px-5 py-4 bg-slate-50 border border-slate-100 rounded-2xl font-mono text-xs focus:ring-4 focus:ring-primary-500/5 focus:border-primary-500 focus:bg-white outline-none transition-all">
+                    <form id="review-form" @submit.prevent="saveSettings()" class="p-4 space-y-4">
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            <!-- Google Review Link -->
+                            <div class="sm:col-span-2">
+                                <label class="block text-[11px] font-semibold text-slate-600 uppercase tracking-wider mb-1">
+                                    Google Business / Review URL
+                                </label>
+                                <input type="url" x-model="settings.reviewUrl" placeholder="https://g.page/r/your-shop/review or Google Maps review link"
+                                    class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-xs font-mono text-slate-900 placeholder:text-slate-400 focus:bg-white focus:border-primary-500 focus:ring-1 focus:ring-primary-500/20 outline-none transition-all">
                             </div>
 
-                            <div class="space-y-2">
-                                <div class="flex items-center justify-between ml-1">
-                                    <label class="text-xs font-bold text-slate-500">Review Access Passcode (?key=...)</label>
-                                    <span class="text-[10px] text-slate-400">Protects review generator page</span>
-                                </div>
-                                <input type="text" x-model="settings.reviewAccessKey"
-                                    placeholder="e.g., review123"
-                                    class="block w-full px-5 py-4 bg-slate-50 border border-slate-100 rounded-2xl font-mono text-xs focus:ring-4 focus:ring-primary-500/5 focus:border-primary-500 focus:bg-white outline-none transition-all">
+                            <!-- Review Access Key -->
+                            <div>
+                                <label class="block text-[11px] font-semibold text-slate-600 uppercase tracking-wider mb-1">
+                                    Review Access Key (?key=...)
+                                </label>
+                                <input type="text" x-model="settings.reviewAccessKey" placeholder="e.g. review123"
+                                    class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-xs font-mono text-slate-900 placeholder:text-slate-400 focus:bg-white focus:border-primary-500 focus:ring-1 focus:ring-primary-500/20 outline-none transition-all">
                             </div>
 
-                            <div class="space-y-2">
-                                <label class="text-xs font-bold text-slate-500 ml-1">Live Review Direct Link</label>
-                                <div class="flex gap-2">
+                            <!-- Live Direct Link -->
+                            <div>
+                                <label class="block text-[11px] font-semibold text-slate-600 uppercase tracking-wider mb-1">
+                                    Live Review Direct Link
+                                </label>
+                                <div class="flex gap-1.5">
                                     <input type="text" readonly :value="getReviewDirectLink()"
-                                        class="block w-full px-5 py-4 bg-slate-100 border border-slate-200 rounded-2xl font-mono text-xs text-slate-600 outline-none select-all">
+                                        class="w-full px-3 py-2 bg-slate-100 border border-slate-200 rounded-lg text-xs font-mono text-slate-600 outline-none select-all">
                                     <button type="button" @click="copyReviewLink()"
-                                        class="px-5 py-4 bg-slate-900 text-white hover:bg-slate-800 active:scale-95 rounded-2xl text-xs font-bold transition-all flex items-center gap-2 whitespace-nowrap shadow-sm">
-                                        <i :class="copiedReviewLink ? 'fas fa-check text-emerald-300' : 'fas fa-copy'"></i>
+                                        class="inline-flex items-center gap-1.5 px-3 py-2 bg-slate-900 text-white rounded-lg text-xs font-medium hover:bg-slate-800 transition-colors shadow-xs shrink-0">
+                                        <i :class="copiedReviewLink ? 'fas fa-check text-emerald-400' : 'fas fa-copy'" class="text-[11px]"></i>
                                         <span x-text="copiedReviewLink ? 'Copied' : 'Copy'"></span>
                                     </button>
                                 </div>
                             </div>
 
-                            <div class="space-y-2">
-                                <div class="flex items-center justify-between ml-1">
-                                    <label class="text-xs font-bold text-slate-500">Instagram Handle</label>
+                            <!-- Instagram Handle -->
+                            <div>
+                                <div class="flex items-center justify-between mb-1">
+                                    <label class="block text-[11px] font-semibold text-slate-600 uppercase tracking-wider">
+                                        Instagram Handle
+                                    </label>
                                     <span class="text-[10px] text-pink-600 font-semibold" x-show="settings.instagramUsername" x-text="'@' + settings.instagramUsername.replace(/^@/, '')"></span>
                                 </div>
-                                <div class="relative">
-                                    <span class="absolute left-5 top-1/2 -translate-y-1/2 text-slate-400 font-bold text-sm">@</span>
-                                    <input type="text" x-model="settings.instagramUsername"
-                                        placeholder="yourshopname"
-                                        class="block w-full pl-10 pr-5 py-4 bg-slate-50 border border-slate-100 rounded-2xl font-medium text-xs focus:ring-4 focus:ring-primary-500/5 focus:border-primary-500 focus:bg-white outline-none transition-all">
+                                <div class="flex rounded-lg shadow-2xs">
+                                    <span class="inline-flex items-center px-2.5 rounded-l-lg border border-r-0 border-slate-200 bg-slate-100 text-slate-500 text-xs font-mono font-bold select-none">@</span>
+                                    <input type="text" x-model="settings.instagramUsername" placeholder="yourshopname"
+                                        class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-r-lg text-xs font-medium text-slate-900 placeholder:text-slate-400 focus:bg-white focus:border-primary-500 focus:ring-1 focus:ring-primary-500/20 outline-none transition-all">
                                 </div>
                             </div>
 
-                            <div class="space-y-2">
-                                <label class="text-xs font-bold text-slate-500 ml-1">Instagram Follow Redirect Link</label>
-                                <div class="flex gap-2">
+                            <!-- Instagram Redirect URL -->
+                            <div>
+                                <label class="block text-[11px] font-semibold text-slate-600 uppercase tracking-wider mb-1">
+                                    Instagram Follow Redirect URL
+                                </label>
+                                <div class="flex gap-1.5">
                                     <input type="text" readonly :value="getInstagramRedirectLink()"
-                                        class="block w-full px-5 py-4 bg-slate-100 border border-slate-200 rounded-2xl font-mono text-xs text-slate-600 outline-none select-all">
+                                        class="w-full px-3 py-2 bg-slate-100 border border-slate-200 rounded-lg text-xs font-mono text-slate-600 outline-none select-all">
                                     <button type="button" @click="copyInstagramLink()"
-                                        class="px-5 py-4 bg-gradient-to-r from-pink-500 to-rose-600 text-white hover:opacity-90 active:scale-95 rounded-2xl text-xs font-bold transition-all flex items-center gap-2 whitespace-nowrap shadow-sm">
-                                        <i :class="copiedInstagramLink ? 'fas fa-check text-emerald-300' : 'fab fa-instagram'"></i>
-                                        <span x-text="copiedInstagramLink ? 'Copied' : 'Copy Link'"></span>
+                                        class="inline-flex items-center gap-1.5 px-3 py-2 bg-slate-900 text-white rounded-lg text-xs font-medium hover:bg-slate-800 transition-colors shadow-xs shrink-0">
+                                        <i :class="copiedInstagramLink ? 'fas fa-check text-emerald-400' : 'fab fa-instagram'" class="text-[11px]"></i>
+                                        <span x-text="copiedInstagramLink ? 'Copied' : 'Copy'"></span>
                                     </button>
                                 </div>
                             </div>
                         </div>
-
-                        <div class="flex items-center justify-between pt-4 border-t border-slate-100">
-                            <a :href="getReviewDirectLink()" target="_blank"
-                                class="px-5 py-3 bg-slate-100 text-slate-700 hover:bg-slate-200 active:scale-95 rounded-2xl text-xs font-bold transition-all flex items-center gap-2">
-                                <i class="fas fa-external-link-alt text-xs"></i>
-                                <span>Open Review Page</span>
-                            </a>
-
-                            <button type="submit" :disabled="saving"
-                                class="px-8 py-4 bg-primary-600 text-white rounded-2xl font-bold text-sm hover:bg-primary-700 active:scale-95 transition-all shadow-purple flex items-center gap-3">
-                                <i :class="saving ? 'fas fa-spinner fa-spin' : 'fas fa-save'"></i>
-                                <span x-text="saving ? 'Saving...' : 'Save Review Settings'"></span>
-                            </button>
-                        </div>
                     </form>
+
+                    <div class="px-4 py-3 bg-slate-50/70 border-t border-slate-200/80 flex items-center justify-between text-xs">
+                        <a :href="getReviewDirectLink()" target="_blank"
+                            class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white border border-slate-200 text-slate-700 rounded-lg text-xs font-medium hover:bg-slate-50 transition-colors shadow-xs">
+                            <i class="fas fa-external-link-alt text-[10px] text-slate-400"></i>
+                            <span>Open Public Review Portal</span>
+                        </a>
+                        <button type="submit" form="review-form" :disabled="saving"
+                            class="inline-flex items-center gap-1.5 px-3.5 py-1.5 bg-primary-600 text-white rounded-lg text-xs font-medium hover:bg-primary-700 active:scale-[0.98] transition-all shadow-xs disabled:opacity-50">
+                            <i :class="saving ? 'fas fa-spinner fa-spin' : 'fas fa-save'" class="text-[11px]"></i>
+                            <span x-text="saving ? 'Saving...' : 'Save Review Settings'"></span>
+                        </button>
+                    </div>
                 </div>
 
-                <!-- QR Code & Standee Card -->
-                <div class="bg-white border border-slate-200 p-8 md:p-10 rounded-[32px] shadow-glass">
-                    <div class="flex items-center gap-4 mb-8">
-                        <div class="w-12 h-12 rounded-2xl bg-indigo-50 flex items-center justify-center text-indigo-600">
-                            <i class="fas fa-qrcode text-xl"></i>
-                        </div>
-                        <div>
-                            <h3 class="text-xl font-bold text-slate-900">Counter QR Standee</h3>
-                            <p class="text-slate-500 text-sm">Download or print ready-to-use QR standee for your reception desk or invoice receipts</p>
-                        </div>
+                <!-- Counter QR Standee Card -->
+                <div class="bg-white border border-slate-200/80 rounded-xl shadow-xs overflow-hidden">
+                    <div class="px-4 py-3 bg-slate-50/70 border-b border-slate-200/80">
+                        <h3 class="text-xs font-bold text-slate-900 uppercase tracking-wider flex items-center gap-1.5">
+                            <i class="fas fa-print text-primary-600 text-xs"></i>
+                            Counter QR Standee & Print Asset
+                        </h3>
                     </div>
-
-                    <div class="grid grid-cols-1 md:grid-cols-12 gap-8 items-center">
+                    <div class="p-4 grid grid-cols-1 md:grid-cols-12 gap-5 items-center">
                         <!-- QR Preview Box -->
-                        <div class="md:col-span-5 flex flex-col items-center justify-center p-8 bg-slate-50 border border-slate-200 rounded-3xl shadow-inner">
+                        <div class="md:col-span-4 flex flex-col items-center justify-center p-4 bg-slate-50 border border-slate-200/80 rounded-xl text-center">
                             <template x-if="qrDataUrl">
-                                <img :src="qrDataUrl" alt="Review QR Code" class="w-52 h-52 object-contain bg-white p-3 rounded-2xl border border-slate-200 shadow-md">
+                                <img :src="qrDataUrl" alt="Review QR Code" class="w-36 h-36 object-contain bg-white p-2 rounded-lg border border-slate-200 shadow-2xs">
                             </template>
                             <template x-if="!qrDataUrl && loadingQr">
-                                <div class="w-52 h-52 flex flex-col items-center justify-center text-slate-400 gap-2">
-                                    <i class="fas fa-spinner fa-spin text-2xl text-indigo-500"></i>
-                                    <span class="text-xs font-semibold">Generating QR...</span>
+                                <div class="w-36 h-36 flex flex-col items-center justify-center text-slate-400 gap-1.5">
+                                    <i class="fas fa-spinner fa-spin text-xl text-primary-600"></i>
+                                    <span class="text-[11px] font-medium">Generating QR...</span>
                                 </div>
                             </template>
-                            <span class="mt-4 text-[11px] font-bold text-slate-500 tracking-wider uppercase">Scan to Review</span>
+                            <span class="mt-2.5 text-[10px] font-bold text-slate-500 uppercase tracking-wider">Scan to Review</span>
                         </div>
 
                         <!-- Instructions & Actions -->
-                        <div class="md:col-span-7 space-y-6">
-                            <div class="space-y-3">
-                                <div class="flex items-start gap-3">
-                                    <div class="w-6 h-6 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center text-xs font-bold mt-0.5">1</div>
-                                    <p class="text-xs text-slate-600">Customer scans this QR code with their phone camera after a repair or purchase.</p>
+                        <div class="md:col-span-8 space-y-4">
+                            <div class="space-y-2">
+                                <div class="flex items-start gap-2.5">
+                                    <span class="w-5 h-5 rounded-full bg-primary-100 text-primary-700 flex items-center justify-center text-[10px] font-bold shrink-0 mt-0.5">1</span>
+                                    <p class="text-xs text-slate-600">Customer scans the counter QR code with camera phone after purchase or service completion.</p>
                                 </div>
-                                <div class="flex items-start gap-3">
-                                    <div class="w-6 h-6 rounded-full bg-indigo-100 text-indigo-600 flex items-center justify-center text-xs font-bold mt-0.5">2</div>
-                                    <p class="text-xs text-slate-600">They tap <strong>Quick Positive</strong> or type what was repaired (e.g. <em>Screen Replacement</em>) to draft an authentic 5-star review.</p>
+                                <div class="flex items-start gap-2.5">
+                                    <span class="w-5 h-5 rounded-full bg-primary-100 text-primary-700 flex items-center justify-center text-[10px] font-bold shrink-0 mt-0.5">2</span>
+                                    <p class="text-xs text-slate-600">Selects <strong>Quick Positive</strong> or enters their repaired item to generate a genuine 5-star draft.</p>
                                 </div>
-                                <div class="flex items-start gap-3">
-                                    <div class="w-6 h-6 rounded-full bg-amber-100 text-amber-600 flex items-center justify-center text-xs font-bold mt-0.5">3</div>
-                                    <p class="text-xs text-slate-600">With one tap, the review is copied to their clipboard and your Google Review page opens automatically.</p>
+                                <div class="flex items-start gap-2.5">
+                                    <span class="w-5 h-5 rounded-full bg-primary-100 text-primary-700 flex items-center justify-center text-[10px] font-bold shrink-0 mt-0.5">3</span>
+                                    <p class="text-xs text-slate-600">Review copies automatically to clipboard and opens your Google Business review form in one tap.</p>
                                 </div>
                             </div>
 
-                            <div class="flex flex-wrap items-center gap-3 pt-4">
+                            <div class="flex flex-wrap items-center gap-2 pt-1 border-t border-slate-100">
                                 <button type="button" @click="downloadQrCode()"
-                                    class="px-6 py-3.5 bg-slate-900 text-white hover:bg-slate-800 active:scale-95 rounded-2xl text-xs font-bold transition-all flex items-center gap-2 shadow-sm">
-                                    <i class="fas fa-download"></i>
-                                    <span>Download QR (PNG)</span>
+                                    class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-slate-900 text-white rounded-lg text-xs font-medium hover:bg-slate-800 transition-colors shadow-xs">
+                                    <i class="fas fa-download text-[11px]"></i>
+                                    <span>Download PNG</span>
                                 </button>
-
                                 <button type="button" @click="printQrCode()"
-                                    class="px-6 py-3.5 bg-indigo-600 text-white hover:bg-indigo-700 active:scale-95 rounded-2xl text-xs font-bold transition-all flex items-center gap-2 shadow-md">
-                                    <i class="fas fa-print"></i>
+                                    class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-primary-600 text-white rounded-lg text-xs font-medium hover:bg-primary-700 transition-colors shadow-xs">
+                                    <i class="fas fa-print text-[11px]"></i>
                                     <span>Print Standee</span>
                                 </button>
-
                                 <button type="button" @click="copyReviewLink()"
-                                    class="px-5 py-3.5 bg-slate-100 text-slate-700 hover:bg-slate-200 active:scale-95 rounded-2xl text-xs font-bold transition-all flex items-center gap-2">
-                                    <i class="fas fa-link text-xs"></i>
+                                    class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white border border-slate-200 text-slate-700 rounded-lg text-xs font-medium hover:bg-slate-50 transition-colors shadow-xs">
+                                    <i class="fas fa-link text-[11px] text-slate-400"></i>
                                     <span>Copy URL</span>
                                 </button>
                             </div>
@@ -508,8 +729,157 @@
                     </div>
                 </div>
             </div>
+
+            <!-- 5. WHATSAPP AGENT -->
+            <div x-show="activeTab === 'whatsapp-agent'" x-cloak class="space-y-4">
+                <div class="bg-white border border-slate-200/80 rounded-xl shadow-xs overflow-hidden">
+                    <div class="px-4 py-3 bg-slate-50/70 border-b border-slate-200/80 flex items-center justify-between">
+                        <div class="flex items-center gap-2.5">
+                            <div class="w-7 h-7 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center text-xs">
+                                <i class="fab fa-whatsapp"></i>
+                            </div>
+                            <div>
+                                <h2 class="text-xs font-bold text-slate-900 uppercase tracking-wider">WhatsApp Autonomous Agent</h2>
+                                <p class="text-[11px] text-slate-500">Auto-quote customers, query vendor availability, and notify boss on confirmed deals</p>
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <a href="/whatsapp/link" target="_blank"
+                                class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-xs font-medium transition-all shadow-xs">
+                                <i class="fab fa-whatsapp text-emerald-600"></i>
+                                <span>WhatsApp Session</span>
+                            </a>
+                            <button type="submit" form="whatsapp-agent-form" :disabled="saving"
+                                class="inline-flex items-center gap-1.5 px-3.5 py-1.5 bg-primary-600 text-white rounded-lg text-xs font-medium hover:bg-primary-700 active:scale-[0.98] transition-all shadow-xs disabled:opacity-50">
+                                <i :class="saving ? 'fas fa-spinner fa-spin' : 'fas fa-save'" class="text-[11px]"></i>
+                                <span x-text="saving ? 'Saving...' : 'Save Changes'"></span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <form id="whatsapp-agent-form" @submit.prevent="saveSettings()" class="p-4 space-y-4">
+                        <!-- Agent Toggle Card -->
+                        <div class="p-3.5 bg-slate-50/70 border border-slate-200/80 rounded-xl flex items-center justify-between">
+                            <div class="space-y-0.5">
+                                <span class="text-xs font-bold text-slate-900">Activate Autonomous WhatsApp Agent</span>
+                                <p class="text-[11px] text-slate-500">
+                                    When linked, the agent continuously replies to customer inquiries, queries suppliers for wholesale rates, and seals deals.
+                                </p>
+                            </div>
+                            <label class="relative inline-flex items-center cursor-pointer">
+                                <input type="checkbox" x-model="settings.whatsappAgentEnabled" class="sr-only peer">
+                                <div class="w-9 h-5 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-emerald-600"></div>
+                            </label>
+                        </div>
+
+                        <!-- Configuration Fields -->
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            <!-- Boss WhatsApp Phone -->
+                            <div>
+                                <label class="block text-[11px] font-semibold text-slate-600 uppercase tracking-wider mb-1">
+                                    Boss WhatsApp Number <span class="text-rose-500">*</span>
+                                </label>
+                                <input type="tel" x-model="settings.bossPhone" placeholder="e.g. 9876543210"
+                                    class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-xs font-medium text-slate-900 placeholder:text-slate-400 focus:bg-white focus:border-primary-500 focus:ring-1 focus:ring-primary-500/20 outline-none transition-all">
+                                <p class="text-[10px] text-slate-400 mt-1">
+                                    Receives immediate deal summaries, gross profit calculations, and actionable AI suggestions whenever a customer confirms a purchase.
+                                </p>
+                            </div>
+
+                            <!-- Default Margin % -->
+                            <div>
+                                <label class="block text-[11px] font-semibold text-slate-600 uppercase tracking-wider mb-1">
+                                    Default Profit Margin (%) <span class="text-rose-500">*</span>
+                                </label>
+                                <div class="relative">
+                                    <input type="number" min="0" max="200" step="1" x-model.number="settings.defaultMarginPercent" required placeholder="20"
+                                        class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-xs font-medium text-slate-900 placeholder:text-slate-400 focus:bg-white focus:border-primary-500 focus:ring-1 focus:ring-primary-500/20 outline-none transition-all">
+                                    <span class="absolute right-3 top-2 text-xs font-bold text-slate-400">%</span>
+                                </div>
+                                <p class="text-[10px] text-slate-400 mt-1">
+                                    Applied on supplier quotes when a category-specific margin is not defined. (Categories can have custom margins).
+                                </p>
+                            </div>
+                        </div>
+
+                        <!-- Agent Workflow Diagram / Infographic -->
+                        <div class="mt-4 pt-4 border-t border-slate-100">
+                            <h3 class="text-[11px] font-bold text-slate-700 uppercase tracking-wider mb-2">Automated Protocol Lifecycle</h3>
+                            <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+                                <div class="p-3 bg-slate-50 rounded-lg border border-slate-200/60 space-y-1">
+                                    <div class="flex items-center gap-1.5 text-xs font-bold text-slate-900">
+                                        <span class="w-5 h-5 rounded-full bg-primary-100 text-primary-700 flex items-center justify-center text-[10px]">1</span>
+                                        <span>Customer Asks</span>
+                                    </div>
+                                    <p class="text-[11px] text-slate-500">
+                                        Customer asks for a product, price, or part. If not in store stock, agent pings registered Vendors for rate and availability.
+                                    </p>
+                                </div>
+                                <div class="p-3 bg-slate-50 rounded-lg border border-slate-200/60 space-y-1">
+                                    <div class="flex items-center gap-1.5 text-xs font-bold text-slate-900">
+                                        <span class="w-5 h-5 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center text-[10px]">2</span>
+                                        <span>Vendor Quotes & Margin</span>
+                                    </div>
+                                    <p class="text-[11px] text-slate-500">
+                                        Vendor replies with wholesale rate. Agent parses cost, adds configured category profit margin, and sends rate to customer.
+                                    </p>
+                                </div>
+                                <div class="p-3 bg-slate-50 rounded-lg border border-slate-200/60 space-y-1">
+                                    <div class="flex items-center gap-1.5 text-xs font-bold text-slate-900">
+                                        <span class="w-5 h-5 rounded-full bg-amber-100 text-amber-700 flex items-center justify-center text-[10px]">3</span>
+                                        <span>Deal Closed & Boss Alert</span>
+                                    </div>
+                                    <p class="text-[11px] text-slate-500">
+                                        Customer confirms with "YES" or "Deal". Agent sends confirmation and immediately alerts the Boss with financial summary & AI suggestions.
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- 6. TEAM LEDGER -->
+            <div x-show="activeTab === 'users'" x-cloak class="space-y-4">
+                <div class="bg-white border border-slate-200/80 rounded-xl shadow-xs overflow-hidden">
+                    <div class="px-4 py-3 bg-slate-50/70 border-b border-slate-200/80 flex items-center justify-between">
+                        <div class="flex items-center gap-2.5">
+                            <div class="w-7 h-7 rounded-lg bg-primary-50 text-primary-600 flex items-center justify-center text-xs">
+                                <i class="fas fa-users-cog"></i>
+                            </div>
+                            <div>
+                                <h2 class="text-xs font-bold text-slate-900 uppercase tracking-wider">Team Ledger & Staff Permissions</h2>
+                                <p class="text-[11px] text-slate-500">Access control, credentials management, and role-based permissions</p>
+                            </div>
+                        </div>
+                        <a href="/team"
+                            class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-primary-600 text-white rounded-lg text-xs font-medium hover:bg-primary-700 active:scale-[0.98] transition-all shadow-xs">
+                            <span>Open Team Workspace</span>
+                            <i class="fas fa-arrow-right text-[10px]"></i>
+                        </a>
+                    </div>
+
+                    <div class="p-8 text-center flex flex-col items-center justify-center space-y-3">
+                        <div class="w-12 h-12 rounded-xl bg-primary-50 border border-primary-200/60 flex items-center justify-center text-primary-600">
+                            <i class="fas fa-shield-halved text-lg"></i>
+                        </div>
+                        <div class="space-y-1 max-w-md">
+                            <h3 class="text-sm font-bold text-slate-900">Dedicated Team Management Portal</h3>
+                            <p class="text-xs text-slate-500">
+                                Staff user accounts, role permissions (Technician, Cashier, Manager, Administrator), and secure login tokens are managed in the specialized Team Ledger workspace.
+                            </p>
+                        </div>
+                        <div class="pt-2">
+                            <a href="/team"
+                                class="inline-flex items-center gap-2 px-4 py-2 bg-slate-900 text-white rounded-lg text-xs font-medium hover:bg-slate-800 transition-colors shadow-xs">
+                                <i class="fas fa-users text-xs text-slate-400"></i>
+                                <span>Go to Team Workspace</span>
+                                <i class="fas fa-arrow-right text-[10px]"></i>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 </div>
-
-<script src="/js/pages/settings.js"></script>

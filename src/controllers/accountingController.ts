@@ -4,6 +4,28 @@ import { handleError, sendSuccess, sendError } from "../utils";
 import mongoose from "mongoose";
 
 /**
+ * Ensure all active contacts (Customers, Vendors, Suppliers) have a corresponding Ledger Account
+ */
+export const ensureContactAccounts = async () => {
+    try {
+        const existingAccountContactIds = await Account.distinct("contact");
+        const existingSet = new Set(existingAccountContactIds.map(id => id ? id.toString() : ""));
+        const unlinkedContacts = await Contact.find({ _id: { $nin: Array.from(existingSet) } }).lean();
+        if (unlinkedContacts.length > 0) {
+            const newAccounts = unlinkedContacts.map(contact => ({
+                contact: contact._id,
+                accountName: `${contact.name}'s Ledger`,
+                accountType: contact.contactType === "Customer" ? "Receivable" : "Payable",
+                totalBalance: 0
+            }));
+            await Account.insertMany(newAccounts);
+        }
+    } catch (err) {
+        console.error("Error auto-syncing contact accounts:", err);
+    }
+};
+
+/**
  * Get Overall Financial Summary (Total Payables & Receivables)
  */
 export const getAccountingSummary = async (req: Request, res: Response) => {
@@ -18,18 +40,29 @@ export const getAccountingSummary = async (req: Request, res: Response) => {
 
         accounts.forEach(acc => {
             const balance = acc.totalBalance || 0;
-            if (balance > 0) {
-                formattedSummary.totalPayable += balance;
-            } else if (balance < 0) {
-                formattedSummary.totalReceivable += Math.abs(balance);
+            if (acc.accountType === "Receivable") {
+                if (balance >= 0) {
+                    formattedSummary.totalReceivable += balance;
+                } else {
+                    formattedSummary.totalPayable += Math.abs(balance);
+                }
+            } else if (acc.accountType === "Payable") {
+                if (balance >= 0) {
+                    formattedSummary.totalPayable += balance;
+                } else {
+                    formattedSummary.totalReceivable += Math.abs(balance);
+                }
+            } else {
+                if (balance >= 0) {
+                    formattedSummary.totalReceivable += balance;
+                } else {
+                    formattedSummary.totalPayable += Math.abs(balance);
+                }
             }
         });
 
         // Net Position = Assets (Receivables) - Liabilities (Payables)
-        // If Receivables (They owe us) > Payables (We owe them) -> Positive (Debit/Welfare)
         formattedSummary.netBalance = formattedSummary.totalReceivable - formattedSummary.totalPayable;
-
-        console.log("[Accounting] Summary Re-computed (Balance Based):", formattedSummary);
 
         return sendSuccess(res, formattedSummary, "Accounting summary fetched successfully");
     } catch (error) {
@@ -39,10 +72,11 @@ export const getAccountingSummary = async (req: Request, res: Response) => {
 };
 
 /**
- * Get All Accounts with Contact details
+ * Get All Accounts with Contact details (auto-syncing contacts)
  */
 export const getAllAccounts = async (req: Request, res: Response) => {
     try {
+        await ensureContactAccounts();
         const accounts = await Account.find().populate("contact", "name phone contactType companyName");
         return sendSuccess(res, accounts, "Accounts fetched successfully");
     } catch (error) {
@@ -84,6 +118,47 @@ export const getAccountLedger = async (req: Request, res: Response) => {
         }, { totalTook: 0, totalGave: 0, count: transactions.length });
 
         return sendSuccess(res, { account, transactions, periodStats }, "Ledger fetched successfully");
+    } catch (error) {
+        return handleError(error, res);
+    }
+};
+
+/**
+ * Get General Ledger (All Transactions across all Shop Accounts)
+ */
+export const getAllTransactions = async (req: Request, res: Response) => {
+    try {
+        const { startDate, endDate, transactionType } = req.query;
+
+        const filter: any = {};
+        if (transactionType) filter.transactionType = transactionType;
+
+        if (startDate || endDate) {
+            filter.date = {};
+            if (startDate) filter.date.$gte = new Date(startDate as string);
+            if (endDate) {
+                const end = new Date(endDate as string);
+                end.setHours(23, 59, 59, 999);
+                filter.date.$lte = end;
+            }
+        }
+
+        const transactions = await Transaction.find(filter)
+            .populate({
+                path: "account",
+                select: "accountName accountType contact",
+                populate: { path: "contact", select: "name companyName" }
+            })
+            .populate("tag", "name color")
+            .sort({ date: -1 });
+
+        const periodStats = transactions.reduce((acc, tx) => {
+            if (tx.transactionType === "Credit") acc.totalTook += tx.amount;
+            else acc.totalGave += tx.amount;
+            return acc;
+        }, { totalTook: 0, totalGave: 0, count: transactions.length });
+
+        return sendSuccess(res, { transactions, periodStats }, "General ledger fetched successfully");
     } catch (error) {
         return handleError(error, res);
     }
@@ -309,7 +384,21 @@ export const updateAccount = async (req: Request, res: Response) => {
 export const getContactLedgers = async (req: Request, res: Response) => {
     try {
         const { contactId } = req.params;
-        const accounts = await Account.find({ contact: contactId });
+        let accounts = await Account.find({ contact: contactId });
+
+        if (accounts.length === 0) {
+            const contact = await Contact.findById(contactId);
+            if (contact) {
+                const accountType = contact.contactType === "Customer" ? "Receivable" : "Payable";
+                const newAcc = await Account.create({
+                    contact: contact._id,
+                    accountName: `${contact.name}'s Ledger`,
+                    accountType,
+                    totalBalance: 0
+                });
+                accounts = [newAcc];
+            }
+        }
 
         // Enhance with recent transactions for each account
         const enrichedAccounts = await Promise.all(accounts.map(async (acc) => {

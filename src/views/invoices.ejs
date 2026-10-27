@@ -1,0 +1,350 @@
+<script src="/js/pages/invoices.js"></script>
+
+<div x-data="invoicesData()" x-init="init()" class="space-y-6">
+
+    <!-- Top Action & Title Header -->
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-200 pb-5">
+        <div>
+            <div class="flex items-center gap-2">
+                <h1 class="text-2xl font-bold text-slate-900 tracking-tight">Sales & Billing Ledger</h1>
+                <span class="px-2 py-0.5 bg-indigo-50 text-indigo-700 text-[10px] font-black uppercase rounded tracking-wider border border-indigo-100">ERP Suite</span>
+            </div>
+            <p class="text-xs text-slate-500 mt-1">Manage GST Tax Invoices, Quotations, Receivables, and Fast Collections.</p>
+        </div>
+
+        <div class="flex items-center gap-3">
+            <a href="/invoices/create?type=Quotation"
+                class="px-4 py-2.5 bg-white border border-slate-200 text-slate-700 rounded-xl font-bold text-xs uppercase tracking-wider hover:border-primary-300 hover:text-primary-600 transition-all shadow-sm flex items-center gap-2 active:scale-95">
+                <i class="fas fa-file-signature text-slate-400"></i>
+                <span>Estimate / Quote</span>
+            </a>
+
+            <a href="/invoices/create?type=Invoice"
+                class="px-5 py-2.5 bg-primary-600 text-white rounded-xl font-bold text-xs uppercase tracking-wider hover:bg-primary-700 shadow-md shadow-primary-200 transition-all flex items-center gap-2 active:scale-95">
+                <i class="fas fa-plus"></i>
+                <span>New Invoice</span>
+                <span class="ml-1 text-[9px] px-1.5 py-0.5 bg-primary-700 rounded text-primary-200">Alt+N</span>
+            </a>
+        </div>
+    </div>
+
+    <!-- ERP Metric Summary Bar -->
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <div class="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm">
+            <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest">Total Invoiced (Sales)</p>
+            <div class="flex items-baseline gap-1 mt-2">
+                <span class="text-slate-400 font-bold text-sm">₹</span>
+                <span class="text-2xl font-black text-slate-900 tracking-tight font-mono" x-text="formatNumber(metrics.sales)">0</span>
+            </div>
+            <div class="flex items-center justify-between mt-2 pt-2 border-t border-slate-50 text-[10px] text-slate-400">
+                <span>Total Bills: <strong class="text-slate-700" x-text="metrics.totalInvoices">0</strong></span>
+                <span>GST Tax: <strong class="text-slate-700" x-text="'₹' + formatNumber(metrics.tax)">₹0</strong></span>
+            </div>
+        </div>
+
+        <div class="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm">
+            <p class="text-[9px] font-black text-emerald-600 uppercase tracking-widest">Realized Collections</p>
+            <div class="flex items-baseline gap-1 mt-2">
+                <span class="text-emerald-500 font-bold text-sm">₹</span>
+                <span class="text-2xl font-black text-emerald-600 tracking-tight font-mono" x-text="formatNumber(metrics.collected)">0</span>
+            </div>
+            <div class="flex items-center justify-between mt-2 pt-2 border-t border-slate-50 text-[10px] text-slate-400">
+                <span>Received to Ledger</span>
+                <i class="fas fa-check-double text-emerald-500"></i>
+            </div>
+        </div>
+
+        <div class="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm">
+            <p class="text-[9px] font-black text-rose-500 uppercase tracking-widest">Outstanding Due (Receivables)</p>
+            <div class="flex items-baseline gap-1 mt-2">
+                <span class="text-rose-400 font-bold text-sm">₹</span>
+                <span class="text-2xl font-black text-rose-600 tracking-tight font-mono" x-text="formatNumber(metrics.due)">0</span>
+            </div>
+            <div class="flex items-center justify-between mt-2 pt-2 border-t border-slate-50 text-[10px] text-slate-400">
+                <span>Pending Bills: <strong class="text-rose-600" x-text="metrics.unpaidCount">0</strong></span>
+                <i class="fas fa-clock text-rose-400"></i>
+            </div>
+        </div>
+
+        <div class="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm">
+            <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest">Quotations Pipeline</p>
+            <div class="flex items-baseline gap-1 mt-2">
+                <span class="text-2xl font-black text-indigo-600 tracking-tight font-mono" x-text="metrics.totalQuotations">0</span>
+                <span class="text-xs text-slate-400 font-bold ml-1">Active Quotes</span>
+            </div>
+            <div class="flex items-center justify-between mt-2 pt-2 border-t border-slate-50 text-[10px] text-slate-400">
+                <span>One-click conversion</span>
+                <i class="fas fa-arrow-right-arrow-left text-indigo-400"></i>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filter Control Bar -->
+    <div class="bg-white border border-slate-200 rounded-2xl p-4 shadow-sm space-y-3">
+        <div class="flex flex-col md:flex-row items-center justify-between gap-4">
+            <!-- Tabs -->
+            <div class="flex items-center p-1 bg-slate-100 rounded-xl overflow-x-auto w-full md:w-auto">
+                <button @click="setDocType('')"
+                    :class="filterDocType === '' ? 'bg-white text-slate-900 shadow-sm font-bold' : 'text-slate-600 hover:text-slate-900 font-medium'"
+                    class="px-4 py-1.5 rounded-lg text-xs transition-all whitespace-nowrap">
+                    All Documents
+                </button>
+                <button @click="setDocType('Invoice')"
+                    :class="filterDocType === 'Invoice' ? 'bg-white text-primary-700 shadow-sm font-bold' : 'text-slate-600 hover:text-slate-900 font-medium'"
+                    class="px-4 py-1.5 rounded-lg text-xs transition-all whitespace-nowrap">
+                    Tax Invoices
+                </button>
+                <button @click="setDocType('Quotation')"
+                    :class="filterDocType === 'Quotation' ? 'bg-white text-indigo-700 shadow-sm font-bold' : 'text-slate-600 hover:text-slate-900 font-medium'"
+                    class="px-4 py-1.5 rounded-lg text-xs transition-all whitespace-nowrap">
+                    Quotations / Estimates
+                </button>
+                <button @click="setStatus('Unpaid')"
+                    :class="filterStatus === 'Unpaid' ? 'bg-white text-rose-600 shadow-sm font-bold' : 'text-slate-600 hover:text-slate-900 font-medium'"
+                    class="px-4 py-1.5 rounded-lg text-xs transition-all whitespace-nowrap">
+                    Pending Due
+                </button>
+                <button @click="setStatus('Paid')"
+                    :class="filterStatus === 'Paid' ? 'bg-white text-emerald-600 shadow-sm font-bold' : 'text-slate-600 hover:text-slate-900 font-medium'"
+                    class="px-4 py-1.5 rounded-lg text-xs transition-all whitespace-nowrap">
+                    Fully Paid
+                </button>
+            </div>
+
+            <!-- Search Field -->
+            <div class="relative w-full md:w-80">
+                <i class="fas fa-search absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i>
+                <input type="text" x-model="searchQuery" @input.debounce.300ms="fetchInvoices()"
+                    placeholder="Search by doc #, customer, item..."
+                    class="w-full pl-9 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium outline-none focus:bg-white focus:border-primary-400 transition-all">
+            </div>
+        </div>
+    </div>
+
+    <!-- Invoices & Quotations ERP Table -->
+    <div class="bg-white border border-slate-200 rounded-2xl shadow-sm overflow-hidden">
+        <div class="overflow-x-auto">
+            <table class="w-full text-left text-xs">
+                <thead>
+                    <tr class="bg-slate-50/75 border-b border-slate-200 text-[10px] font-black text-slate-500 uppercase tracking-widest">
+                        <th class="py-3.5 px-4">Doc #</th>
+                        <th class="py-3.5 px-4">Type</th>
+                        <th class="py-3.5 px-4">Date</th>
+                        <th class="py-3.5 px-4">Customer</th>
+                        <th class="py-3.5 px-4 text-right">Taxable</th>
+                        <th class="py-3.5 px-4 text-right">Grand Total</th>
+                        <th class="py-3.5 px-4 text-right">Balance Due</th>
+                        <th class="py-3.5 px-4 text-center">Status</th>
+                        <th class="py-3.5 px-4 text-center">Actions</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100">
+                    <template x-if="loading">
+                        <tr>
+                            <td colspan="9" class="p-12 text-center text-slate-400">
+                                <i class="fas fa-circle-notch fa-spin text-xl text-primary-500 mb-2"></i>
+                                <p class="text-xs font-bold uppercase tracking-widest">Loading documents...</p>
+                            </td>
+                        </tr>
+                    </template>
+
+                    <template x-if="!loading && invoices.length === 0">
+                        <tr>
+                            <td colspan="9" class="p-16 text-center text-slate-400">
+                                <div class="w-12 h-12 bg-slate-100 rounded-2xl flex items-center justify-center mx-auto mb-3 text-slate-400">
+                                    <i class="fas fa-file-invoice text-xl"></i>
+                                </div>
+                                <p class="text-sm font-bold text-slate-700">No documents found</p>
+                                <p class="text-xs text-slate-400 mt-1">Create your first Tax Invoice or Quotation to begin.</p>
+                            </td>
+                        </tr>
+                    </template>
+
+                    <template x-for="inv in invoices" :key="inv._id">
+                        <tr class="hover:bg-slate-50/60 transition-colors">
+                            <!-- Doc Number -->
+                            <td class="py-3.5 px-4">
+                                <a :href="'/invoices/' + inv._id" class="font-mono font-bold text-slate-900 hover:text-primary-600 transition-colors flex items-center gap-1.5">
+                                    <span x-text="inv.docNumber"></span>
+                                    <i class="fas fa-arrow-up-right-from-square text-[9px] text-slate-300"></i>
+                                </a>
+                                <template x-if="inv.serviceTicket">
+                                    <span class="text-[9px] font-bold text-amber-600 block mt-0.5">Linked to Ticket</span>
+                                </template>
+                            </td>
+
+                            <!-- Doc Type -->
+                            <td class="py-3.5 px-4">
+                                <span class="px-2 py-0.5 rounded text-[10px] font-black uppercase tracking-wider"
+                                    :class="inv.docType === 'Invoice' ? 'bg-indigo-50 text-indigo-700 border border-indigo-100' : 'bg-slate-100 text-slate-700 border border-slate-200'"
+                                    x-text="inv.docType"></span>
+                            </td>
+
+                            <!-- Issue Date -->
+                            <td class="py-3.5 px-4 text-slate-600 whitespace-nowrap">
+                                <span x-text="formatDate(inv.issueDate)"></span>
+                            </td>
+
+                            <!-- Customer -->
+                            <td class="py-3.5 px-4">
+                                <div class="font-bold text-slate-900" x-text="inv.customerName"></div>
+                                <div class="text-[10px] text-slate-400 font-mono" x-text="inv.customerPhone || inv.customerGstin || ''"></div>
+                            </td>
+
+                            <!-- Taxable -->
+                            <td class="py-3.5 px-4 text-right font-mono text-slate-600" x-text="'₹' + formatNumber(inv.taxableTotal)"></td>
+
+                            <!-- Grand Total -->
+                            <td class="py-3.5 px-4 text-right font-mono font-bold text-slate-900" x-text="'₹' + formatNumber(inv.grandTotal)"></td>
+
+                            <!-- Balance Due -->
+                            <td class="py-3.5 px-4 text-right font-mono font-bold"
+                                :class="inv.balanceDue > 0 ? 'text-rose-600' : 'text-emerald-600'"
+                                x-text="inv.docType === 'Quotation' ? '—' : ('₹' + formatNumber(inv.balanceDue))"></td>
+
+                            <!-- Status -->
+                            <td class="py-3.5 px-4 text-center">
+                                <span class="px-2.5 py-1 rounded-full text-[9px] font-black uppercase tracking-wider inline-block"
+                                    :class="{
+                                        'bg-emerald-50 text-emerald-700 border border-emerald-200': inv.status === 'Paid',
+                                        'bg-amber-50 text-amber-700 border border-amber-200': inv.status === 'Partially Paid' || inv.status === 'Sent',
+                                        'bg-rose-50 text-rose-700 border border-rose-200': inv.status === 'Unpaid',
+                                        'bg-slate-100 text-slate-600 border border-slate-200': inv.status === 'Draft',
+                                        'bg-indigo-50 text-indigo-700 border border-indigo-200': inv.status === 'Converted' || inv.status === 'Accepted',
+                                        'bg-red-50 text-red-600 border border-red-200': inv.status === 'Cancelled' || inv.status === 'Declined'
+                                    }" x-text="inv.status"></span>
+                            </td>
+
+                            <!-- Action Buttons -->
+                            <td class="py-3.5 px-4 text-center whitespace-nowrap">
+                                <div class="flex items-center justify-center gap-1.5">
+                                    <!-- View/Print -->
+                                    <a :href="'/invoices/' + inv._id" title="View / Print Tax Invoice"
+                                        class="w-7 h-7 rounded-lg bg-slate-50 border border-slate-200 text-slate-600 hover:bg-slate-100 flex items-center justify-center transition-all">
+                                        <i class="fas fa-eye text-xs"></i>
+                                    </a>
+
+                                    <!-- Edit Document -->
+                                    <template x-if="inv.status !== 'Converted' && inv.status !== 'Paid'">
+                                        <a :href="'/invoices/' + inv._id + '/edit'" title="Edit Document"
+                                            class="w-7 h-7 rounded-lg bg-slate-50 border border-slate-200 text-slate-600 hover:bg-slate-100 flex items-center justify-center transition-all">
+                                            <i class="fas fa-pencil text-xs"></i>
+                                        </a>
+                                    </template>
+
+                                    <!-- If Quotation: Convert to Invoice button -->
+                                    <template x-if="inv.docType === 'Quotation' && inv.status !== 'Converted'">
+                                        <button @click="convertQuotation(inv._id)" title="Convert to Tax Invoice"
+                                            class="px-2 h-7 rounded-lg bg-indigo-50 border border-indigo-200 text-indigo-700 hover:bg-indigo-100 text-[10px] font-bold flex items-center gap-1 transition-all">
+                                            <i class="fas fa-bolt text-[9px]"></i>
+                                            <span>Invoice</span>
+                                        </button>
+                                    </template>
+
+                                    <!-- If Invoice with Balance: Record Payment -->
+                                    <template x-if="inv.docType === 'Invoice' && inv.balanceDue > 0">
+                                        <button @click="openPaymentModal(inv)" title="Record Customer Payment"
+                                            class="px-2 h-7 rounded-lg bg-emerald-50 border border-emerald-200 text-emerald-700 hover:bg-emerald-100 text-[10px] font-bold flex items-center gap-1 transition-all">
+                                            <i class="fas fa-indian-rupee-sign text-[9px]"></i>
+                                            <span>Collect</span>
+                                        </button>
+                                    </template>
+
+                                    <!-- Delete -->
+                                    <button @click="deleteDoc(inv)" title="Delete"
+                                        class="w-7 h-7 rounded-lg bg-slate-50 border border-slate-200 text-slate-400 hover:text-rose-600 hover:bg-rose-50 flex items-center justify-center transition-all">
+                                        <i class="fas fa-trash-alt text-xs"></i>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                    </template>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Pagination -->
+        <div class="p-4 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500 bg-slate-50/50">
+            <div>
+                Showing <span class="font-bold text-slate-800" x-text="invoices.length">0</span> of <span class="font-bold text-slate-800" x-text="pagination.total">0</span> documents
+            </div>
+            <div class="flex items-center gap-2">
+                <button @click="prevPage()" :disabled="pagination.page <= 1"
+                    class="px-3 py-1.5 bg-white border border-slate-200 rounded-lg disabled:opacity-40 hover:bg-slate-50 font-bold transition-all">
+                    Previous
+                </button>
+                <span class="px-2 text-slate-600 font-mono" x-text="pagination.page + ' / ' + (pagination.totalPages || 1)"></span>
+                <button @click="nextPage()" :disabled="pagination.page >= pagination.totalPages"
+                    class="px-3 py-1.5 bg-white border border-slate-200 rounded-lg disabled:opacity-40 hover:bg-slate-50 font-bold transition-all">
+                    Next
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Payment Collection Modal -->
+    <div x-show="paymentModal.show" style="display: none;" class="fixed inset-0 z-[100] flex items-center justify-center px-4">
+        <div class="absolute inset-0 bg-black/40 backdrop-blur-sm" @click="paymentModal.show = false"></div>
+        <div class="relative bg-white rounded-3xl shadow-2xl w-full max-w-md p-6 border border-slate-200 animate__animated animate__fadeInUp animate__faster">
+            <div class="flex items-center justify-between border-b border-slate-100 pb-4 mb-4">
+                <div>
+                    <h3 class="text-base font-black text-slate-900">Record Payment</h3>
+                    <p class="text-xs text-slate-400" x-text="'Invoice #' + paymentModal.docNumber"></p>
+                </div>
+                <button @click="paymentModal.show = false" class="text-slate-400 hover:text-slate-600">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+
+            <form @submit.prevent="submitPayment()" class="space-y-4">
+                <div class="bg-slate-50 p-3 rounded-xl border border-slate-100 flex items-center justify-between">
+                    <span class="text-xs font-bold text-slate-500">Total Outstanding Due:</span>
+                    <span class="text-base font-black font-mono text-rose-600" x-text="'₹' + formatNumber(paymentModal.balanceDue)"></span>
+                </div>
+
+                <div class="space-y-1.5">
+                    <label class="text-xs font-bold text-slate-600">Amount Received (₹)</label>
+                    <input type="number" step="0.01" x-model.number="paymentModal.amount" required
+                        class="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl font-mono text-base font-bold outline-none focus:border-primary-500 focus:bg-white">
+                </div>
+
+                <div class="grid grid-cols-2 gap-3">
+                    <div class="space-y-1.5">
+                        <label class="text-xs font-bold text-slate-600">Payment Mode</label>
+                        <select x-model="paymentModal.paymentMode" class="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold outline-none focus:border-primary-500">
+                            <option value="Cash">Cash</option>
+                            <option value="UPI">UPI / QR</option>
+                            <option value="Bank">Bank Transfer</option>
+                            <option value="Cheque">Cheque</option>
+                        </select>
+                    </div>
+
+                    <div class="space-y-1.5">
+                        <label class="text-xs font-bold text-slate-600">Deposit Account</label>
+                        <select x-model="paymentModal.accountId" class="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold outline-none focus:border-primary-500">
+                            <option value="">No Ledger Link</option>
+                            <template x-for="acc in accounts" :key="acc._id">
+                                <option :value="acc._id" x-text="acc.accountName"></option>
+                            </template>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="space-y-1.5">
+                    <label class="text-xs font-bold text-slate-600">Reference / Transaction ID</label>
+                    <input type="text" x-model="paymentModal.reference" placeholder="e.g. UPI Ref, Cheque #"
+                        class="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs outline-none focus:border-primary-500">
+                </div>
+
+                <div class="pt-3 flex gap-2">
+                    <button type="button" @click="paymentModal.show = false" class="flex-1 py-3 bg-slate-100 text-slate-700 rounded-xl font-bold text-xs">
+                        Cancel
+                    </button>
+                    <button type="submit" :disabled="paymentModal.submitting" class="flex-1 py-3 bg-emerald-600 text-white rounded-xl font-bold text-xs hover:bg-emerald-700 shadow-md">
+                        <span x-text="paymentModal.submitting ? 'Recording...' : 'Confirm Payment'"></span>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>

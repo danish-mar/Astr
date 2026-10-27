@@ -1,0 +1,387 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><%= (typeof docTitle !== 'undefined' && docTitle) ? docTitle : 'Print Document' %></title>
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Outfit', 'sans-serif'],
+                        mono: ['Inter', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'sans-serif'],
+                    }
+                }
+            }
+        };
+    </script>
+
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+
+    <!-- Axios -->
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+
+    <style>
+        @page {
+            size: A4;
+            margin: 12mm 15mm;
+        }
+
+        body {
+            font-family: 'Outfit', sans-serif;
+            background-color: #f8fafc;
+            color: #0f172a;
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
+        }
+
+        .font-mono {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif !important;
+            font-variant-numeric: tabular-nums !important;
+            font-feature-settings: 'tnum' 1 !important;
+            letter-spacing: 0.01em;
+        }
+
+        @media print {
+            body {
+                background-color: #ffffff !important;
+                padding: 0 !important;
+                margin: 0 !important;
+            }
+
+            .no-print {
+                display: none !important;
+            }
+
+            .print-card {
+                border: none !important;
+                box-shadow: none !important;
+                padding: 0 !important;
+                margin: 0 !important;
+                max-width: 100% !important;
+                width: 100% !important;
+            }
+        }
+    </style>
+</head>
+
+<body class="p-4 md:p-8">
+
+    <!-- Floating Top Toolbar (Screen only) -->
+    <div class="no-print max-w-4xl mx-auto mb-6 flex items-center justify-between bg-white border border-slate-200 px-6 py-3.5 rounded-2xl shadow-sm">
+        <div class="flex items-center gap-3">
+            <button onclick="window.history.back()" class="w-8 h-8 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-600 flex items-center justify-center transition-all">
+                <i class="fas fa-arrow-left text-xs"></i>
+            </button>
+            <span class="text-xs font-bold text-slate-700">Formal Document Print Preview</span>
+        </div>
+        <div class="flex items-center gap-3">
+            <button onclick="window.print()" class="px-5 py-2 bg-slate-900 text-white hover:bg-slate-800 rounded-xl text-xs font-bold transition-all flex items-center gap-2 shadow-md active:scale-95">
+                <i class="fas fa-print text-xs"></i>
+                <span>Print Document</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- Loading Placeholder -->
+    <div id="loadingIndicator" class="max-w-4xl mx-auto py-24 text-center text-slate-400">
+        <i class="fas fa-circle-notch fa-spin text-2xl text-primary-500 mb-2"></i>
+        <p class="text-xs font-bold tracking-widest uppercase">Rendering Document...</p>
+    </div>
+
+    <!-- Exact Printable Container -->
+    <div id="documentContainer" style="display: none;" class="print-card max-w-4xl mx-auto bg-white border border-slate-200 rounded-3xl p-10 md:p-14 shadow-sm">
+
+        <!-- Top Header: Shop Info (Left) & Document Meta (Right) -->
+        <div class="flex justify-between items-start gap-8">
+            <!-- Left Header -->
+            <div>
+                <h1 id="shopName" class="text-2xl font-black text-slate-950 uppercase tracking-tight">MAMDANI COMPUTERS</h1>
+                <p id="shopAddress" class="text-xs text-slate-600 font-medium mt-1 leading-relaxed">Xyz Street, Aurangabad, Maharashtra - 431001</p>
+                <div class="mt-2 text-xs text-slate-600 space-y-0.5 font-medium">
+                    <p id="shopPhoneRow">Phone: <span id="shopPhone" class="font-semibold text-slate-800">+918989898989</span></p>
+                    <p id="shopEmailRow">Email: <span id="shopEmail" class="text-slate-800">contact@mamdani.com</span></p>
+                    <p id="shopGstinRow" style="display: none;">GSTIN: <span id="shopGstin" class="font-mono font-bold text-slate-900"></span></p>
+                </div>
+            </div>
+
+            <!-- Right Header: Badge & Document Info -->
+            <div class="text-right">
+                <div id="docBadge" class="inline-block bg-slate-950 text-white font-black text-[11px] uppercase tracking-wider px-3.5 py-1.5 rounded-md">
+                    COMMERCIAL QUOTATION
+                </div>
+                <div class="mt-3.5 text-xs text-slate-600 space-y-1">
+                    <p>Doc Number: <strong id="docNumber" class="font-mono text-slate-950">QTN-1001</strong></p>
+                    <p>Issue Date: <strong id="issueDate" class="text-slate-950">06 Oct 2026</strong></p>
+                    <p>Place of Supply: <strong id="placeOfSupply" class="text-slate-950">State</strong></p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Horizontal Divider -->
+        <div class="border-b border-slate-200 mt-6 mb-8"></div>
+
+        <!-- Billed To (Customer Details) Card -->
+        <div class="border border-slate-200 rounded-2xl p-6 mb-8 flex justify-between items-start bg-white">
+            <div>
+                <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2">BILLED TO (CUSTOMER DETAILS)</p>
+                <h3 id="customerName" class="text-sm font-black text-slate-950">Ramesh Kumar</h3>
+                <p id="customerAddress" class="text-xs text-slate-600 mt-1 leading-relaxed">Koramangala, Bangalore</p>
+                <p id="customerPhoneRow" class="text-xs text-slate-700 font-bold mt-1">Phone: <span id="customerPhone">9988776657</span></p>
+            </div>
+
+            <div class="text-right">
+                <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2">CUSTOMER TAX PROFILE</p>
+                <p class="text-xs text-slate-600">State: <strong id="customerState" class="text-slate-950">State</strong></p>
+                <p id="customerGstinRow" style="display: none;" class="text-xs text-slate-600 mt-0.5">GSTIN: <strong id="customerGstin" class="font-mono text-slate-950"></strong></p>
+            </div>
+        </div>
+
+        <!-- Table: Items & Breakdown -->
+        <div class="border border-slate-200 rounded-xl overflow-hidden mb-8">
+            <table class="w-full text-left text-xs border-collapse">
+                <thead>
+                    <tr class="bg-slate-50 border-b border-slate-200 text-[9px] font-black text-slate-500 uppercase tracking-wider">
+                        <th class="py-3 px-3 w-10 text-center border-r border-slate-200">#</th>
+                        <th class="py-3 px-4 border-r border-slate-200">ITEM & DESCRIPTION</th>
+                        <th class="py-3 px-3 w-20 text-center border-r border-slate-200">HSN/SAC</th>
+                        <th class="py-3 px-3 w-14 text-center border-r border-slate-200">QTY</th>
+                        <th class="py-3 px-4 w-28 text-right border-r border-slate-200">RATE (₹)</th>
+                        <th class="py-3 px-4 w-28 text-right border-r border-slate-200">TAXABLE (₹)</th>
+                        <th class="py-3 px-3 w-20 text-center border-r border-slate-200">GST %</th>
+                        <th class="py-3 px-4 w-32 text-right">TOTAL (₹)</th>
+                    </tr>
+                </thead>
+                <tbody id="itemsTableBody" class="divide-y divide-slate-200">
+                    <!-- Populated via JavaScript -->
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Bottom Grid: Terms (Left) & Financial Totals Card (Right) -->
+        <div class="grid grid-cols-1 md:grid-cols-12 gap-8 items-start mb-12">
+            <!-- Left: Terms & Conditions -->
+            <div class="md:col-span-6 space-y-2">
+                <h4 class="text-xs font-black text-slate-700 uppercase tracking-wider">TERMS & CONDITIONS:</h4>
+                <div id="termsContainer" class="text-[11px] text-slate-500 leading-relaxed space-y-1">
+                    <p>1. Goods once sold will not be taken back or exchanged.</p>
+                    <p>2. Warranty is as per manufacturer terms.</p>
+                    <p>3. Payment is due within the stipulated time.</p>
+                </div>
+            </div>
+
+            <!-- Right: Totals Box -->
+            <div class="md:col-span-6 bg-slate-50 border border-slate-200 rounded-2xl p-5 space-y-3">
+                <div class="flex justify-between items-center text-xs text-slate-600 font-medium">
+                    <span>Taxable Subtotal:</span>
+                    <span id="taxableSubtotal" class="font-mono text-slate-800">₹0.00</span>
+                </div>
+
+                <div id="cgstRow" class="flex justify-between items-center text-xs text-slate-600 font-medium">
+                    <span>Central GST (CGST):</span>
+                    <span id="cgstTotal" class="font-mono text-slate-800">₹0.00</span>
+                </div>
+
+                <div id="sgstRow" class="flex justify-between items-center text-xs text-slate-600 font-medium">
+                    <span>State GST (SGST):</span>
+                    <span id="sgstTotal" class="font-mono text-slate-800">₹0.00</span>
+                </div>
+
+                <div id="igstRow" style="display: none;" class="flex justify-between items-center text-xs text-slate-600 font-medium">
+                    <span>Integrated GST (IGST):</span>
+                    <span id="igstTotal" class="font-mono text-slate-800">₹0.00</span>
+                </div>
+
+                <div id="roundOffRow" class="flex justify-between items-center text-xs text-slate-600 font-medium">
+                    <span>Round Off:</span>
+                    <span id="roundOff" class="font-mono text-slate-800">₹0.00</span>
+                </div>
+
+                <div class="border-t-2 border-slate-900 pt-3 flex justify-between items-baseline">
+                    <span class="text-sm font-black text-slate-950 uppercase tracking-wider">Grand Total:</span>
+                    <span id="grandTotal" class="text-xl font-black font-mono text-slate-950">₹0.00</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Document Footer -->
+        <div class="flex justify-between items-end pt-6">
+            <div>
+                <p class="text-[9px] font-black uppercase text-slate-400 tracking-wider">ELECTRONIC GENERATED DOCUMENT</p>
+                <p id="footerPowered" class="text-[10px] text-slate-500 font-medium mt-0.5">Powered by Astr ERP Suite • 6/10/2026</p>
+            </div>
+
+            <div class="text-right">
+                <div class="w-48 border-b-2 border-slate-900 ml-auto mb-1.5"></div>
+                <p class="text-[10px] font-black uppercase text-slate-800 tracking-wider">AUTHORIZED SIGNATORY</p>
+                <p id="signatoryShopName" class="text-[9px] text-slate-400 font-medium">For Mamdani Computers</p>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        (async function() {
+            try {
+                const parts = window.location.pathname.split('/');
+                const id = parts[2]; // /invoices/:id/print
+
+                const token = localStorage.getItem('astr_token');
+                const headers = token ? { Authorization: `Bearer ${token}` } : {};
+
+                const res = await axios.get(`/api/v1/invoices/${id}`, { headers });
+                if (!res.data || !res.data.success) {
+                    throw new Error('Failed to fetch invoice');
+                }
+
+                const { invoice, shop } = res.data.data;
+
+                // Set PDF filename title: Customer Name - Invoice/Quotation Number
+                const pdfTitle = `${invoice.customerName || 'Customer'} - ${invoice.docNumber || 'Document'}`;
+                document.title = pdfTitle;
+
+                // 1. Shop Info
+                document.getElementById('shopName').textContent = shop.shopName || 'MAMDANI COMPUTERS';
+                document.getElementById('shopAddress').textContent = shop.address || 'Shop Address';
+                document.getElementById('shopPhone').textContent = shop.phone || '';
+                document.getElementById('shopEmail').textContent = shop.email || '';
+                document.getElementById('signatoryShopName').textContent = 'For ' + (shop.shopName || 'MAMDANI COMPUTERS');
+
+                if (shop.gstin) {
+                    document.getElementById('shopGstin').textContent = shop.gstin;
+                    document.getElementById('shopGstinRow').style.display = 'block';
+                }
+
+                // 2. Document Meta
+                const isQuotation = invoice.docType === 'Quotation';
+                document.getElementById('docBadge').textContent = isQuotation ? 'COMMERCIAL QUOTATION' : 'TAX INVOICE';
+                document.getElementById('docNumber').textContent = invoice.docNumber;
+                document.title = `${invoice.customerName || 'Customer'} - ${invoice.docNumber || 'Document'}`;
+
+                const issueD = new Date(invoice.issueDate);
+                const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+                const formattedDate = `${String(issueD.getDate()).padStart(2, '0')} ${months[issueD.getMonth()]} ${issueD.getFullYear()}`;
+                document.getElementById('issueDate').textContent = formattedDate;
+                document.getElementById('placeOfSupply').textContent = invoice.customerState || shop.state || 'State';
+
+                // 3. Customer Info
+                document.getElementById('customerName').textContent = invoice.customerName;
+                document.getElementById('customerAddress').textContent = invoice.customerAddress || 'Address';
+                document.getElementById('customerPhone').textContent = invoice.customerPhone || '';
+                document.getElementById('customerState').textContent = invoice.customerState || 'State';
+
+                if (invoice.customerGstin) {
+                    document.getElementById('customerGstin').textContent = invoice.customerGstin;
+                    document.getElementById('customerGstinRow').style.display = 'block';
+                }
+
+                // 4. Items Table
+                const tbody = document.getElementById('itemsTableBody');
+                tbody.innerHTML = '';
+
+                (invoice.items || []).forEach((item, index) => {
+                    const tr = document.createElement('tr');
+                    tr.className = 'text-xs text-slate-800';
+
+                    const rateStr = formatNum(item.unitPrice);
+                    const taxableStr = formatNum(item.taxableAmount);
+                    const totalStr = formatNum(item.total);
+
+                    tr.innerHTML = `
+                        <td class="py-3 px-3 text-center text-slate-400 font-mono border-r border-slate-200">${index + 1}</td>
+                        <td class="py-3 px-4 font-bold text-slate-900 border-r border-slate-200">${escapeHtml(item.description)}</td>
+                        <td class="py-3 px-3 text-center font-mono text-slate-500 border-r border-slate-200">${escapeHtml(item.hsnSac || '—')}</td>
+                        <td class="py-3 px-3 text-center font-mono font-bold text-slate-900 border-r border-slate-200">${item.quantity}</td>
+                        <td class="py-3 px-4 text-right font-mono text-slate-800 border-r border-slate-200">${rateStr}</td>
+                        <td class="py-3 px-4 text-right font-mono text-slate-800 border-r border-slate-200">${taxableStr}</td>
+                        <td class="py-3 px-3 text-center font-mono text-slate-700 border-r border-slate-200">${item.gstRate}%</td>
+                        <td class="py-3 px-4 text-right font-mono font-black text-slate-950">${totalStr}</td>
+                    `;
+                    tbody.appendChild(tr);
+                });
+
+                // 5. Terms
+                const termsText = invoice.terms || shop.invoiceTerms || '';
+                if (termsText) {
+                    const lines = termsText.split('\n').filter(l => l.trim().length > 0);
+                    const tContainer = document.getElementById('termsContainer');
+                    tContainer.innerHTML = '';
+                    lines.forEach(line => {
+                        const p = document.createElement('p');
+                        p.textContent = line;
+                        tContainer.appendChild(p);
+                    });
+                }
+
+                // 6. Totals
+                document.getElementById('taxableSubtotal').textContent = '₹' + formatNum(invoice.taxableTotal);
+
+                if (invoice.igstTotal > 0) {
+                    document.getElementById('igstTotal').textContent = '₹' + formatNum(invoice.igstTotal);
+                    document.getElementById('igstRow').style.display = 'flex';
+                    document.getElementById('cgstRow').style.display = 'none';
+                    document.getElementById('sgstRow').style.display = 'none';
+                } else {
+                    document.getElementById('cgstTotal').textContent = '₹' + formatNum(invoice.cgstTotal);
+                    document.getElementById('sgstTotal').textContent = '₹' + formatNum(invoice.sgstTotal);
+                    document.getElementById('cgstRow').style.display = 'flex';
+                    document.getElementById('sgstRow').style.display = 'flex';
+                    document.getElementById('igstRow').style.display = 'none';
+                }
+
+                const rOff = invoice.roundOff || 0;
+                document.getElementById('roundOff').textContent = (rOff >= 0 ? '+ ₹' : '- ₹') + formatNum(Math.abs(rOff));
+                document.getElementById('grandTotal').textContent = '₹' + formatNum(invoice.grandTotal);
+
+                // Footer date
+                const today = new Date();
+                document.getElementById('footerPowered').textContent = `Powered by Astr ERP Suite • ${today.getDate()}/${today.getMonth() + 1}/${today.getFullYear()}`;
+
+                // Show Container, hide loader
+                document.getElementById('loadingIndicator').style.display = 'none';
+                document.getElementById('documentContainer').style.display = 'block';
+
+                // If user opened with ?autoprint=1
+                const params = new URLSearchParams(window.location.search);
+                if (params.get('autoprint') === '1') {
+                    setTimeout(() => window.print(), 300);
+                }
+
+            } catch (err) {
+                console.error('Print preview failed:', err);
+                document.getElementById('loadingIndicator').innerHTML = `
+                    <div class="text-rose-500 font-bold mb-2"><i class="fas fa-exclamation-triangle"></i> Failed to load document</div>
+                    <p class="text-xs text-slate-400">Please make sure you are logged in and try again.</p>
+                `;
+            }
+        })();
+
+        function formatNum(n) {
+            return Number(n || 0).toLocaleString('en-IN', {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2
+            });
+        }
+
+        function escapeHtml(text) {
+            if (!text) return '';
+            return String(text)
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#039;');
+        }
+    </script>
+</body>
+</html>

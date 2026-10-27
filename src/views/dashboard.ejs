@@ -55,13 +55,54 @@
   <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
     
     <!-- Earnings Chart - Takes 2 columns -->
-    <div class="lg:col-span-2 bg-white border border-slate-200 rounded-lg shadow-sm overflow-hidden">
-      <div class="p-6 border-b border-slate-100">
-        <h3 class="text-lg font-bold text-slate-900">Earnings Trend</h3>
-        <p class="text-xs text-slate-500 mt-1">Last 7 days</p>
+    <div class="lg:col-span-2 bg-white border border-slate-200/90 rounded-xl shadow-sm overflow-hidden flex flex-col">
+      <div class="p-5 sm:p-6 border-b border-slate-100 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div>
+          <div class="flex items-center gap-2.5">
+            <div class="w-9 h-9 rounded-lg bg-primary-50 text-primary-600 flex items-center justify-center font-bold">
+              <i class="fas fa-chart-line text-sm"></i>
+            </div>
+            <div>
+              <h3 class="text-base sm:text-lg font-bold text-slate-900 leading-tight">Earnings Trend</h3>
+              <p class="text-xs text-slate-500">Repairs &amp; retail sales velocity</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="flex items-center gap-3 self-end sm:self-auto">
+          <!-- Quick metrics -->
+          <div class="flex items-center gap-4 px-3 py-1.5 rounded-lg bg-slate-50 border border-slate-100">
+            <div>
+              <span class="block text-[10px] font-semibold uppercase tracking-wider text-slate-400 leading-none">Period Total</span>
+              <span class="text-sm font-bold text-slate-900" x-text="'₹' + formatNumber(trendSummary.total)">₹0</span>
+            </div>
+            <div class="w-px h-6 bg-slate-200"></div>
+            <div>
+              <span class="block text-[10px] font-semibold uppercase tracking-wider text-slate-400 leading-none">Daily Avg</span>
+              <span class="text-sm font-semibold text-slate-600" x-text="'₹' + formatNumber(trendSummary.dailyAverage)">₹0</span>
+            </div>
+          </div>
+
+          <!-- Time range pills -->
+          <div class="inline-flex p-1 bg-slate-100 rounded-lg">
+            <button type="button" 
+              @click="changeTrendRange('7d')"
+              :class="trendRange === '7d' ? 'bg-white text-slate-900 shadow-sm font-semibold' : 'text-slate-500 hover:text-slate-800 font-medium'"
+              class="px-2.5 py-1 text-xs rounded-md transition-all">
+              7D
+            </button>
+            <button type="button" 
+              @click="changeTrendRange('30d')"
+              :class="trendRange === '30d' ? 'bg-white text-slate-900 shadow-sm font-semibold' : 'text-slate-500 hover:text-slate-800 font-medium'"
+              class="px-2.5 py-1 text-xs rounded-md transition-all">
+              30D
+            </button>
+          </div>
+        </div>
       </div>
-      <div class="p-6">
-        <div class="h-80 w-full">
+
+      <div class="p-5 sm:p-6 relative flex-1 flex flex-col justify-center">
+        <div class="h-80 w-full relative">
           <canvas id="revenueChart"></canvas>
         </div>
       </div>
