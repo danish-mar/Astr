@@ -258,26 +258,112 @@
                                         </div>
                                     </template>
 
-                                    <!-- DYNAMIC CARD 2: SERVICE TICKET -->
+                                    <!-- DYNAMIC CARD 2: SINGLE SERVICE TICKET -->
                                     <template x-if="msg.cardType === 'ticket' && msg.cardData">
                                         <div class="border border-slate-200/80 rounded-2xl p-3 bg-slate-50/50 space-y-2">
                                             <div class="flex items-center justify-between pb-1 border-b border-slate-200/60">
                                                 <div class="flex items-center gap-1.5">
-                                                    <span class="w-1.5 h-1.5 rounded-full bg-amber-500"></span>
-                                                    <span class="text-[10px] font-bold uppercase tracking-wider text-slate-700">Ticket Registered</span>
+                                                    <span class="w-1.5 h-1.5 rounded-full"
+                                                        :class="{
+                                                            'bg-amber-500': msg.cardData.status === 'Pending',
+                                                            'bg-blue-500': msg.cardData.status === 'In Progress',
+                                                            'bg-emerald-500': msg.cardData.status === 'Completed',
+                                                            'bg-slate-900': msg.cardData.status === 'Delivered',
+                                                            'bg-rose-500': msg.cardData.status === 'Cancelled',
+                                                            'bg-purple-500': msg.cardData.status === 'Reopened'
+                                                        }"></span>
+                                                    <span class="text-[10px] font-bold uppercase tracking-wider text-slate-700">Service Ticket</span>
                                                     <span class="text-[10px] font-mono font-bold text-slate-900" x-text="'#' + msg.cardData.ticketNumber"></span>
                                                 </div>
-                                                <span class="text-[9px] font-semibold text-amber-700 bg-amber-50 px-2 py-0.5 rounded border border-amber-200" x-text="msg.cardData.status"></span>
+                                                <span class="text-[9px] font-bold px-2 py-0.5 rounded uppercase"
+                                                    :class="{
+                                                        'bg-amber-100 text-amber-700 border border-amber-200/80': msg.cardData.status === 'Pending',
+                                                        'bg-blue-100 text-blue-700 border border-blue-200/80': msg.cardData.status === 'In Progress',
+                                                        'bg-emerald-100 text-emerald-700 border border-emerald-200/80': msg.cardData.status === 'Completed',
+                                                        'bg-slate-900 text-white': msg.cardData.status === 'Delivered',
+                                                        'bg-rose-100 text-rose-700 border border-rose-200/80': msg.cardData.status === 'Cancelled',
+                                                        'bg-purple-100 text-purple-700 border border-purple-200/80': msg.cardData.status === 'Reopened'
+                                                    }" x-text="msg.cardData.status"></span>
+                                            </div>
+
+                                            <div class="text-xs space-y-1">
+                                                <p><span class="text-slate-400">Customer:</span> <strong class="text-slate-800" x-text="msg.cardData.customerName"></strong> <span class="text-slate-400 font-mono text-[11px]" x-show="msg.cardData.customerPhone && msg.cardData.customerPhone !== '—'" x-text="'(' + msg.cardData.customerPhone + ')'"></span></p>
+                                                <p><span class="text-slate-400">Device:</span> <span class="text-slate-800 font-medium" x-text="msg.cardData.deviceDetails"></span></p>
+                                                <p x-show="msg.cardData.serviceCharge > 0"><span class="text-slate-400">Est. Charge:</span> <strong class="text-slate-900 font-mono">₹<span x-text="Number(msg.cardData.serviceCharge).toLocaleString('en-IN')"></span></strong></p>
+                                                <p x-show="msg.cardData.notes && msg.cardData.notes !== '—'"><span class="text-slate-400">Notes:</span> <span class="text-slate-700 font-medium italic" x-text="msg.cardData.notes"></span></p>
+                                                <p x-show="msg.cardData.assignedTechnician && msg.cardData.assignedTechnician !== 'Unassigned'"><span class="text-slate-400">Tech:</span> <span class="text-slate-700" x-text="msg.cardData.assignedTechnician"></span></p>
+                                            </div>
+
+                                            <div class="pt-1.5 border-t border-slate-200/60 flex items-center justify-between">
+                                                <a href="/service-tickets" class="text-[11px] text-slate-400 hover:text-slate-600">All Tickets</a>
+                                                <a :href="'/service-tickets/' + (msg.cardData.id || msg.cardData._id)" class="text-[11px] font-semibold text-violet-600 hover:text-violet-700">Open Ticket Dossier →</a>
+                                            </div>
+                                        </div>
+                                    </template>
+
+                                    <!-- DYNAMIC CARD 2B: MULTIPLE SERVICE TICKETS LIST -->
+                                    <template x-if="msg.cardType === 'tickets' && msg.cardData && msg.cardData.length > 0">
+                                        <div class="border border-slate-200/80 rounded-2xl p-3 bg-slate-50/50 space-y-2">
+                                            <div class="flex items-center justify-between pb-1 border-b border-slate-200/60">
+                                                <div class="flex items-center gap-1.5">
+                                                    <span class="w-1.5 h-1.5 rounded-full bg-blue-500"></span>
+                                                    <span class="text-[10px] font-bold uppercase tracking-wider text-slate-700">Service Tickets (<span x-text="msg.cardData.length"></span>)</span>
+                                                </div>
+                                                <a href="/service-tickets" class="text-[11px] font-semibold text-violet-600 hover:text-violet-700">View All →</a>
+                                            </div>
+
+                                            <div class="divide-y divide-slate-200/60 max-h-72 overflow-y-auto custom-scrollbar">
+                                                <template x-for="t in msg.cardData" :key="t.id || t._id">
+                                                    <div class="py-2.5 space-y-1 text-xs">
+                                                        <div class="flex items-center justify-between">
+                                                            <div class="flex items-center gap-1.5">
+                                                                <span class="font-mono font-bold text-slate-900" x-text="'#' + t.ticketNumber"></span>
+                                                                <span class="text-slate-300">•</span>
+                                                                <span class="font-semibold text-slate-800" x-text="t.customerName"></span>
+                                                            </div>
+                                                            <span class="text-[9px] font-bold px-2 py-0.5 rounded uppercase"
+                                                                :class="{
+                                                                    'bg-amber-100 text-amber-700 border border-amber-200/80': t.status === 'Pending',
+                                                                    'bg-blue-100 text-blue-700 border border-blue-200/80': t.status === 'In Progress',
+                                                                    'bg-emerald-100 text-emerald-700 border border-emerald-200/80': t.status === 'Completed',
+                                                                    'bg-slate-900 text-white': t.status === 'Delivered',
+                                                                    'bg-rose-100 text-rose-700 border border-rose-200/80': t.status === 'Cancelled',
+                                                                    'bg-purple-100 text-purple-700 border border-purple-200/80': t.status === 'Reopened'
+                                                                }" x-text="t.status"></span>
+                                                        </div>
+                                                        <p class="text-slate-700 text-[11px] font-medium" x-text="t.deviceDetails"></p>
+                                                        <div class="flex items-center justify-between text-[10px] text-slate-400 pt-0.5">
+                                                            <span x-show="t.notes && t.notes !== '—'" class="truncate max-w-[220px]" x-text="'Note: ' + t.notes"></span>
+                                                            <span x-show="!t.notes || t.notes === '—'" class="text-slate-400" x-text="t.serviceCharge > 0 ? '₹' + Number(t.serviceCharge).toLocaleString('en-IN') : ''"></span>
+                                                            <a :href="'/service-tickets/' + (t.id || t._id)" class="text-violet-600 hover:text-violet-700 font-semibold ml-auto">Open Dossier →</a>
+                                                        </div>
+                                                    </div>
+                                                </template>
+                                            </div>
+                                        </div>
+                                    </template>
+
+                                    <!-- DYNAMIC CARD 2C: CONTACT CARD -->
+                                    <template x-if="msg.cardType === 'contact' && msg.cardData">
+                                        <div class="border border-slate-200/80 rounded-2xl p-3 bg-slate-50/50 space-y-2">
+                                            <div class="flex items-center justify-between pb-1 border-b border-slate-200/60">
+                                                <div class="flex items-center gap-1.5">
+                                                    <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+                                                    <span class="text-[10px] font-bold uppercase tracking-wider text-slate-700">Contact / Party</span>
+                                                </div>
+                                                <span class="text-[9px] font-semibold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200" x-text="msg.cardData.contactType || 'Customer'"></span>
                                             </div>
 
                                             <div class="text-xs space-y-0.5">
-                                                <p><span class="text-slate-400">Customer:</span> <strong class="text-slate-800" x-text="msg.cardData.customerName"></strong></p>
-                                                <p><span class="text-slate-400">Device:</span> <span class="text-slate-800 font-medium" x-text="msg.cardData.deviceDetails"></span></p>
-                                                <p x-show="msg.cardData.serviceCharge > 0"><span class="text-slate-400">Est. Charge:</span> <strong class="text-slate-900 font-mono">₹<span x-text="Number(msg.cardData.serviceCharge).toLocaleString('en-IN')"></span></strong></p>
+                                                <p><span class="text-slate-400">Name:</span> <strong class="text-slate-800" x-text="msg.cardData.name"></strong></p>
+                                                <p><span class="text-slate-400">Phone:</span> <span class="text-slate-800 font-mono font-medium" x-text="msg.cardData.phone || '—'"></span></p>
+                                                <p x-show="msg.cardData.address"><span class="text-slate-400">Address:</span> <span class="text-slate-700" x-text="msg.cardData.address"></span></p>
+                                                <p x-show="msg.cardData.notes"><span class="text-slate-400">Notes:</span> <span class="text-slate-700 italic" x-text="msg.cardData.notes"></span></p>
                                             </div>
 
-                                            <div class="pt-1.5 border-t border-slate-200/60 flex justify-end">
-                                                <a href="/service-tickets" class="text-[11px] font-semibold text-violet-600 hover:text-violet-700">Open Service Tickets →</a>
+                                            <div class="pt-1.5 border-t border-slate-200/60 flex items-center justify-between text-[11px]">
+                                                <span class="text-slate-400 text-[10px]" x-show="msg.cardData.openTicketsCount !== undefined" x-text="msg.cardData.openTicketsCount + ' active repair(s)'"></span>
+                                                <a href="/contacts" class="font-semibold text-violet-600 hover:text-violet-700 ml-auto">Party List →</a>
                                             </div>
                                         </div>
                                     </template>

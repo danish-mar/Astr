@@ -5,7 +5,7 @@ import aiService from "./aiService";
 
 export interface IAssistantResponse {
     reply: string;
-    cardType: "text" | "products" | "ticket" | "invoice" | "kpis";
+    cardType: "text" | "products" | "ticket" | "tickets" | "contact" | "invoice" | "kpis";
     cardData?: any;
     actionTaken?: string;
 }
@@ -108,6 +108,176 @@ class AssistantService {
     }
 
     /**
+     * Action: Search / Inspect Service Tickets
+     */
+    async searchServiceTickets(params: {
+        query?: string;
+        ticketNumber?: string;
+        status?: string;
+        customerName?: string;
+        limit?: number;
+    }) {
+        const filter: any = {};
+
+        if (params.ticketNumber) {
+            filter.ticketNumber = String(params.ticketNumber).trim();
+        }
+
+        if (params.status && params.status !== "All") {
+            filter.status = params.status;
+        }
+
+        if (params.customerName) {
+            const contacts = await Contact.find({ name: { $regex: params.customerName.trim(), $options: "i" } });
+            const contactIds = contacts.map(c => c._id);
+            filter.customer = { $in: contactIds };
+        }
+
+        if (params.query) {
+            const q = params.query.trim();
+            if (/^\d{6}$/.test(q)) {
+                filter.ticketNumber = q;
+            } else {
+                const contacts = await Contact.find({
+                    $or: [
+                        { name: { $regex: q, $options: "i" } },
+                        { phone: { $regex: q, $options: "i" } }
+                    ]
+                });
+                const contactIds = contacts.map(c => c._id);
+                filter.$or = [
+                    { ticketNumber: { $regex: q, $options: "i" } },
+                    { deviceDetails: { $regex: q, $options: "i" } },
+                    { notes: { $regex: q, $options: "i" } },
+                    { customer: { $in: contactIds } }
+                ];
+            }
+        }
+
+        const limit = Math.min(Number(params.limit) || 10, 25);
+        const tickets = await ServiceTicket.find(filter)
+            .populate("customer", "name phone")
+            .sort({ createdAt: -1, _id: -1 })
+            .limit(limit);
+
+        return tickets.map(t => {
+            const customer = t.customer as any;
+            return {
+                id: t._id,
+                ticketNumber: t.ticketNumber,
+                customerName: customer?.name || "Walk-in Customer",
+                customerPhone: customer?.phone || "—",
+                deviceDetails: t.deviceDetails,
+                status: t.status,
+                serviceCharge: t.serviceCharge || 0,
+                notes: t.notes || "",
+                assignedTechnician: t.assignedTechnician || "Unassigned",
+                createdAt: t.createdAt,
+                updatedAt: t.updatedAt,
+                latestLog: t.logs && t.logs.length > 0 ? t.logs[t.logs.length - 1].label : null
+            };
+        });
+    }
+
+    /**
+     * Action: Create / Register Contact
+     */
+    async createContact(params: {
+        name: string;
+        phone?: string;
+        contactType?: "Customer" | "Vendor";
+        address?: string;
+        gstin?: string;
+        state?: string;
+        notes?: string;
+    }) {
+        if (!params.name || !params.name.trim()) {
+            throw new Error("Contact name is required.");
+        }
+
+        const cleanName = params.name.trim();
+        const cleanPhone = (params.phone || "").trim();
+
+        let contact = null;
+        if (cleanPhone && cleanPhone !== "9999999999") {
+            contact = await Contact.findOne({ phone: cleanPhone });
+        }
+        if (!contact && cleanName && cleanName !== "Walk-in Customer") {
+            contact = await Contact.findOne({ name: { $regex: `^${cleanName}$`, $options: "i" } });
+        }
+
+        if (contact) {
+            if (cleanPhone && (!contact.phone || contact.phone === "9999999999")) contact.phone = cleanPhone;
+            if (params.address) contact.address = params.address;
+            if (params.gstin) contact.gstin = params.gstin;
+            if (params.state) contact.state = params.state;
+            if (params.notes) contact.notes = params.notes;
+            await contact.save();
+        } else {
+            contact = new Contact({
+                name: cleanName,
+                phone: cleanPhone || "9999999999",
+                contactType: params.contactType || "Customer",
+                address: params.address || "",
+                gstin: params.gstin || "",
+                state: params.state || "",
+                notes: params.notes || "",
+            });
+            await contact.save();
+        }
+
+        const openTicketsCount = await ServiceTicket.countDocuments({
+            customer: contact._id,
+            status: { $in: ["Pending", "In Progress"] }
+        });
+
+        return {
+            id: contact._id,
+            name: contact.name,
+            phone: contact.phone,
+            contactType: contact.contactType,
+            address: contact.address || "",
+            notes: contact.notes || "",
+            openTicketsCount
+        };
+    }
+
+    /**
+     * Action: Search Contacts
+     */
+    async searchContacts(params: { query: string; contactType?: string }) {
+        const filter: any = {};
+        if (params.contactType && params.contactType !== "All") {
+            filter.contactType = params.contactType;
+        }
+
+        if (params.query) {
+            const q = params.query.trim();
+            filter.$or = [
+                { name: { $regex: q, $options: "i" } },
+                { phone: { $regex: q, $options: "i" } }
+            ];
+        }
+
+        const contacts = await Contact.find(filter).limit(5);
+        return Promise.all(contacts.map(async c => {
+            const openTicketsCount = await ServiceTicket.countDocuments({
+                customer: c._id,
+                status: { $in: ["Pending", "In Progress"] }
+            });
+            return {
+                id: c._id,
+                name: c.name,
+                phone: c.phone,
+                contactType: c.contactType,
+                address: c.address || "",
+                notes: c.notes || "",
+                openTicketsCount
+            };
+        }));
+    }
+
+    /**
      * Action: Create Service Ticket
      */
     async createServiceTicket(params: {
@@ -161,6 +331,7 @@ class AssistantService {
             deviceDetails: ticket.deviceDetails,
             status: ticket.status,
             serviceCharge: ticket.serviceCharge || 0,
+            notes: ticket.notes || "",
             assignedTechnician: ticket.assignedTechnician || "Unassigned",
         };
     }
@@ -324,10 +495,45 @@ Shop State: ${settings.state || "Default State"}
 Default GST Rate: ${settings.defaultGstRate || 18}%
 Product Categories: ${categoryNames}
 
-Your job is to understand what the user wants and perform ERP operations directly.
+Your job is to understand what the user wants and perform ERP operations directly, or guide the user step-by-step.
 
 AVAILABLE ACTIONS:
-1. "search_products":
+1. "search_service_tickets":
+   Use when the user asks about tickets, repairs, ticket status, notes, available/pending jobs, or inquires about a ticket # or customer.
+   Parameters:
+   - "query": string (optional: search by ticket #, client name, phone, or device description)
+   - "ticketNumber": string (optional: specific 6-digit ticket number)
+   - "status": string (optional: "Pending", "In Progress", "Completed", "Delivered", "Cancelled", "Reopened", or "All")
+   - "customerName": string (optional)
+   - "limit": number (optional, default 10)
+
+2. "create_contact":
+   Use when the user asks to create or register a customer, party, or vendor, or as the first step when onboarding a customer before creating a repair ticket.
+   Parameters:
+   - "name": string (required)
+   - "phone": string (optional)
+   - "contactType": "Customer" or "Vendor" (default "Customer")
+   - "address": string (optional)
+   - "notes": string (optional)
+   - "gstin": string (optional)
+   - "state": string (optional)
+
+3. "search_contacts":
+   Use to search or check if a customer or party already exists.
+   Parameters:
+   - "query": string (required: name or phone)
+
+4. "create_service_ticket":
+   Use when the user wants to log or create a repair ticket / service ticket for a device.
+   Parameters:
+   - "customerName": string (required)
+   - "customerPhone": string (optional)
+   - "deviceDetails": string (required: brand/model and defect/issue description)
+   - "serviceCharge": number (optional: estimated cost)
+   - "notes": string (optional: intake notes/diagnostics)
+   - "assignedTechnician": string (optional)
+
+5. "search_products":
    Use when the user asks for laptops, hardware, parts, or products under a budget or from catalog.
    Parameters:
    - "query": string (e.g. "laptop", "SSD", "Dell", "monitor")
@@ -335,19 +541,10 @@ AVAILABLE ACTIONS:
    - "maxPrice": number (optional, e.g. 50000)
    - "minPrice": number (optional)
 
-2. "create_service_ticket":
-   Use when the user wants to log or create a repair ticket / service ticket for a device.
-   Parameters:
-   - "customerName": string (required)
-   - "customerPhone": string (optional)
-   - "deviceDetails": string (required, brand/model and fault description)
-   - "serviceCharge": number (optional, estimated cost)
-   - "notes": string (optional)
-
-3. "create_invoice_or_quotation":
+6. "create_invoice_or_quotation":
    Use when the user wants to generate a quotation (estimate) or invoice (tax invoice/bill).
    Parameters:
-   - "docType": "Quotation" or "Invoice" (use "Quotation" if user said quote/quotation/estimate, "Invoice" for invoice/bill)
+   - "docType": "Quotation" or "Invoice"
    - "customerName": string (required)
    - "customerPhone": string (optional)
    - "customerAddress": string (optional)
@@ -364,12 +561,19 @@ AVAILABLE ACTIONS:
      ]
    - "notes": string (optional)
 
-4. "get_shop_kpis":
+7. "get_shop_kpis":
    Use when the user asks for dashboard summary, pending repairs, open bills count, etc.
    Parameters: {}
 
-5. null (No action):
-   Use for general questions, clarifications, greetings, or explanations.
+8. null (No action):
+   Use for general conversation, asking clarifying step-by-step questions, or greeting.
+
+STEP-BY-STEP TICKET & CONTACT CONVERSATIONAL PROTOCOL:
+- When a user wants to register a new customer and ticket:
+  1. If contact name or phone is given but device details are missing, register the contact with "create_contact" (or verify it), then ask:
+     "Contact [Name] registered! What device are they bringing in and what is the defect/issue? (You can also mention estimated cost or any notes)."
+  2. If both contact info and device details are provided together, you can create the ticket directly (which links to the contact) or create both.
+  3. When displaying tickets, always state the ticket number, status (Pending/Bench/Ready/Delivered/Cancelled), device details, customer, and any notes present.
 
 IMPORTANT RULES:
 - If prices or quantities are mentioned, parse them accurately.
@@ -379,9 +583,9 @@ IMPORTANT RULES:
 JSON OUTPUT STRUCTURE:
 {
   "thought": "brief reason for chosen action",
-  "action": "search_products" | "create_service_ticket" | "create_invoice_or_quotation" | "get_shop_kpis" | null,
+  "action": "search_service_tickets" | "create_contact" | "search_contacts" | "create_service_ticket" | "search_products" | "create_invoice_or_quotation" | "get_shop_kpis" | null,
   "parameters": { ... },
-  "reply": "Friendly concise confirmation message to user"
+  "reply": "Clear, informative message for the user"
 }`;
 
         const messages: Array<{ role: "system" | "user" | "assistant"; content: string }> = [
@@ -430,6 +634,50 @@ JSON OUTPUT STRUCTURE:
 
         // Dispatch Action
         try {
+            if (action === "search_service_tickets") {
+                const tickets = await this.searchServiceTickets(params);
+                if (tickets.length === 0) {
+                    return {
+                        reply: `No service tickets found${params.query ? ` matching "${params.query}"` : ""}${params.status ? ` with status "${params.status}"` : ""}.`,
+                        cardType: "text",
+                        actionTaken: action,
+                    };
+                }
+                return {
+                    reply: replyText,
+                    cardType: tickets.length === 1 ? "ticket" : "tickets",
+                    cardData: tickets.length === 1 ? tickets[0] : tickets,
+                    actionTaken: action,
+                };
+            }
+
+            if (action === "create_contact") {
+                const contactData = await this.createContact(params);
+                return {
+                    reply: replyText || `Contact "${contactData.name}" has been registered successfully.`,
+                    cardType: "contact",
+                    cardData: contactData,
+                    actionTaken: action,
+                };
+            }
+
+            if (action === "search_contacts") {
+                const contacts = await this.searchContacts(params);
+                if (contacts.length === 0) {
+                    return {
+                        reply: `No contacts found matching "${params.query}".`,
+                        cardType: "text",
+                        actionTaken: action,
+                    };
+                }
+                return {
+                    reply: replyText,
+                    cardType: contacts.length === 1 ? "contact" : "text",
+                    cardData: contacts.length === 1 ? contacts[0] : contacts,
+                    actionTaken: action,
+                };
+            }
+
             if (action === "search_products") {
                 const products = await this.searchProducts(params);
                 if (products.length === 0) {
@@ -497,7 +745,34 @@ JSON OUTPUT STRUCTURE:
     private async fallbackRegexParser(text: string): Promise<IAssistantResponse> {
         const lower = text.toLowerCase();
 
-        // 1. Search products (e.g. "laptops under 50000" or "suggest laptops")
+        // 1. Search tickets (e.g. 6-digit number or "tickets", "pending repairs", "status")
+        const ticketNumMatch = text.match(/\b\d{6}\b/);
+        if (ticketNumMatch || lower.includes("ticket") || lower.includes("repair") || lower.includes("status")) {
+            const ticketNum = ticketNumMatch ? ticketNumMatch[0] : undefined;
+            let status = undefined;
+            if (lower.includes("pending")) status = "Pending";
+            else if (lower.includes("in progress") || lower.includes("bench")) status = "In Progress";
+            else if (lower.includes("completed") || lower.includes("ready")) status = "Completed";
+            else if (lower.includes("delivered")) status = "Delivered";
+            else if (lower.includes("cancelled")) status = "Cancelled";
+
+            const tickets = await this.searchServiceTickets({
+                ticketNumber: ticketNum,
+                status,
+                query: !ticketNum && !status ? text : undefined
+            });
+
+            if (tickets.length > 0) {
+                return {
+                    reply: `Found ${tickets.length} service ticket(s):`,
+                    cardType: tickets.length === 1 ? "ticket" : "tickets",
+                    cardData: tickets.length === 1 ? tickets[0] : tickets,
+                    actionTaken: "search_service_tickets",
+                };
+            }
+        }
+
+        // 2. Search products (e.g. "laptops under 50000" or "suggest laptops")
         const priceMatch = lower.match(/(?:under|below|less than|within)\s*(?:rs\.?|inr|₹)?\s*(\d+)/i);
         if (lower.includes("laptop") || lower.includes("suggest") || lower.includes("catalog") || lower.includes("show me") || priceMatch) {
             const maxPrice = priceMatch ? parseInt(priceMatch[1], 10) : undefined;
@@ -514,7 +789,7 @@ JSON OUTPUT STRUCTURE:
             }
         }
 
-        // 2. Fallback notification
+        // 3. Fallback notification
         return {
             reply: "AI is not configured yet or the provider is offline. Please configure your AI provider (Gemini, OpenAI, or Ollama) in Settings > AI Configuration.",
             cardType: "text",
