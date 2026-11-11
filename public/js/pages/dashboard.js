@@ -24,8 +24,12 @@
         statusChartInstance: null,
         user: { name: 'User' },
         loading: true,
+        initialized: false,
 
         async init() {
+            if (this.initialized) return;
+            this.initialized = true;
+
             const userStr = localStorage.getItem('astr_user');
             if (userStr) {
                 try {
@@ -88,16 +92,32 @@
         },
 
         renderRevenueChart() {
-            const revenueCtx = document.getElementById('revenueChart');
-            if (!revenueCtx || !this.charts.revenueTrend) return;
+            const revenueCanvas = document.getElementById('revenueChart');
+            if (!revenueCanvas || !this.charts.revenueTrend) return;
 
+            const trendData = this.charts.revenueTrend;
+            const values = trendData.map(d => Number(d.total) || 0);
+            const maxVal = Math.max(0, ...values);
+            const suggestedMax = maxVal > 0 ? Math.ceil((maxVal * 1.25) / 1000) * 1000 : 5000;
+            const labels = trendData.map(d => d.label || d._id);
+
+            // Update existing instance smoothly without tearing down canvas
             if (this.revenueChartInstance) {
-                this.revenueChartInstance.destroy();
-                this.revenueChartInstance = null;
+                this.revenueChartInstance.data.labels = labels;
+                this.revenueChartInstance.data.datasets[0].data = values;
+                this.revenueChartInstance.data.datasets[0].pointRadius = this.trendRange === '30d' ? 2.5 : 4.5;
+                if (this.revenueChartInstance.options.scales?.y) {
+                    this.revenueChartInstance.options.scales.y.suggestedMax = suggestedMax;
+                }
+                if (this.revenueChartInstance.options.scales?.x?.ticks) {
+                    this.revenueChartInstance.options.scales.x.ticks.maxTicksLimit = this.trendRange === '30d' ? 8 : 7;
+                }
+                this.revenueChartInstance.update();
+                return;
             }
 
-            const ctx = revenueCtx.getContext('2d');
-            const trendData = this.charts.revenueTrend;
+            const ctx = revenueCanvas.getContext('2d');
+            if (!ctx) return;
 
             // Gradient fill
             const gradient = ctx.createLinearGradient(0, 0, 0, 280);
@@ -105,15 +125,10 @@
             gradient.addColorStop(0.65, 'rgba(124, 58, 237, 0.04)');
             gradient.addColorStop(1, 'rgba(124, 58, 237, 0.0)');
 
-            // Calculate max value for sensible scale boundaries
-            const values = trendData.map(d => Number(d.total) || 0);
-            const maxVal = Math.max(0, ...values);
-            const suggestedMax = maxVal > 0 ? Math.ceil((maxVal * 1.25) / 1000) * 1000 : 5000;
-
-            this.revenueChartInstance = new Chart(ctx, {
+            this.revenueChartInstance = new Chart(revenueCanvas, {
                 type: 'line',
                 data: {
-                    labels: trendData.map(d => d.label || d._id),
+                    labels: labels,
                     datasets: [{
                         label: 'Revenue',
                         data: values,
@@ -238,16 +253,18 @@
         },
 
         renderStatusChart() {
-            const statusCtx = document.getElementById('statusChart');
-            if (!statusCtx || !this.charts.ticketStatus) return;
-
-            if (this.statusChartInstance) {
-                this.statusChartInstance.destroy();
-                this.statusChartInstance = null;
-            }
+            const statusCanvas = document.getElementById('statusChart');
+            if (!statusCanvas || !this.charts.ticketStatus) return;
 
             const labels = this.charts.ticketStatus.map(item => item._id);
             const data = this.charts.ticketStatus.map(item => item.count);
+
+            if (this.statusChartInstance) {
+                this.statusChartInstance.data.labels = labels;
+                this.statusChartInstance.data.datasets[0].data = data;
+                this.statusChartInstance.update();
+                return;
+            }
 
             const colors = {
                 'Pending': '#fbbf24',
@@ -259,7 +276,7 @@
 
             const bgColors = labels.map(status => colors[status] || '#9ca3af');
 
-            this.statusChartInstance = new Chart(statusCtx, {
+            this.statusChartInstance = new Chart(statusCanvas, {
                 type: 'doughnut',
                 data: {
                     labels: labels,
