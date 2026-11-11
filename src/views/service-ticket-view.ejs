@@ -26,7 +26,7 @@
                         }" x-text="ticket?.status || 'Loading...'"></span>
                 </div>
                 <p class="text-xs text-slate-500 mt-0.5">
-                    <span x-text="ticket?.customer?.name || 'Walk-in Client'"></span>
+                    <span x-text="ticket?.customer?.name || 'Walk-in Customer'"></span>
                     <span class="text-slate-300 mx-1.5">•</span>
                     <span>Received: </span><span class="font-medium text-slate-700" x-text="formatDate(ticket?.createdAt)"></span>
                 </p>
@@ -38,7 +38,7 @@
             <button type="button" @click="openWhatsApp()"
                 class="px-3.5 py-2 bg-emerald-50 border border-emerald-200 text-emerald-700 hover:bg-emerald-100 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 active:scale-95 shadow-2xs">
                 <i class="fab fa-whatsapp text-sm"></i>
-                <span>WhatsApp Client</span>
+                <span>WhatsApp Customer</span>
             </button>
 
             <button type="button" @click="window.print()"
@@ -53,8 +53,8 @@
                 <span>Cancel</span>
             </button>
 
-            <button type="button" x-show="ticket?.status === 'Cancelled'" @click="updateStatus('Pending')"
-                class="px-3.5 py-2 bg-white border border-amber-200 text-amber-700 hover:bg-amber-50 rounded-xl text-xs font-bold transition-all shadow-2xs flex items-center gap-1.5 active:scale-95">
+            <button type="button" x-show="ticket?.status === 'Cancelled'" @click="updateStatus('Reopened')"
+                class="px-3.5 py-2 bg-white border border-purple-200 text-purple-700 hover:bg-purple-50 rounded-xl text-xs font-bold transition-all shadow-2xs flex items-center gap-1.5 active:scale-95">
                 <i class="fas fa-rotate-left text-[11px]"></i>
                 <span>Reopen</span>
             </button>
@@ -70,7 +70,7 @@
     <!-- Loading State -->
     <div x-show="loading" class="flex flex-col items-center justify-center py-28 space-y-3">
         <div class="w-10 h-10 border-3 border-slate-200 border-t-primary-600 rounded-full animate-spin"></div>
-        <p class="text-xs font-bold text-slate-400 uppercase tracking-widest">Loading Service Dossier...</p>
+        <p class="text-xs font-bold text-slate-400 uppercase tracking-widest">Loading Ticket Details...</p>
     </div>
 
     <!-- Main Content Grid -->
@@ -86,56 +86,88 @@
                         <div class="w-6 h-6 rounded-md bg-primary-50 text-primary-600 flex items-center justify-center text-xs">
                             <i class="fas fa-arrows-split-up-and-left"></i>
                         </div>
-                        <span class="text-xs font-bold text-slate-900 uppercase tracking-wider font-display">Repair Stage Progression</span>
+                        <span class="text-xs font-bold text-slate-900 uppercase tracking-wider font-display">Repair Status</span>
                     </div>
                     <span class="text-[11px] font-mono font-bold px-2 py-0.5 rounded-md border"
-                        :class="ticket?.status === 'Cancelled' ? 'text-rose-700 bg-rose-50 border-rose-200/80' : 'text-primary-700 bg-primary-50 border-primary-200/60'"
-                        x-text="ticket?.status === 'Cancelled' ? 'Ticket Cancelled' : ticket?.status === 'Reopened' ? 'Ticket Reopened' : `Stage ${getStageIndex(ticket?.status)} of 4`"></span>
+                        :class="{
+                            'text-amber-700 bg-amber-50 border-amber-200/80': ticket?.status === 'Pending',
+                            'text-blue-700 bg-blue-50 border-blue-200/80': ticket?.status === 'In Progress',
+                            'text-emerald-700 bg-emerald-50 border-emerald-200/80': ticket?.status === 'Completed',
+                            'text-slate-700 bg-slate-100 border-slate-300': ticket?.status === 'Delivered',
+                            'text-rose-700 bg-rose-50 border-rose-200/80': ticket?.status === 'Cancelled',
+                            'text-purple-700 bg-purple-50 border-purple-200/80': ticket?.status === 'Reopened'
+                        }"
+                        x-text="ticket?.status === 'Cancelled' ? 'Ticket Cancelled' : ticket?.status === 'Reopened' ? 'Ticket Reopened' : `Stage ${getStageIndex(ticket?.status)} of 4: ${ticket?.status}`"></span>
                 </div>
 
                 <!-- Progress Bar -->
                 <div class="w-full bg-slate-100 rounded-full h-2 overflow-hidden">
                     <div class="h-2 rounded-full transition-all duration-500"
-                        :class="ticket?.status === 'Cancelled' ? 'bg-rose-500' : 'bg-primary-600'"
+                        :class="{
+                            'bg-rose-500': ticket?.status === 'Cancelled',
+                            'bg-purple-500': ticket?.status === 'Reopened',
+                            'bg-amber-500': ticket?.status === 'Pending',
+                            'bg-blue-500': ticket?.status === 'In Progress',
+                            'bg-emerald-500': ticket?.status === 'Completed',
+                            'bg-slate-700': ticket?.status === 'Delivered'
+                        }"
                         :style="`width: ${ticket?.status === 'Cancelled' ? 100 : getStagePercent(ticket?.status)}%`"></div>
                 </div>
 
-                <!-- 4 Step Buttons -->
-                <div class="grid grid-cols-4 gap-2 pt-1">
+                <!-- Status Buttons (All Available Statuses) -->
+                <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2 pt-1">
                     <button type="button" @click="updateStatus('Pending')"
-                        class="p-2.5 rounded-xl text-center transition-all flex flex-col items-center gap-1 border"
+                        class="p-2.5 rounded-xl text-center transition-all flex flex-col items-center gap-1 border active:scale-95"
                         :class="ticket?.status === 'Pending' 
-                            ? 'bg-amber-50 border-amber-300 text-amber-800 font-bold shadow-xs' 
+                            ? 'bg-amber-50 border-amber-300 text-amber-800 font-bold shadow-xs ring-1 ring-amber-300' 
                             : 'bg-slate-50/70 hover:bg-slate-100 border-slate-200/70 text-slate-600'">
                         <i class="fas fa-inbox text-xs" :class="ticket?.status === 'Pending' ? 'text-amber-600' : 'text-slate-400'"></i>
                         <span class="text-[11px]">1. Intake</span>
                     </button>
 
                     <button type="button" @click="updateStatus('In Progress')"
-                        class="p-2.5 rounded-xl text-center transition-all flex flex-col items-center gap-1 border"
+                        class="p-2.5 rounded-xl text-center transition-all flex flex-col items-center gap-1 border active:scale-95"
                         :class="ticket?.status === 'In Progress' 
-                            ? 'bg-blue-50 border-blue-300 text-blue-800 font-bold shadow-xs' 
+                            ? 'bg-blue-50 border-blue-300 text-blue-800 font-bold shadow-xs ring-1 ring-blue-300' 
                             : 'bg-slate-50/70 hover:bg-slate-100 border-slate-200/70 text-slate-600'">
                         <i class="fas fa-screwdriver-wrench text-xs" :class="ticket?.status === 'In Progress' ? 'text-blue-600 animate-pulse' : 'text-slate-400'"></i>
                         <span class="text-[11px]">2. Bench</span>
                     </button>
 
                     <button type="button" @click="updateStatus('Completed')"
-                        class="p-2.5 rounded-xl text-center transition-all flex flex-col items-center gap-1 border"
+                        class="p-2.5 rounded-xl text-center transition-all flex flex-col items-center gap-1 border active:scale-95"
                         :class="ticket?.status === 'Completed' 
-                            ? 'bg-emerald-50 border-emerald-300 text-emerald-800 font-bold shadow-xs' 
+                            ? 'bg-emerald-50 border-emerald-300 text-emerald-800 font-bold shadow-xs ring-1 ring-emerald-300' 
                             : 'bg-slate-50/70 hover:bg-slate-100 border-slate-200/70 text-slate-600'">
                         <i class="fas fa-circle-check text-xs" :class="ticket?.status === 'Completed' ? 'text-emerald-600' : 'text-slate-400'"></i>
                         <span class="text-[11px]">3. Ready</span>
                     </button>
 
                     <button type="button" @click="updateStatus('Delivered')"
-                        class="p-2.5 rounded-xl text-center transition-all flex flex-col items-center gap-1 border"
+                        class="p-2.5 rounded-xl text-center transition-all flex flex-col items-center gap-1 border active:scale-95"
                         :class="ticket?.status === 'Delivered' 
-                            ? 'bg-slate-100 border-slate-400 text-slate-900 font-bold shadow-xs' 
+                            ? 'bg-slate-100 border-slate-400 text-slate-900 font-bold shadow-xs ring-1 ring-slate-400' 
                             : 'bg-slate-50/70 hover:bg-slate-100 border-slate-200/70 text-slate-600'">
                         <i class="fas fa-box text-xs" :class="ticket?.status === 'Delivered' ? 'text-slate-900' : 'text-slate-400'"></i>
                         <span class="text-[11px]">4. Delivered</span>
+                    </button>
+
+                    <button type="button" @click="updateStatus('Cancelled')"
+                        class="p-2.5 rounded-xl text-center transition-all flex flex-col items-center gap-1 border active:scale-95"
+                        :class="ticket?.status === 'Cancelled' 
+                            ? 'bg-rose-50 border-rose-300 text-rose-800 font-bold shadow-xs ring-1 ring-rose-300' 
+                            : 'bg-slate-50/70 hover:bg-slate-100 border-slate-200/70 text-slate-600'">
+                        <i class="fas fa-ban text-xs" :class="ticket?.status === 'Cancelled' ? 'text-rose-600' : 'text-slate-400'"></i>
+                        <span class="text-[11px]">Cancelled</span>
+                    </button>
+
+                    <button type="button" @click="updateStatus('Reopened')"
+                        class="p-2.5 rounded-xl text-center transition-all flex flex-col items-center gap-1 border active:scale-95"
+                        :class="ticket?.status === 'Reopened' 
+                            ? 'bg-purple-50 border-purple-300 text-purple-800 font-bold shadow-xs ring-1 ring-purple-300' 
+                            : 'bg-slate-50/70 hover:bg-slate-100 border-slate-200/70 text-slate-600'">
+                        <i class="fas fa-rotate-left text-xs" :class="ticket?.status === 'Reopened' ? 'text-purple-600' : 'text-slate-400'"></i>
+                        <span class="text-[11px]">Reopened</span>
                     </button>
                 </div>
 
@@ -145,8 +177,8 @@
                         <i class="fas fa-circle-exclamation text-rose-600 text-sm"></i>
                         <span>This service ticket is currently <strong>Cancelled</strong>.</span>
                     </span>
-                    <button type="button" @click="updateStatus('Pending')" class="px-3 py-1 bg-white border border-rose-300 text-rose-700 hover:bg-rose-100 rounded-lg font-bold text-[11px] transition-all shadow-2xs">
-                        Reopen to Intake
+                    <button type="button" @click="updateStatus('Reopened')" class="px-3 py-1 bg-white border border-rose-300 text-rose-700 hover:bg-rose-100 rounded-lg font-bold text-[11px] transition-all shadow-2xs">
+                        Reopen Ticket
                     </button>
                 </div>
             </div>
@@ -159,8 +191,8 @@
                             <i :class="getDeviceIcon(ticket?.deviceDetails)"></i>
                         </div>
                         <div>
-                            <h2 class="text-base font-bold text-slate-900 font-display">Hardware Diagnosis & Description</h2>
-                            <p class="text-xs text-slate-500">Defect manifestation documented during intake</p>
+                            <h2 class="text-base font-bold text-slate-900 font-display">Device & Problem Details</h2>
+                            <p class="text-xs text-slate-500">Issue reported by customer</p>
                         </div>
                     </div>
                     <span class="text-xs font-bold px-2.5 py-1 bg-slate-100 text-slate-700 rounded-lg uppercase tracking-wider"
@@ -169,13 +201,13 @@
 
                 <div class="space-y-4">
                     <div>
-                        <label class="block text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2">Device & Job Description</label>
+                        <label class="block text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2">Reported Problem / Description</label>
                         <div class="p-4 bg-slate-50/80 border border-slate-200/80 rounded-xl text-sm font-semibold text-slate-900 leading-relaxed"
                             x-text="ticket?.deviceDetails"></div>
                     </div>
 
                     <div x-show="ticket?.notes">
-                        <label class="block text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2">Internal Workshop Remarks</label>
+                        <label class="block text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2">Technician Notes</label>
                         <div class="p-4 bg-amber-50/40 border border-amber-200/70 rounded-xl text-xs text-slate-700 italic leading-relaxed"
                             x-text="ticket?.notes"></div>
                     </div>
@@ -199,9 +231,9 @@
                         </div>
 
                         <div class="p-3 bg-slate-50/70 rounded-xl border border-slate-200/60">
-                            <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400 block mb-0.5">Job Reference</span>
+                            <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400 block mb-0.5">Ticket Number</span>
                             <div class="flex items-center justify-between mt-0.5">
-                                <span class="font-mono text-xs font-bold text-primary-600" x-text="'TAG #' + ticket?.ticketNumber"></span>
+                                <span class="font-mono text-xs font-bold text-primary-600" x-text="'#' + ticket?.ticketNumber"></span>
                                 <button type="button" @click="copyTicketNumber(ticket?.ticketNumber)" class="text-slate-400 hover:text-slate-700 text-xs">
                                     <i class="fas fa-copy"></i>
                                 </button>
@@ -211,7 +243,7 @@
                 </div>
             </div>
 
-            <!-- 2.5 External Workshop / Outsourced Repair Card -->
+            <!-- 2.5 Outside Workshop Repair Card -->
             <div class="bg-white border border-slate-200/90 rounded-2xl p-6 shadow-2xs space-y-5">
                 <div class="flex items-center justify-between border-b border-slate-100 pb-4">
                     <div class="flex items-center gap-3">
@@ -220,7 +252,7 @@
                         </div>
                         <div>
                             <div class="flex items-center gap-2">
-                                <h2 class="text-base font-bold text-slate-900 font-display">External Workshop / Outsourced Repair</h2>
+                                <h2 class="text-base font-bold text-slate-900 font-display">Outside Workshop Repair</h2>
                                 <span x-show="ticket?.outsourcedRepair?.isOutsourced"
                                     class="px-2 py-0.5 rounded text-[10px] font-black uppercase tracking-wider"
                                     :class="{
@@ -228,9 +260,9 @@
                                         'bg-slate-100 text-slate-700 border border-slate-200': ticket?.outsourcedRepair?.custodyLocation === 'In-House',
                                         'bg-emerald-50 text-emerald-700 border border-emerald-200': ticket?.outsourcedRepair?.custodyLocation === 'Received Back'
                                     }"
-                                    x-text="ticket?.outsourcedRepair?.custodyLocation === 'At Partner Shop' ? 'At External Shop' : (ticket?.outsourcedRepair?.custodyLocation || 'In-House')"></span>
+                                    x-text="ticket?.outsourcedRepair?.custodyLocation === 'At Partner Shop' ? 'At Outside Shop' : (ticket?.outsourcedRepair?.custodyLocation === 'Received Back' ? 'Received Back' : 'In Our Shop')"></span>
                             </div>
-                            <p class="text-xs text-slate-500">Track device custody location & partner diagnostic outcome</p>
+                            <p class="text-xs text-slate-500">Track repairs sent to outside workshop or partner lab</p>
                         </div>
                     </div>
                     <button type="button" @click="openOutsourceModal()"
@@ -239,7 +271,7 @@
                             ? 'bg-purple-50 border-purple-200 text-purple-700 hover:bg-purple-100' 
                             : 'bg-white border-slate-200 text-slate-700 hover:border-purple-300 hover:text-purple-600'">
                         <i class="fas" :class="ticket?.outsourcedRepair?.isOutsourced ? 'fa-sliders' : 'fa-plus'"></i>
-                        <span x-text="ticket?.outsourcedRepair?.isOutsourced ? 'Manage Tracking' : 'Send to 3rd-Party'"></span>
+                        <span x-text="ticket?.outsourcedRepair?.isOutsourced ? 'Manage Outside Repair' : 'Send to Outside Shop'"></span>
                     </button>
                 </div>
 
@@ -250,14 +282,14 @@
                             <i class="fas fa-warehouse"></i>
                         </div>
                         <div>
-                            <h4 class="text-xs font-bold text-slate-800">Current Custody: In-House Workshop</h4>
-                            <p class="text-[11px] text-slate-400">Device is handled directly by your internal technicians.</p>
+                            <h4 class="text-xs font-bold text-slate-800">Device Location: In Our Shop</h4>
+                            <p class="text-[11px] text-slate-400">Device is handled directly by our technicians.</p>
                         </div>
                     </div>
                     <button type="button" @click="openOutsourceModal()"
                         class="px-3.5 py-1.5 bg-slate-900 hover:bg-slate-800 text-white rounded-lg text-xs font-bold transition-all shadow-xs flex items-center gap-1.5 shrink-0">
                         <i class="fas fa-arrow-up-right-from-square text-[10px]"></i>
-                        <span>Dispatch to External Shop</span>
+                        <span>Send to Outside Shop</span>
                     </button>
                 </div>
 
@@ -266,8 +298,8 @@
                     <!-- 1. Physical Custody Stepper / Pills -->
                     <div>
                         <div class="flex items-center justify-between mb-2">
-                            <label class="block text-[10px] font-black uppercase tracking-widest text-slate-400">1. Physical Custody Location ("Where is it?")</label>
-                            <span class="text-[11px] text-slate-500 font-medium" x-text="ticket?.outsourcedRepair?.custodyLocation === 'At Partner Shop' ? 'Currently at external shop' : (ticket?.outsourcedRepair?.custodyLocation === 'Received Back' ? 'Returned to your workshop' : 'At internal bench')"></span>
+                            <label class="block text-[10px] font-black uppercase tracking-widest text-slate-400">1. Device Location</label>
+                            <span class="text-[11px] text-slate-500 font-medium" x-text="ticket?.outsourcedRepair?.custodyLocation === 'At Partner Shop' ? 'Currently at outside shop' : (ticket?.outsourcedRepair?.custodyLocation === 'Received Back' ? 'Returned to our shop' : 'In our shop')"></span>
                         </div>
                         <div class="grid grid-cols-3 gap-2">
                             <!-- In-House -->
@@ -277,7 +309,7 @@
                                     ? 'bg-slate-100 border-slate-400 text-slate-900 font-bold shadow-xs'
                                     : 'bg-slate-50/70 hover:bg-slate-100 border-slate-200/70 text-slate-600'">
                                 <i class="fas fa-warehouse text-xs" :class="ticket?.outsourcedRepair?.custodyLocation === 'In-House' ? 'text-slate-800' : 'text-slate-400'"></i>
-                                <span class="text-[11px]">Still in Shop</span>
+                                <span class="text-[11px]">In Our Shop</span>
                             </button>
 
                             <!-- At Partner Shop -->
@@ -287,7 +319,7 @@
                                     ? 'bg-purple-50 border-purple-400 text-purple-900 font-bold shadow-xs ring-1 ring-purple-300'
                                     : 'bg-slate-50/70 hover:bg-slate-100 border-slate-200/70 text-slate-600'">
                                 <i class="fas fa-truck-fast text-xs" :class="ticket?.outsourcedRepair?.custodyLocation === 'At Partner Shop' ? 'text-purple-600 animate-pulse' : 'text-slate-400'"></i>
-                                <span class="text-[11px]">Still There</span>
+                                <span class="text-[11px]">At Outside Shop</span>
                             </button>
 
                             <!-- Received Back -->
@@ -297,15 +329,15 @@
                                     ? 'bg-emerald-50 border-emerald-400 text-emerald-900 font-bold shadow-xs'
                                     : 'bg-slate-50/70 hover:bg-slate-100 border-slate-200/70 text-slate-600'">
                                 <i class="fas fa-box-check text-xs" :class="ticket?.outsourcedRepair?.custodyLocation === 'Received Back' ? 'text-emerald-600' : 'text-slate-400'"></i>
-                                <span class="text-[11px]">Given Here</span>
+                                <span class="text-[11px]">Back in Shop</span>
                             </button>
                         </div>
                     </div>
 
-                    <!-- 2. Diagnostic Progress & Outcome ("repaired, not repaired, cant repair") -->
+                    <!-- 2. Diagnostic Progress & Outcome -->
                     <div>
                         <div class="flex items-center justify-between mb-2">
-                            <label class="block text-[10px] font-black uppercase tracking-widest text-slate-400">2. External Diagnostic Progress & Outcome</label>
+                            <label class="block text-[10px] font-black uppercase tracking-widest text-slate-400">2. Outside Repair Status</label>
                             <span class="text-[11px] font-mono font-bold"
                                 :class="{
                                     'text-blue-600': ticket?.outsourcedRepair?.repairOutcome === 'In Progress' || ticket?.outsourcedRepair?.repairOutcome === 'Pending',
@@ -313,7 +345,7 @@
                                     'text-rose-600': ticket?.outsourcedRepair?.repairOutcome === 'Cant Repair',
                                     'text-amber-600': ticket?.outsourcedRepair?.repairOutcome === 'Not Repaired'
                                 }"
-                                x-text="ticket?.outsourcedRepair?.repairOutcome === 'Cant Repair' ? 'CAN\'T REPAIR' : (ticket?.outsourcedRepair?.repairOutcome || 'PENDING')"></span>
+                                x-text="ticket?.outsourcedRepair?.repairOutcome === 'Cant Repair' ? 'CANNOT REPAIR' : (ticket?.outsourcedRepair?.repairOutcome || 'PENDING')"></span>
                         </div>
                         <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
                             <!-- In Progress / Diagnosing -->
@@ -323,7 +355,7 @@
                                     ? 'bg-blue-50 border-blue-400 text-blue-900 font-bold shadow-xs'
                                     : 'bg-slate-50/70 hover:bg-slate-100 border-slate-200/70 text-slate-600'">
                                 <i class="fas fa-magnifying-glass text-xs" :class="ticket?.outsourcedRepair?.repairOutcome === 'In Progress' ? 'text-blue-600' : 'text-slate-400'"></i>
-                                <span class="text-[11px]">In Diagnostic</span>
+                                <span class="text-[11px]">Diagnosing</span>
                             </button>
 
                             <!-- Repaired -->
@@ -353,7 +385,7 @@
                                     ? 'bg-rose-50 border-rose-400 text-rose-900 font-bold shadow-xs ring-1 ring-rose-300'
                                     : 'bg-slate-50/70 hover:bg-slate-100 border-slate-200/70 text-slate-600'">
                                 <i class="fas fa-ban text-xs" :class="ticket?.outsourcedRepair?.repairOutcome === 'Cant Repair' ? 'text-rose-600' : 'text-slate-400'"></i>
-                                <span class="text-[11px]">Can't Repair</span>
+                                <span class="text-[11px]">Cannot Repair</span>
                             </button>
                         </div>
                     </div>
@@ -362,7 +394,7 @@
                     <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-1">
                         <!-- Partner Name & Phone -->
                         <div class="p-3 bg-purple-50/40 rounded-xl border border-purple-200/60">
-                            <span class="text-[10px] font-bold uppercase tracking-wider text-purple-600 block mb-0.5">Partner Workshop</span>
+                            <span class="text-[10px] font-bold uppercase tracking-wider text-purple-600 block mb-0.5">Outside Workshop</span>
                             <div class="flex items-center justify-between">
                                 <span class="text-xs font-bold text-slate-900 truncate" x-text="ticket?.outsourcedRepair?.partnerShopName || 'Not Assigned'"></span>
                                 <a x-show="ticket?.outsourcedRepair?.partnerContact" :href="`tel:${ticket?.outsourcedRepair?.partnerContact}`" class="text-purple-600 hover:text-purple-800 text-xs">
@@ -374,7 +406,7 @@
 
                         <!-- Job / RMA Reference # -->
                         <div class="p-3 bg-slate-50/70 rounded-xl border border-slate-200/60">
-                            <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400 block mb-0.5">Partner Job / RMA Ref</span>
+                            <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400 block mb-0.5">Partner Reference #</span>
                             <div class="flex items-center justify-between">
                                 <span class="font-mono text-xs font-bold text-slate-800 truncate" x-text="ticket?.outsourcedRepair?.externalJobNumber || '—'"></span>
                                 <button type="button" x-show="ticket?.outsourcedRepair?.externalJobNumber" @click="copyTicketNumber(ticket?.outsourcedRepair?.externalJobNumber)" class="text-slate-400 hover:text-slate-700 text-xs">
@@ -386,7 +418,7 @@
 
                         <!-- Vendor Cost & Expected Return -->
                         <div class="p-3 bg-slate-50/70 rounded-xl border border-slate-200/60">
-                            <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400 block mb-0.5">Partner Fee & Return ETA</span>
+                            <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400 block mb-0.5">Partner Cost & Return Date</span>
                             <div class="flex items-center justify-between">
                                 <span class="font-mono text-xs font-bold text-slate-800" x-text="'₹' + formatCurrency(ticket?.outsourcedRepair?.vendorCost)"></span>
                                 <span class="text-[10px] font-semibold text-slate-500" x-text="ticket?.outsourcedRepair?.expectedReturnDate ? ('ETA ' + formatDate(ticket?.outsourcedRepair?.expectedReturnDate)) : 'No ETA'"></span>
@@ -397,13 +429,13 @@
 
                     <!-- Partner Remarks -->
                     <div x-show="ticket?.outsourcedRepair?.notes" class="p-3 bg-slate-50 border border-slate-200/80 rounded-xl text-xs text-slate-700">
-                        <span class="text-[10px] font-black uppercase tracking-widest text-slate-400 block mb-1">Partner Workshop Remarks</span>
+                        <span class="text-[10px] font-black uppercase tracking-widest text-slate-400 block mb-1">Partner Notes</span>
                         <p class="italic leading-relaxed" x-text="ticket?.outsourcedRepair?.notes"></p>
                     </div>
                 </div>
             </div>
 
-            <!-- 3. Activity Timeline -->
+            <!-- 3. Activity History -->
             <div class="bg-white border border-slate-200/90 rounded-2xl p-6 shadow-2xs space-y-5">
                 <div class="flex items-center justify-between border-b border-slate-100 pb-4">
                     <div class="flex items-center gap-2.5">
@@ -411,12 +443,12 @@
                             <i class="fas fa-timeline"></i>
                         </div>
                         <div>
-                            <h2 class="text-sm font-bold text-slate-900 font-display">Activity & Service Log</h2>
-                            <p class="text-[11px] text-slate-400">Audit trail of ticket updates</p>
+                            <h2 class="text-sm font-bold text-slate-900 font-display">Activity History</h2>
+                            <p class="text-[11px] text-slate-400">History of updates on this ticket</p>
                         </div>
                     </div>
                     <span class="text-[10px] font-mono text-slate-500 font-bold bg-slate-100 px-2.5 py-1 rounded-lg"
-                        x-text="`${ticket?.logs?.length || 0} Events Logged`"></span>
+                        x-text="`${ticket?.logs?.length || 0} Events`"></span>
                 </div>
 
                 <div class="relative pl-6 space-y-4 before:absolute before:left-2 before:top-2 before:bottom-2 before:w-0.5 before:bg-slate-200 text-xs">
@@ -436,17 +468,17 @@
             </div>
         </div>
 
-        <!-- Right Column: Customer Dossier & Financial Ledger (4 cols) -->
+        <!-- Right Column: Customer Details & Billing (4 cols) -->
         <div class="lg:col-span-4 space-y-5">
             
-            <!-- Customer Dossier -->
+            <!-- Customer Details -->
             <div class="bg-white border border-slate-200/90 rounded-2xl p-6 shadow-2xs space-y-4">
                 <div class="flex items-center justify-between border-b border-slate-100 pb-3.5">
                     <div class="flex items-center gap-2">
                         <div class="w-6 h-6 rounded-md bg-blue-50 text-blue-600 flex items-center justify-center text-xs">
                             <i class="fas fa-user-check"></i>
                         </div>
-                        <h3 class="text-xs font-bold text-slate-900 uppercase tracking-wider font-display">Client Dossier</h3>
+                        <h3 class="text-xs font-bold text-slate-900 uppercase tracking-wider font-display">Customer Details</h3>
                     </div>
                     <a x-show="ticket?.customer?._id" :href="`/contacts?id=${ticket?.customer?._id}`"
                         class="text-[11px] font-bold text-primary-600 hover:text-primary-700 flex items-center gap-1">
@@ -459,7 +491,7 @@
                     <div class="w-12 h-12 rounded-2xl bg-primary-100 text-primary-700 font-black text-base flex items-center justify-center shadow-2xs shrink-0"
                         x-text="ticket?.customer?.name ? ticket.customer.name.charAt(0).toUpperCase() : 'C'"></div>
                     <div>
-                        <h4 class="text-sm font-bold text-slate-900 font-display" x-text="ticket?.customer?.name || 'Walk-in Client'"></h4>
+                        <h4 class="text-sm font-bold text-slate-900 font-display" x-text="ticket?.customer?.name || 'Walk-in Customer'"></h4>
                         <p class="text-xs font-mono text-slate-500 mt-0.5" x-text="ticket?.customer?.phone || 'No phone'"></p>
                         <p x-show="ticket?.customer?.companyName" class="text-[11px] text-slate-400" x-text="ticket?.customer?.companyName"></p>
                     </div>
@@ -480,22 +512,22 @@
                 </div>
             </div>
 
-            <!-- Financial Assessment & Billing -->
+            <!-- Billing & Cost -->
             <div class="bg-white border border-slate-200/90 rounded-2xl p-6 shadow-2xs space-y-4">
                 <div class="flex items-center justify-between border-b border-slate-100 pb-3.5">
                     <div class="flex items-center gap-2">
                         <div class="w-6 h-6 rounded-md bg-emerald-50 text-emerald-600 flex items-center justify-center text-xs">
                             <i class="fas fa-wallet"></i>
                         </div>
-                        <h3 class="text-xs font-bold text-slate-900 uppercase tracking-wider font-display">Financial Assessment</h3>
+                        <h3 class="text-xs font-bold text-slate-900 uppercase tracking-wider font-display">Billing & Cost</h3>
                     </div>
-                    <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Accounting Synced</span>
+                    <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Accounts Linked</span>
                 </div>
 
                 <!-- Charge Box -->
                 <div class="p-4 bg-slate-50 border border-slate-200/80 rounded-xl space-y-3">
                     <div>
-                        <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400 block mb-1">Service Charge (Estimate)</span>
+                        <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400 block mb-1">Service Charge</span>
                         <div class="flex items-baseline gap-1.5 font-mono">
                             <span class="text-slate-400 font-bold text-lg">₹</span>
                             <span class="text-3xl font-extrabold text-slate-900 tracking-tight"
@@ -504,11 +536,11 @@
                     </div>
 
                     <div class="pt-2.5 border-t border-slate-200/70 flex items-center justify-between text-xs">
-                        <span class="text-slate-500 font-medium">Ledger Status:</span>
+                        <span class="text-slate-500 font-medium">Payment Status:</span>
                         <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-semibold"
                             :class="isSettled ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700'">
                             <span class="w-1.5 h-1.5 rounded-full" :class="isSettled ? 'bg-emerald-500' : 'bg-amber-500'"></span>
-                            <span x-text="isSettled ? 'Settled in Ledger' : 'Outstanding / Pending'"></span>
+                            <span x-text="isSettled ? 'Paid' : 'Pending Payment'"></span>
                         </span>
                     </div>
                 </div>
@@ -549,8 +581,8 @@
                                 <i class="fas fa-truck-fast"></i>
                             </div>
                             <div>
-                                <h3 class="text-sm font-bold text-slate-900">Manage 3rd-Party Repair Tracking</h3>
-                                <p class="text-[11px] text-slate-400">Record external workshop details & progress</p>
+                                <h3 class="text-sm font-bold text-slate-900">Manage Outside Repair</h3>
+                                <p class="text-[11px] text-slate-400">Update outside workshop details and status</p>
                             </div>
                         </div>
                         <button type="button" @click="showOutsourceModal = false" class="text-slate-400 hover:text-slate-600">
@@ -563,42 +595,42 @@
                         <!-- Outsource Enabled Toggle -->
                         <div class="flex items-center justify-between p-3 bg-purple-50/50 border border-purple-200/60 rounded-xl">
                             <div>
-                                <span class="font-bold text-slate-900 block">Outsourced to External Shop</span>
-                                <span class="text-[11px] text-slate-500">Enable tracking for 3rd-party repair partner</span>
+                                <span class="font-bold text-slate-900 block">Sent to Outside Shop</span>
+                                <span class="text-[11px] text-slate-500">Enable tracking for outside repair partner</span>
                             </div>
                             <input type="checkbox" x-model="outsourceForm.isOutsourced" class="w-4 h-4 text-purple-600 rounded cursor-pointer">
                         </div>
 
                         <!-- 1. Custody Location Selection -->
                         <div class="space-y-1.5">
-                            <label class="block text-[10px] font-black uppercase tracking-widest text-slate-400">Custody ("Where is it?")</label>
+                            <label class="block text-[10px] font-black uppercase tracking-widest text-slate-400">Device Location</label>
                             <div class="grid grid-cols-3 gap-2">
                                 <button type="button" @click="outsourceForm.custodyLocation = 'In-House'"
                                     class="py-2 px-1 text-center rounded-lg border text-[11px] font-semibold transition-all"
                                     :class="outsourceForm.custodyLocation === 'In-House' ? 'bg-slate-900 text-white border-slate-900 shadow-xs' : 'bg-slate-50 text-slate-700 border-slate-200'">
-                                    Still in Shop
+                                    In Our Shop
                                 </button>
                                 <button type="button" @click="outsourceForm.custodyLocation = 'At Partner Shop'"
                                     class="py-2 px-1 text-center rounded-lg border text-[11px] font-semibold transition-all"
                                     :class="outsourceForm.custodyLocation === 'At Partner Shop' ? 'bg-purple-600 text-white border-purple-600 shadow-xs' : 'bg-slate-50 text-slate-700 border-slate-200'">
-                                    Still There
+                                    At Outside Shop
                                 </button>
                                 <button type="button" @click="outsourceForm.custodyLocation = 'Received Back'"
                                     class="py-2 px-1 text-center rounded-lg border text-[11px] font-semibold transition-all"
                                     :class="outsourceForm.custodyLocation === 'Received Back' ? 'bg-emerald-600 text-white border-emerald-600 shadow-xs' : 'bg-slate-50 text-slate-700 border-slate-200'">
-                                    Given Here
+                                    Back in Shop
                                 </button>
                             </div>
                         </div>
 
                         <!-- 2. Diagnostic Progress & Outcome Selection -->
                         <div class="space-y-1.5">
-                            <label class="block text-[10px] font-black uppercase tracking-widest text-slate-400">Diagnostic Progress & Outcome</label>
+                            <label class="block text-[10px] font-black uppercase tracking-widest text-slate-400">Repair Status</label>
                             <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
                                 <button type="button" @click="outsourceForm.repairOutcome = 'In Progress'"
                                     class="py-2 px-1 text-center rounded-lg border text-[11px] font-semibold transition-all"
                                     :class="outsourceForm.repairOutcome === 'In Progress' ? 'bg-blue-600 text-white border-blue-600 shadow-xs' : 'bg-slate-50 text-slate-700 border-slate-200'">
-                                    In Diagnostic
+                                    Diagnosing
                                 </button>
                                 <button type="button" @click="outsourceForm.repairOutcome = 'Repaired'"
                                     class="py-2 px-1 text-center rounded-lg border text-[11px] font-semibold transition-all"
@@ -613,7 +645,7 @@
                                 <button type="button" @click="outsourceForm.repairOutcome = 'Cant Repair'"
                                     class="py-2 px-1 text-center rounded-lg border text-[11px] font-semibold transition-all"
                                     :class="outsourceForm.repairOutcome === 'Cant Repair' ? 'bg-rose-600 text-white border-rose-600 shadow-xs' : 'bg-slate-50 text-slate-700 border-slate-200'">
-                                    Can't Repair
+                                    Cannot Repair
                                 </button>
                             </div>
                         </div>
@@ -621,12 +653,12 @@
                         <!-- Partner Shop & Contact -->
                         <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                             <div class="space-y-1">
-                                <label class="block text-[10px] font-black uppercase tracking-widest text-slate-400">Partner Shop Name</label>
+                                <label class="block text-[10px] font-black uppercase tracking-widest text-slate-400">Outside Shop Name</label>
                                 <input type="text" x-model="outsourceForm.partnerShopName" placeholder="e.g. Apex Chip Level Lab"
                                     class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold focus:outline-none focus:border-purple-400">
                             </div>
                             <div class="space-y-1">
-                                <label class="block text-[10px] font-black uppercase tracking-widest text-slate-400">Partner Phone / Contact</label>
+                                <label class="block text-[10px] font-black uppercase tracking-widest text-slate-400">Outside Phone / Contact</label>
                                 <input type="text" x-model="outsourceForm.partnerContact" placeholder="e.g. 9876543210"
                                     class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold focus:outline-none focus:border-purple-400">
                             </div>
@@ -635,12 +667,12 @@
                         <!-- External Ref & Vendor Cost -->
                         <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                             <div class="space-y-1">
-                                <label class="block text-[10px] font-black uppercase tracking-widest text-slate-400">Partner Job / RMA Ref #</label>
+                                <label class="block text-[10px] font-black uppercase tracking-widest text-slate-400">Partner Reference #</label>
                                 <input type="text" x-model="outsourceForm.externalJobNumber" placeholder="e.g. APX-9941"
                                     class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold focus:outline-none focus:border-purple-400">
                             </div>
                             <div class="space-y-1">
-                                <label class="block text-[10px] font-black uppercase tracking-widest text-slate-400">Partner Fee / Cost (₹)</label>
+                                <label class="block text-[10px] font-black uppercase tracking-widest text-slate-400">Partner Cost (₹)</label>
                                 <input type="number" min="0" x-model="outsourceForm.vendorCost" placeholder="0"
                                     class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold focus:outline-none focus:border-purple-400">
                             </div>
@@ -649,12 +681,12 @@
                         <!-- Dates -->
                         <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                             <div class="space-y-1">
-                                <label class="block text-[10px] font-black uppercase tracking-widest text-slate-400">Date Dispatched</label>
+                                <label class="block text-[10px] font-black uppercase tracking-widest text-slate-400">Date Sent</label>
                                 <input type="date" x-model="outsourceForm.sentDate"
                                     class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold focus:outline-none focus:border-purple-400">
                             </div>
                             <div class="space-y-1">
-                                <label class="block text-[10px] font-black uppercase tracking-widest text-slate-400">Expected Return ETA</label>
+                                <label class="block text-[10px] font-black uppercase tracking-widest text-slate-400">Expected Return Date</label>
                                 <input type="date" x-model="outsourceForm.expectedReturnDate"
                                     class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold focus:outline-none focus:border-purple-400">
                             </div>
@@ -662,8 +694,8 @@
 
                         <!-- Remarks -->
                         <div class="space-y-1">
-                            <label class="block text-[10px] font-black uppercase tracking-widest text-slate-400">Partner Diagnostic Remarks</label>
-                            <textarea x-model="outsourceForm.notes" rows="2" placeholder="e.g. Sent for BGA reballing. Partner waiting for stencil..."
+                            <label class="block text-[10px] font-black uppercase tracking-widest text-slate-400">Outside Shop Notes</label>
+                            <textarea x-model="outsourceForm.notes" rows="2" placeholder="e.g. Sent for BGA reballing. Waiting for stencil..."
                                 class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold focus:outline-none focus:border-purple-400"></textarea>
                         </div>
 

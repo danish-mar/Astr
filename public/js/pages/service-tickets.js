@@ -304,17 +304,87 @@
                 const model = this.getDeviceModel(ticket.deviceDetails);
                 const status = ticket.status;
                 const charge = ticket.serviceCharge ? `₹${Number(ticket.serviceCharge).toLocaleString('en-IN')}` : 'TBD';
+                const shopName = this.shopSettings?.shopName || 'our shop';
+                const ticketNum = ticket.ticketNumber || '';
 
-                const text = encodeURIComponent(
-                    `Hello ${customerName},\n\n` +
-                    `Here is the latest service status for your device:\n` +
-                    `• Ticket: #${ticket.ticketNumber}\n` +
-                    `• Device: ${model}\n` +
-                    `• Status: *${status}*\n` +
-                    `• Estimate/Charge: ${charge}\n\n` +
-                    `Thank you for trusting ${this.shopSettings?.shopName || 'our workshop'}. Feel free to reply if you have any questions!`
-                );
+                let messageBody = '';
 
+                switch (status) {
+                    case 'Pending':
+                        messageBody =
+                            `Hello ${customerName},\n\n` +
+                            `Your device (${model}) has been received at ${shopName}.\n\n` +
+                            `• Ticket: #${ticketNum}\n` +
+                            `• Status: *Received (Intake)*\n` +
+                            `• Estimated Charge: ${charge}\n\n` +
+                            `Our technicians will inspect it shortly and keep you updated.\n\n` +
+                            `Thank you,\n${shopName}`;
+                        break;
+
+                    case 'In Progress':
+                        messageBody =
+                            `Hello ${customerName},\n\n` +
+                            `Your device (${model}) is currently on the workbench.\n\n` +
+                            `• Ticket: #${ticketNum}\n` +
+                            `• Status: *In Progress (Under Repair)*\n` +
+                            `• Estimated Charge: ${charge}\n\n` +
+                            `Our technician is actively diagnosing/repairing the issue. We will notify you once it's ready.\n\n` +
+                            `Thank you,\n${shopName}`;
+                        break;
+
+                    case 'Completed':
+                        messageBody =
+                            `Hello ${customerName},\n\n` +
+                            `Good news! Your device (${model}) is ready for pickup.\n\n` +
+                            `• Ticket: #${ticketNum}\n` +
+                            `• Status: *Ready for Pickup*\n` +
+                            `• Total Amount: ${charge}\n\n` +
+                            `You can collect your device during shop hours.\n\n` +
+                            `Thank you,\n${shopName}`;
+                        break;
+
+                    case 'Delivered':
+                        messageBody =
+                            `Hello ${customerName},\n\n` +
+                            `Your device (${model}) has been delivered.\n\n` +
+                            `• Ticket: #${ticketNum}\n` +
+                            `• Status: *Delivered*\n` +
+                            `• Amount: ${charge}\n\n` +
+                            `Thank you for choosing ${shopName}! Let us know if you need any further assistance.\n\n` +
+                            `Best regards,\n${shopName}`;
+                        break;
+
+                    case 'Cancelled':
+                        messageBody =
+                            `Hello ${customerName},\n\n` +
+                            `This is regarding your service ticket #${ticketNum} for ${model}.\n\n` +
+                            `• Status: *Cancelled*\n\n` +
+                            `The service ticket has been cancelled. Please visit our shop to collect your device.\n\n` +
+                            `Thank you,\n${shopName}`;
+                        break;
+
+                    case 'Reopened':
+                        messageBody =
+                            `Hello ${customerName},\n\n` +
+                            `Your service ticket #${ticketNum} for ${model} has been reopened.\n\n` +
+                            `• Status: *Reopened*\n\n` +
+                            `Our technician is reviewing the device. We will update you shortly.\n\n` +
+                            `Thank you,\n${shopName}`;
+                        break;
+
+                    default:
+                        messageBody =
+                            `Hello ${customerName},\n\n` +
+                            `Here is the latest service status for your device:\n\n` +
+                            `• Ticket: #${ticketNum}\n` +
+                            `• Device: ${model}\n` +
+                            `• Status: *${status}*\n` +
+                            `• Estimate/Charge: ${charge}\n\n` +
+                            `Thank you,\n${shopName}`;
+                        break;
+                }
+
+                const text = encodeURIComponent(messageBody);
                 window.open(`https://wa.me/${cleanPhone}?text=${text}`, '_blank');
             },
 
