@@ -1,6 +1,6 @@
 {
   "name": "astr-protocol",
-  "version": "3.4.1",
+  "version": "3.4.2",
   "scripts": {
     "dev": "nodemon -e ts,ejs,json --exec ts-node src/server.ts",
     "build": "tsc",
