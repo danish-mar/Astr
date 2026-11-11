@@ -21,7 +21,8 @@
                             'bg-blue-50 text-blue-700 border border-blue-200/80': ticket?.status === 'In Progress',
                             'bg-emerald-50 text-emerald-700 border border-emerald-200/80': ticket?.status === 'Completed',
                             'bg-slate-100 text-slate-700 border border-slate-300': ticket?.status === 'Delivered',
-                            'bg-rose-50 text-rose-700 border border-rose-200/80': ticket?.status === 'Cancelled'
+                            'bg-rose-50 text-rose-700 border border-rose-200/80': ticket?.status === 'Cancelled',
+                            'bg-purple-50 text-purple-700 border border-purple-200/80': ticket?.status === 'Reopened'
                         }" x-text="ticket?.status || 'Loading...'"></span>
                 </div>
                 <p class="text-xs text-slate-500 mt-0.5">
@@ -44,6 +45,18 @@
                 class="px-3.5 py-2 bg-white border border-slate-200 text-slate-700 hover:border-primary-300 hover:text-primary-600 rounded-xl text-xs font-bold transition-all shadow-2xs flex items-center gap-1.5 active:scale-95">
                 <i class="fas fa-print text-xs text-slate-400"></i>
                 <span>Print Slip</span>
+            </button>
+
+            <button type="button" x-show="ticket?.status !== 'Cancelled'" @click="cancelTicket()"
+                class="px-3.5 py-2 bg-white border border-rose-200 text-rose-600 hover:bg-rose-50 rounded-xl text-xs font-bold transition-all shadow-2xs flex items-center gap-1.5 active:scale-95">
+                <i class="fas fa-ban text-[11px]"></i>
+                <span>Cancel</span>
+            </button>
+
+            <button type="button" x-show="ticket?.status === 'Cancelled'" @click="updateStatus('Pending')"
+                class="px-3.5 py-2 bg-white border border-amber-200 text-amber-700 hover:bg-amber-50 rounded-xl text-xs font-bold transition-all shadow-2xs flex items-center gap-1.5 active:scale-95">
+                <i class="fas fa-rotate-left text-[11px]"></i>
+                <span>Reopen</span>
             </button>
 
             <button type="button" @click="editTicket()"
@@ -75,14 +88,16 @@
                         </div>
                         <span class="text-xs font-bold text-slate-900 uppercase tracking-wider font-display">Repair Stage Progression</span>
                     </div>
-                    <span class="text-[11px] font-mono text-primary-700 font-bold bg-primary-50 px-2 py-0.5 rounded-md border border-primary-200/60"
-                        x-text="`Stage ${getStageIndex(ticket?.status)} of 4`"></span>
+                    <span class="text-[11px] font-mono font-bold px-2 py-0.5 rounded-md border"
+                        :class="ticket?.status === 'Cancelled' ? 'text-rose-700 bg-rose-50 border-rose-200/80' : 'text-primary-700 bg-primary-50 border-primary-200/60'"
+                        x-text="ticket?.status === 'Cancelled' ? 'Ticket Cancelled' : ticket?.status === 'Reopened' ? 'Ticket Reopened' : `Stage ${getStageIndex(ticket?.status)} of 4`"></span>
                 </div>
 
                 <!-- Progress Bar -->
                 <div class="w-full bg-slate-100 rounded-full h-2 overflow-hidden">
-                    <div class="bg-primary-600 h-2 rounded-full transition-all duration-500"
-                        :style="`width: ${getStagePercent(ticket?.status)}%`"></div>
+                    <div class="h-2 rounded-full transition-all duration-500"
+                        :class="ticket?.status === 'Cancelled' ? 'bg-rose-500' : 'bg-primary-600'"
+                        :style="`width: ${ticket?.status === 'Cancelled' ? 100 : getStagePercent(ticket?.status)}%`"></div>
                 </div>
 
                 <!-- 4 Step Buttons -->
@@ -121,6 +136,17 @@
                             : 'bg-slate-50/70 hover:bg-slate-100 border-slate-200/70 text-slate-600'">
                         <i class="fas fa-box text-xs" :class="ticket?.status === 'Delivered' ? 'text-slate-900' : 'text-slate-400'"></i>
                         <span class="text-[11px]">4. Delivered</span>
+                    </button>
+                </div>
+
+                <!-- Cancelled State Banner -->
+                <div x-show="ticket?.status === 'Cancelled'" class="p-3 bg-rose-50 border border-rose-200 rounded-xl flex items-center justify-between text-xs text-rose-800">
+                    <span class="flex items-center gap-2">
+                        <i class="fas fa-circle-exclamation text-rose-600 text-sm"></i>
+                        <span>This service ticket is currently <strong>Cancelled</strong>.</span>
+                    </span>
+                    <button type="button" @click="updateStatus('Pending')" class="px-3 py-1 bg-white border border-rose-300 text-rose-700 hover:bg-rose-100 rounded-lg font-bold text-[11px] transition-all shadow-2xs">
+                        Reopen to Intake
                     </button>
                 </div>
             </div>

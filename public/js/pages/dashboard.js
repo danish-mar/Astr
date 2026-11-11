@@ -1,5 +1,6 @@
-document.addEventListener('alpine:init', () => {
-    Alpine.data('dashboardData', () => ({
+(function () {
+    const initComponent = () => {
+        Alpine.data('dashboardData', () => ({
         stats: {
             products: { total: 0, available: 0, sold: 0 },
             tickets: { total: 0, pending: 0, completed: 0, active: 0 },
@@ -306,4 +307,11 @@ document.addEventListener('alpine:init', () => {
             });
         }
     }));
-});
+    };
+
+    if (window.Alpine) {
+        initComponent();
+    } else {
+        document.addEventListener('alpine:init', initComponent);
+    }
+})();

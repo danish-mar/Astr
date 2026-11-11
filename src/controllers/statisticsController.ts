@@ -73,8 +73,9 @@ export const getDashboardStats = async (req: Request, res: Response) => {
             .populate("category", "name");
 
         const recentTickets = await ServiceTicket.find()
-            .sort({ createdAt: -1 })
-            .limit(5);
+            .sort({ createdAt: -1, _id: -1 })
+            .limit(5)
+            .populate("customer", "name phone");
 
         const ticketStatusCounts = await ServiceTicket.aggregate([
             {

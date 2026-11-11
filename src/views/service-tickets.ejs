@@ -145,6 +145,15 @@
                     :class="filters.status === 'Delivered' ? 'bg-slate-900 text-white' : 'bg-slate-100 text-slate-700'"
                     x-text="metrics.delivered"></span>
             </button>
+
+            <button @click="filters.status = 'Cancelled'; pagination.page = 1; loadTickets()"
+                :class="filters.status === 'Cancelled' ? 'bg-rose-600 text-white font-bold shadow-xs' : 'bg-white text-slate-700 hover:bg-slate-50 border border-slate-200/80'"
+                class="px-3.5 py-1.5 rounded-xl transition-all whitespace-nowrap flex items-center gap-1.5">
+                <span>Cancelled</span>
+                <span class="px-1.5 py-0.2 rounded-full text-[10px] font-mono"
+                    :class="filters.status === 'Cancelled' ? 'bg-rose-700 text-white' : 'bg-rose-50 text-rose-700'"
+                    x-text="metrics.cancelled"></span>
+            </button>
         </div>
 
         <!-- Search & Control Row -->
@@ -553,6 +562,8 @@
                             <option value="In Progress">In Progress</option>
                             <option value="Completed">Completed</option>
                             <option value="Delivered">Delivered</option>
+                            <option value="Cancelled">Cancelled</option>
+                            <option value="Reopened">Reopened</option>
                         </select>
                     </div>
 

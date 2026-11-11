@@ -93,6 +93,11 @@
                 }
             },
 
+            async cancelTicket() {
+                if (!confirm('Are you sure you want to mark this service ticket as Cancelled?')) return;
+                await this.updateStatus('Cancelled');
+            },
+
             copyTicketNumber(num) {
                 if (!num) return;
                 navigator.clipboard.writeText(num).then(() => {
@@ -158,6 +163,8 @@
                     case 'In Progress': return 2;
                     case 'Completed': return 3;
                     case 'Delivered': return 4;
+                    case 'Cancelled': return 0;
+                    case 'Reopened': return 1;
                     default: return 1;
                 }
             },
@@ -168,6 +175,8 @@
                     case 'In Progress': return 50;
                     case 'Completed': return 85;
                     case 'Delivered': return 100;
+                    case 'Cancelled': return 0;
+                    case 'Reopened': return 25;
                     default: return 20;
                 }
             },
