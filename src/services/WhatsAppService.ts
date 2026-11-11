@@ -549,6 +549,10 @@ class WhatsAppService {
             footer = `Thank you for choosing *${shopName}*! It was a pleasure serving you.\n\n` +
                 (reviewUrl ? `If you're happy with our service, please take a moment to rate us here:\n🔗 ${reviewUrl}\n\n` : '') +
                 'We hope to see you again! ✨';
+        } else if (ticket.status === 'Cancelled') {
+            statusEmoji = '❌';
+            statusHeader = '*Service Request Cancelled*';
+            footer = `Your service ticket has been marked as cancelled. Please feel free to reach out to *${shopName}* if you have any questions.`;
         }
 
         const message = `${statusEmoji} ${statusHeader}\n\nHello ${customer.name || 'Customer'},\nThe status of your service ticket has been updated.\n\n*Updated Details:*\n• *Ticket ID:* *#${ticket.ticketNumber}*\n• *Device:* ${ticket.deviceDetails}\n• *New Status:* ${ticket.status}\n\n${footer}`;
