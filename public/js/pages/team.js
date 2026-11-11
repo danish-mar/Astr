@@ -12,6 +12,7 @@ document.addEventListener('alpine:init', () => {
         },
 
         filters: {
+            search: '',
             group: 'All',
             showResigned: false
         },
@@ -40,26 +41,30 @@ document.addEventListener('alpine:init', () => {
         },
 
         permissionTree: {
-            'Operations': [
-                { id: 'tickets:read', label: 'View Tickets', description: 'Access to service ticket index and lists.' },
-                { id: 'tickets:write', label: 'Manage Tickets', description: 'Create and update service tickets.' },
-                { id: 'accounting:read', label: 'View Ledger', description: 'Access to financial gateway and totals.' },
-                { id: 'accounting:write', label: 'Post Vouchers', description: 'Create receipt and payment entries.' },
-                { id: 'attendance:view_all', label: 'Audit Attendance', description: 'View attendance records of all staff.' }
+            'Service Tickets': [
+                { id: 'tickets:read', label: 'View Tickets', description: 'Access to service tickets list and details.' },
+                { id: 'tickets:write', label: 'Manage Tickets', description: 'Create, edit, and update ticket status.' }
+            ],
+            'Accounting & Ledger': [
+                { id: 'accounting:read', label: 'View Ledger', description: 'Access to accounts, balance, and entries.' },
+                { id: 'accounting:write', label: 'Post Vouchers', description: 'Create receipt and payment transactions.' },
+                { id: 'payroll:manage', label: 'Payroll Management', description: 'Calculate and process employee payroll.' }
+            ],
+            'Attendance': [
+                { id: 'attendance:view_all', label: 'View All Attendance', description: 'View shift logs for all staff members.' }
             ],
             'Inventory': [
-                { id: 'products:read', label: 'View Inventory', description: 'See stock levels and product details.' },
-                { id: 'products:write', label: 'Manage Stock', description: 'Add/Edit products and adjust counts.' }
+                { id: 'products:read', label: 'View Inventory', description: 'Browse products, stock, and pricing.' },
+                { id: 'products:write', label: 'Manage Stock', description: 'Add, update products, and adjust stock counts.' }
             ],
-            'CRM': [
-                { id: 'contacts:read', label: 'View Contacts', description: 'Access client and vendor records.' },
-                { id: 'contacts:write', label: 'Manage Contacts', description: 'Create and modify relationship data.' },
-                { id: 'leads:read', label: 'View leads', description: 'Access to sales lead pipeline.' }
+            'Contacts & CRM': [
+                { id: 'contacts:read', label: 'View Contacts', description: 'Access customer and supplier details.' },
+                { id: 'contacts:write', label: 'Manage Contacts', description: 'Create and update customer profiles.' },
+                { id: 'leads:read', label: 'View Leads', description: 'Access sales inquiry pipeline.' }
             ],
-            'System': [
-                { id: 'settings:manage', label: 'Shop Settings', description: 'Modify shop identity and branding.' },
-                { id: 'ai:manage', label: 'AI Control', description: 'Configure AI models and keys.' },
-                { id: 'payroll:manage', label: 'Financial Control', description: 'Calculate and view staff payroll.' }
+            'System Settings': [
+                { id: 'settings:manage', label: 'Shop Settings', description: 'Configure workshop and business profile.' },
+                { id: 'ai:manage', label: 'AI Settings', description: 'Manage AI Copilot configuration and tools.' }
             ]
         },
 
@@ -70,7 +75,7 @@ document.addEventListener('alpine:init', () => {
             await this.loadAttendanceStatus();
             await this.loadAura();
 
-            // Poll for aura every 5 minutes
+            // Refresh status periodically every 5 minutes
             setInterval(() => {
                 this.loadAttendanceStatus();
                 this.loadAura();
@@ -84,7 +89,7 @@ document.addEventListener('alpine:init', () => {
                 this.users = response.data || response;
                 if (this.users.data) this.users = this.users.data;
             } catch (error) {
-                console.error('Failed to load users:', error);
+                console.error('Failed to load employees:', error);
             } finally {
                 this.loading = false;
             }
@@ -93,7 +98,6 @@ document.addEventListener('alpine:init', () => {
         async loadAttendanceStatus() {
             try {
                 const response = await this.$store.app.api('/attendance/status');
-                // Ensure attendanceStatus is an object even if empty
                 this.attendanceStatus = response.data || {};
             } catch (error) {
                 this.attendanceStatus = {};
@@ -111,32 +115,38 @@ document.addEventListener('alpine:init', () => {
 
         filteredUsers() {
             if (!this.users) return [];
+            const q = (this.filters.search || '').trim().toLowerCase();
             return this.users.filter(user => {
                 const groupMatch = this.filters.group === 'All' || user.group === this.filters.group;
                 const statusMatch = this.filters.showResigned || user.status !== 'Resigned';
-                return groupMatch && statusMatch;
+                const searchMatch = !q ||
+                    (user.name && user.name.toLowerCase().includes(q)) ||
+                    (user.username && user.username.toLowerCase().includes(q)) ||
+                    (user.position && user.position.toLowerCase().includes(q)) ||
+                    (user.group && user.group.toLowerCase().includes(q));
+                return groupMatch && statusMatch && searchMatch;
             });
         },
 
         async performCheckIn() {
             try {
                 await this.$store.app.api('/attendance/check-in', 'POST');
-                window.showNotification('Shift Signal Transmitted');
+                window.showNotification('Shift started');
                 await this.loadAttendanceStatus();
                 await this.loadAura();
             } catch (error) {
-                window.showNotification(error.response?.data?.message || 'Signal disruption', 'error');
+                window.showNotification(error.response?.data?.message || 'Could not start shift', 'error');
             }
         },
 
         async performCheckOut() {
             try {
                 await this.$store.app.api('/attendance/check-out', 'POST');
-                window.showNotification('Shift Signal Terminated');
+                window.showNotification('Shift ended');
                 await this.loadAttendanceStatus();
                 await this.loadAura();
             } catch (error) {
-                window.showNotification(error.response?.data?.message || 'Signal disruption', 'error');
+                window.showNotification(error.response?.data?.message || 'Could not end shift', 'error');
             }
         },
 
@@ -171,25 +181,25 @@ document.addEventListener('alpine:init', () => {
                 const method = this.editMode ? 'PUT' : 'POST';
 
                 await this.$store.app.api(url, method, this.userForm);
-                window.showNotification(this.editMode ? 'Unit Recalibrated' : 'Unit Deployed');
+                window.showNotification(this.editMode ? 'Employee updated' : 'Employee added');
                 this.modals.user = false;
                 await this.loadUsers();
             } catch (error) {
-                window.showNotification(error.response?.data?.message || 'Deployment failure', 'error');
+                window.showNotification(error.response?.data?.message || 'Failed to save employee', 'error');
             } finally {
                 this.saving = false;
             }
         },
 
         async updateStatus(user, status) {
-            const action = status === 'Resigned' ? 'relieve' : 'restore';
-            window.showConfirm('Confirm Governance', `Are you sure you want to ${action} ${user.name}?`, async () => {
+            const actionText = status === 'Resigned' ? 'mark as resigned' : 'reactivate';
+            window.showConfirm('Update Status', `Are you sure you want to ${actionText} ${user.name}?`, async () => {
                 try {
                     await this.$store.app.api(`/employees/${user._id}/status`, 'PUT', { status });
-                    window.showNotification('Governance policy applied');
+                    window.showNotification('Employee status updated');
                     await this.loadUsers();
                 } catch (error) {
-                    window.showNotification('Policy application failed', 'error');
+                    window.showNotification('Failed to update status', 'error');
                 }
             });
         },
@@ -197,10 +207,10 @@ document.addEventListener('alpine:init', () => {
         async syncLedger(user) {
             try {
                 await this.$store.app.api(`/employees/${user._id}/sync-ledger`, 'POST');
-                window.showNotification('Bond established with financial layer');
+                window.showNotification('Accounts ledger linked');
                 await this.loadUsers();
             } catch (error) {
-                window.showNotification('Linkage failure', 'error');
+                window.showNotification('Failed to link ledger', 'error');
             }
         },
 
@@ -233,14 +243,18 @@ document.addEventListener('alpine:init', () => {
         },
 
         async resetPassword() {
+            if (!this.passwordForm.newPassword) {
+                window.showNotification('Please enter a new password', 'warning');
+                return;
+            }
             try {
                 await this.$store.app.api(`/employees/${this.selectedUser._id}/reset-password`, 'PUT', {
                     newPassword: this.passwordForm.newPassword
                 });
-                window.showNotification('Master Key rotated');
+                window.showNotification('Password updated successfully');
                 this.modals.password = false;
             } catch (error) {
-                window.showNotification('Rotation failed', 'error');
+                window.showNotification(error.response?.data?.message || 'Failed to reset password', 'error');
             }
         },
 
@@ -249,22 +263,22 @@ document.addEventListener('alpine:init', () => {
                 await this.$store.app.api(`/employees/${this.selectedUser._id}/permissions`, 'PUT', {
                     permissions: this.selectedPermissions
                 });
-                window.showNotification('Guard rules synchronized');
+                window.showNotification('Permissions updated');
                 this.modals.permissions = false;
                 await this.loadUsers();
             } catch (error) {
-                window.showNotification('Rule sync failure', 'error');
+                window.showNotification('Failed to save permissions', 'error');
             }
         },
 
         async deleteUser(user) {
-            window.showConfirm('Wipe Record', `Wipe all system data for ${user.name}? This action is irreversible.`, async () => {
+            window.showConfirm('Delete Employee', `Are you sure you want to delete ${user.name}? This action cannot be undone.`, async () => {
                 try {
                     await this.$store.app.api(`/employees/${user._id}`, 'DELETE');
-                    window.showNotification('Personnel data purged');
+                    window.showNotification('Employee deleted');
                     await this.loadUsers();
                 } catch (error) {
-                    window.showNotification('Purge failure', 'error');
+                    window.showNotification(error.response?.data?.message || 'Failed to delete employee', 'error');
                 }
             });
         },
